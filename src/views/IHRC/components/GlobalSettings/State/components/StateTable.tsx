@@ -178,10 +178,13 @@ const StateTable: React.FC<StateTableProps> = ({ stateData, setStateData }) => {
             onChange={(value) => handleInputChange('ptRcFrequency', value)}
           />
           <DatePicker 
+          placeholder='PT EC Due Date'
             value={itemToEdit?.ptEcDueDate}
             onChange={(date) => handleInputChange('ptEcDueDate', date)}
           />
           <DatePicker 
+          
+          placeholder='PT RC Due Date'
             value={itemToEdit?.ptRcDueDate}
             onChange={(date) => handleInputChange('ptRcDueDate', date)}
           />
