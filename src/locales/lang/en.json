@@ -8,7 +8,8 @@
                 "item1": "State",
                 "item2": "District",
                 "item3": "Compliance",
-                "item4": "PF Configuration"
+                "item4": "PF Configuration",
+                 "item5": "Version History"
             }
         }
     }

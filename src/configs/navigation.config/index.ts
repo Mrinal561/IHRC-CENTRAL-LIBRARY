@@ -66,6 +66,16 @@ const navigationConfig: NavigationTree[] = [
                 authority: [],
                 subMenu: [],
             },
+            {
+                key: 'groupMenu.collapse.item5',
+                path: '/version-history',
+                title: 'Version History',
+                translateKey: 'nav.groupMenu.collapse.item5',
+                icon: '',
+                type: NAV_ITEM_TYPE_ITEM,
+                authority: [],
+                subMenu: [],
+            },
         ],
     },
 ]
