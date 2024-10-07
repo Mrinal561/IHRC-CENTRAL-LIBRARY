@@ -15,27 +15,27 @@ export interface VersionHistoryDataRow {
 const initialData: VersionHistoryDataRow[] = [
     {
         versionNumber: '1.0',
-        updatedDate: '2022-01-01',
+        updatedDate: '2024-01-01',
         changeLog: 'Initial release.',
     },
     {
         versionNumber: '1.1',
-        updatedDate: '2022-02-10',
+        updatedDate: '2024-02-10',
         changeLog: 'Initial release.',
     },
     {
         versionNumber: '1.2',
-        updatedDate: '2022-03-15',
+        updatedDate: '2024-03-15',
         changeLog: 'Initial release.',
     },
     {
         versionNumber: '1.3',
-        updatedDate: '2022-04-22',
+        updatedDate: '2024-04-22',
         changeLog: 'Initial release.',
     },
     {
         versionNumber: '1.4',
-        updatedDate: '2022-05-18',
+        updatedDate: '2024-05-18',
         changeLog: 'Initial release.',
     },
   
