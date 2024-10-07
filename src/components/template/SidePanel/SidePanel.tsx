@@ -74,7 +74,7 @@ interface Option {
 
   // Version selector component
   const VersionSelectorHeader = () => {
-    const currentVersion = 'v2.0';
+    const currentVersion = 'v1.4';
   
     return (
         <div className="flex flex-col text-start px-3 h-10 w-40 text-sm font-medium text-gray-700 bg-white border-r border-l">
