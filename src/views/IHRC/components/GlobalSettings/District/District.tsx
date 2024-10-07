@@ -97,7 +97,7 @@ const District = () => {
         onClose={handleDialogClose}
         onRequestClose={handleDialogClose}
       >
-        <h5 className="mb-4">Assign State</h5>
+        <h5 className="mb-4">Add District</h5>
         <div className="flex flex-col gap-6">
           <div className='flex flex-col gap-3'>
             <label>Select State</label>
