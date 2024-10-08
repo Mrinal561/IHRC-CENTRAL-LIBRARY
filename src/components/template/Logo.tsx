@@ -10,7 +10,7 @@ interface LogoProps extends CommonProps {
     logoWidth?: number | string
 }
 
-const LOGO_SRC_PATH = '/img/logo/'
+const LOGO_SRC_PATH = '/ihrc-library-ui/img/logo/'
 
 const Logo = (props: LogoProps) => {
     const {
