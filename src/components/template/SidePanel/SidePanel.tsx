@@ -123,7 +123,6 @@ const _SidePanel = (props: SidePanelProps) => {
             <div className='flex items-center gap-6'>
             {/* <FinancialYearFilter onChange={handleFinancialYearChange} /> */}
                 <Notification />
-               
             </div>
             <div className='version'>
                 
