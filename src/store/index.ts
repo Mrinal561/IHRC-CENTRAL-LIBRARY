@@ -1,10 +1,13 @@
-import store from './storeSetup'
+import { configureStore } from '@reduxjs/toolkit';
+import authReduce from './features/auth/authSlice';
+import authSlice from './features/Auth/authSlice';
 
-export * from './storeSetup'
-export * from './slices/auth'
-export * from './slices/base'
-export * from './slices/theme/themeSlice'
-export * from './slices/locale/localeSlice'
-export * from './rootReducer'
-export * from './hook'
-export default store
+ const store = configureStore({
+  reducer: {
+    auth: authReduce,
+  },
+});
+
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;
+export default store;
