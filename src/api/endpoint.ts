@@ -11,3 +11,5 @@ const endpoints = {
         profile: () => api("superadmin/profile"),
     }
 }
+
+export default endpoints;
