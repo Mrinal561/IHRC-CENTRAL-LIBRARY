@@ -9,7 +9,7 @@ const unauthorizedCode = [401]
 
 const BaseService = axios.create({
     timeout: 60000,
-    baseURL: 'https://sites.mobotics.in/ihrc-api/superadmin',
+    baseURL: appConfig.apiPrefix,
 })
 
 BaseService.interceptors.request.use(
@@ -26,16 +26,15 @@ BaseService.interceptors.request.use(
         }
 
         if (accessToken) {
-            config.headers[
-                REQUEST_HEADER_AUTH_KEY
-            ] = `${TOKEN_TYPE}${accessToken}`
+            config.headers[REQUEST_HEADER_AUTH_KEY] =
+                `${TOKEN_TYPE}${accessToken}`
         }
 
         return config
     },
     (error) => {
         return Promise.reject(error)
-    }
+    },
 )
 
 BaseService.interceptors.response.use(
@@ -48,7 +47,7 @@ BaseService.interceptors.response.use(
         }
 
         return Promise.reject(error)
-    }
+    },
 )
 
 export default BaseService

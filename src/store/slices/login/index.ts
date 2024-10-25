@@ -3,16 +3,16 @@ import session, { SessionLoginState } from './sessionSlice'
 import user, { LoginState } from './loginSlice'
 
 const reducer = combineReducers({
-    session,
+    // session,
     user,
 })
 
 export type AuthenticationState = {
-    session: SessionLoginState
+    // session: SessionLoginState
     user: LoginState
 }
 
-export * from './sessionSlice'
+// export * from './sessionSlice'
 export * from './loginSlice'
 
 export default reducer

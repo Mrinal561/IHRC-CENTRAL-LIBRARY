@@ -12,6 +12,7 @@ import {
 import useAuth from '@/utils/hooks/useAuth'
 import useDirection from '@/utils/hooks/useDirection'
 import useLocale from '@/utils/hooks/useLocale'
+import Cookies from 'js-cookie'
 
 const layouts = {
     [LAYOUT_TYPE_CLASSIC]: lazy(() => import('./ClassicLayout')),
@@ -25,7 +26,7 @@ const layouts = {
 const Layout = () => {
     const layoutType = useAppSelector((state) => state.theme.layout.type)
 
-    const { authenticated } = useAuth()
+    const authenticated = Cookies.get('token')
 
     useDirection()
 

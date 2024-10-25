@@ -10,6 +10,18 @@ import useAuth from '@/utils/hooks/useAuth'
 import { Field, Form, Formik } from 'formik'
 import * as Yup from 'yup'
 import type { CommonProps } from '@/@types/common'
+import httpClient from '@/api/http-client'
+import { endpoints } from '@/api/endpoint'
+import { AxiosError } from 'axios'
+import { Notification, toast } from '@/components/ui'
+import { fetchAuthUser } from '@/store/slices/login/loginSlice'
+import { useAppDispatch } from '@/store'
+import Cookies from 'js-cookie'
+import { useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+import { REDIRECT_URL_KEY } from '@/constants/app.constant'
+import useQuery from '@/utils/hooks/useQuery'
+import appConfig from '@/configs/app.config'
 
 interface SignInFormProps extends CommonProps {
     disableSubmit?: boolean
@@ -20,7 +32,7 @@ interface SignInFormProps extends CommonProps {
 type SignInFormSchema = {
     userName: string
     password: string
-    rememberMe: boolean
+    // rememberMe: boolean
 }
 
 const validationSchema = Yup.object().shape({
@@ -38,23 +50,89 @@ const SignInForm = (props: SignInFormProps) => {
     } = props
 
     const [message, setMessage] = useTimeOutMessage()
+    const query = useQuery()
 
     const { LogIn } = useAuth()
+    const dispatch = useAppDispatch()
+    const navigate = useNavigate()
+    const [loading, setLoading] = useState(false)
 
-    const onSignIn = async (
-        values: SignInFormSchema,
-        setSubmitting: (isSubmitting: boolean) => void
-    ) => {
-        const { userName, password } = values
-        setSubmitting(true)
+    const onSignIn = async (values: SignInFormSchema) => {
+        setLoading(true)
+        try {
+            console.log('Attempting API call...') // Check if this logs
+            const { data } = await httpClient.post(endpoints.auth.login(), {
+                email: values.userName,
+                password: values.password,
+            })
+            console.log('API call succeeded:', data) // Check if this logs
 
-        const result = await LogIn({ userName, password })
+            console.log(data)
 
-        if (result?.status === 'failed') {
-            setMessage(result.message)
+            Cookies.set('token', data.access_token, { path: '/' })
+
+            dispatch(fetchAuthUser()).then(({ payload }) => {
+                if (payload) {
+                    //   if (localStorage.getItem("platform")) {
+                    //     const platform = (payload as AuthUser).platforms.find(
+                    //       (v) => v.uuid == localStorage.getItem("platform")
+                    //     );
+                    //     if (platform) {
+                    //       dispatch(settingActions.setPlatform(platform));
+                    //     } else {
+                    //       localStorage.removeItem("platform");
+                    //     }
+                    //   }
+                    toast.push(
+                        <Notification title="succes" type="success">
+                            Login successful
+                        </Notification>,
+                        {
+                            placement: 'top-end',
+                        },
+                    )
+                    const redirectUrl = query.get(REDIRECT_URL_KEY)
+                    console.log(
+                        redirectUrl,
+                        redirectUrl
+                            ? redirectUrl
+                            : appConfig.authenticatedEntryPath,
+                    )
+                    navigate(
+                        redirectUrl
+                            ? redirectUrl
+                            : appConfig.authenticatedEntryPath,
+                    )
+                } else {
+                    // showErrorNotification()
+                }
+            })
+
+            setLoading(false)
+        } catch (error) {
+            const err = error as AxiosError
+            if (err.response?.status == 401) {
+                toast.push(
+                    <Notification title="error" type="danger">
+                        Invalid email or password{' '}
+                    </Notification>,
+                    {
+                        placement: 'top-end',
+                    },
+                )
+            } else {
+                toast.push(
+                    <Notification title="error" type="danger">
+                        Something went wrong! Please Try again.{' '}
+                    </Notification>,
+                    {
+                        placement: 'top-end',
+                    },
+                )
+            }
         }
 
-        setSubmitting(false)
+        setLoading(false)
     }
 
     return (
@@ -66,17 +144,13 @@ const SignInForm = (props: SignInFormProps) => {
             )}
             <Formik
                 initialValues={{
-                    userName: 'admin',
-                    password: '123Qwe',
-                    rememberMe: true,
+                    userName: '',
+                    password: '',
+                    // rememberMe: true,
                 }}
                 validationSchema={validationSchema}
-                onSubmit={(values, { setSubmitting }) => {
-                    if (!disableSubmit) {
-                        onSignIn(values, setSubmitting)
-                    } else {
-                        setSubmitting(false)
-                    }
+                onSubmit={(values) => {
+                    onSignIn(values)
                 }}
             >
                 {({ touched, errors, isSubmitting }) => (
@@ -114,24 +188,24 @@ const SignInForm = (props: SignInFormProps) => {
                                 />
                             </FormItem>
                             <div className="flex justify-between mb-6">
-                                <Field
+                                {/* <Field
                                     className="mb-0"
                                     name="rememberMe"
                                     component={Checkbox}
                                 >
                                     Remember Me
-                                </Field>
+                                </Field> */}
                                 <ActionLink to={forgotPasswordUrl}>
                                     Forgot Password?
                                 </ActionLink>
                             </div>
                             <Button
                                 block
-                                loading={isSubmitting}
+                                loading={loading}
                                 variant="solid"
                                 type="submit"
                             >
-                                {isSubmitting ? 'Signing in...' : 'Sign In'}
+                                {loading ? 'Signing in...' : 'Sign In'}
                             </Button>
                             <div className="mt-4 text-center">
                                 <span>{`Don't have an account yet?`} </span>
