@@ -9,7 +9,7 @@ const unauthorizedCode = [401]
 
 const BaseService = axios.create({
     timeout: 60000,
-    baseURL: appConfig.apiPrefix,
+    baseURL: 'https://sites.mobotics.in/ihrc-api/superadmin',
 })
 
 BaseService.interceptors.request.use(

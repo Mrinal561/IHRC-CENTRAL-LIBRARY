@@ -39,7 +39,7 @@ const SignInForm = (props: SignInFormProps) => {
 
     const [message, setMessage] = useTimeOutMessage()
 
-    const { signIn } = useAuth()
+    const { LogIn } = useAuth()
 
     const onSignIn = async (
         values: SignInFormSchema,
@@ -48,7 +48,7 @@ const SignInForm = (props: SignInFormProps) => {
         const { userName, password } = values
         setSubmitting(true)
 
-        const result = await signIn({ userName, password })
+        const result = await LogIn({ userName, password })
 
         if (result?.status === 'failed') {
             setMessage(result.message)
