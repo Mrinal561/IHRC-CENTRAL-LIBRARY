@@ -174,7 +174,9 @@ function useAuth() {
     }
 
     return {
-        authenticated: Cookies.get('token'),
+        authenticated: useAppSelector(
+            (state) => state.login.user.authenticated,
+        ),
         signIn,
         signUp,
         signOut,

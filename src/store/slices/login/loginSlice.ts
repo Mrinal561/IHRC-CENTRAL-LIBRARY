@@ -7,10 +7,12 @@ import { endpoints } from '@/api/endpoint'
 export type LoginState = {
     loading: boolean
     user?: AuthUser
+    authenticated: boolean
 }
 
 const initialState: LoginState = {
     loading: true,
+    authenticated: false,
 }
 export const fetchAuthUser = createAsyncThunk(
     'auth/fetchAuthUser',
@@ -24,6 +26,13 @@ const loginSlice = createSlice({
     name: `auth`,
     initialState,
     reducers: {
+        setIsAuthenticated: (
+            state,
+            action: PayloadAction<LoginState['authenticated']>,
+        ) => {
+            state.authenticated = action.payload
+        },
+
         setLoginUser(
             state,
             action: PayloadAction<LoginState['user'] | undefined>,
@@ -41,7 +50,6 @@ const loginSlice = createSlice({
                 if (!action.payload) {
                     return
                 }
-                console.log('...', action.payload)
                 state.user = action.payload
             })
             .addCase(fetchAuthUser.rejected, (state) => {
@@ -51,5 +59,5 @@ const loginSlice = createSlice({
     },
 })
 
-export const { setLoginUser } = loginSlice.actions
+export const { setLoginUser, setIsAuthenticated } = loginSlice.actions
 export default loginSlice.reducer

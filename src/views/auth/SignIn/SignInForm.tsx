@@ -14,7 +14,10 @@ import httpClient from '@/api/http-client'
 import { endpoints } from '@/api/endpoint'
 import { AxiosError } from 'axios'
 import { Notification, toast } from '@/components/ui'
-import { fetchAuthUser } from '@/store/slices/login/loginSlice'
+import {
+    fetchAuthUser,
+    setIsAuthenticated,
+} from '@/store/slices/login/loginSlice'
 import { useAppDispatch } from '@/store'
 import Cookies from 'js-cookie'
 import { useNavigate } from 'react-router-dom'
@@ -73,6 +76,7 @@ const SignInForm = (props: SignInFormProps) => {
 
             dispatch(fetchAuthUser()).then(({ payload }) => {
                 if (payload) {
+                    dispatch(setIsAuthenticated(true))
                     //   if (localStorage.getItem("platform")) {
                     //     const platform = (payload as AuthUser).platforms.find(
                     //       (v) => v.uuid == localStorage.getItem("platform")
