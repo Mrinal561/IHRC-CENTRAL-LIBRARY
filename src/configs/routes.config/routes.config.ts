@@ -45,6 +45,14 @@ export const protectedRoutes = [
         authority: [],
     },
     {
+        key: 'groupMenu.collapse.item5',
+        path: '/register-template',
+        component: lazy(() =>
+            import('@/views/IHRC/components/GlobalSettings/RegisterTemplate/RegisterTemplate')
+        ),
+        authority: [],
+    },
+    {
         key: 'customChecklist.customChecklistForm',
         path: '/add-compliance-form',
         component: lazy(() => import('@/views/IHRC/components/GlobalSettings/Compliance/components/ComplianceAddForm')),

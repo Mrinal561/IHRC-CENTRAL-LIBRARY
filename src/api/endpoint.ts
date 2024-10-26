@@ -9,4 +9,14 @@ export const endpoints = {
         logout: () => api('superadmin/logout'),
         profile: () => api('superadmin/profile'),
     },
+    state: {
+        getAll: () => api('superadmin/state'),
+        getById: (id: string) => api(`superadmin/state/${id}`),
+        create: () => api('superadmin/state'),
+        update: (id: string) => api(`superadmin/state/${id}`),
+        delete: (id: string) => api(`superadmin/state/${id}`),
+    }
+
+    
+
 }

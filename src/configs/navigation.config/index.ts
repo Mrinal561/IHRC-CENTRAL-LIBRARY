@@ -66,6 +66,16 @@ const navigationConfig: NavigationTree[] = [
                 authority: [],
                 subMenu: [],
             },
+            {
+                key: 'groupMenu.collapse.item5',
+                path: '/register-template',
+                title: 'Register Template',
+                translateKey: 'nav.groupMenu.collapse.item5',
+                icon: '',
+                type: NAV_ITEM_TYPE_ITEM,
+                authority: [],
+                subMenu: [],
+            },
         ],
     },
 ]

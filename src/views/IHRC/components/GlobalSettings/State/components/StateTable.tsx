@@ -1,23 +1,21 @@
 import React, { useMemo } from 'react';
-import { Button, Dialog, Tooltip, Pagination, Notification, toast } from '@/components/ui';
-import { MdEdit } from 'react-icons/md';
+import { Button, Dialog, Tooltip, Notification, toast } from '@/components/ui';
+import { MdEdit, MdDelete } from 'react-icons/md';
 import DataTable, { ColumnDef } from '@/components/shared/DataTable';
 import OutlinedInput from '@/components/ui/OutlinedInput';
 import OutlinedSelect from '@/components/ui/Outlined/Outlined';
 import DatePicker from '@/components/ui/DatePicker';
-
-interface StateData {
-  id: string;
-  stateName: string;
-  ptEcFrequency: string;
-  ptRcFrequency: string;
-  ptEcDueDate: Date | null;
-  ptRcDueDate: Date | null;
-}
+// import { StateData } from '@/store/slices/stateSlice';
+import { StateData } from '@/store/slices/state/stateSlice';
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '@/store';
+import { useAppDispatch } from '@/store';
 
 interface StateTableProps {
   stateData: StateData[];
-  setStateData: React.Dispatch<React.SetStateAction<StateData[]>>;
+  loading: boolean;
+  onUpdate: (id: string, data: Partial<StateData>) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
 }
 
 const frequencyOptions = [
@@ -26,15 +24,27 @@ const frequencyOptions = [
   { value: 'monthly', label: 'Monthly' },
 ];
 
-const StateTable: React.FC<StateTableProps> = ({ stateData, setStateData }) => {
+const StateTable: React.FC<StateTableProps> = ({ 
+  stateData, 
+  loading,
+  onUpdate,
+  onDelete
+}) => {
+  const dispatch = useAppDispatch();  
   const [editDialogIsOpen, setEditDialogIsOpen] = React.useState(false);
   const [itemToEdit, setItemToEdit] = React.useState<StateData | null>(null);
   const [currentPage, setCurrentPage] = React.useState(1);
   const [pageSize] = React.useState(10);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = React.useState(false);
+  const [itemToDelete, setItemToDelete] = React.useState<string | null>(null);
 
   const formatDate = (date: Date | null) => {
     if (!date) return '';
-    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    return new Date(date).toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    });
   };
 
   const getFrequencyLabel = (value: string) => {
@@ -59,27 +69,67 @@ const StateTable: React.FC<StateTableProps> = ({ stateData, setStateData }) => {
         cell: ({ getValue }) => getFrequencyLabel(getValue() as string),
       },
       {
-        header: 'PT EC Due Date',
-        accessorKey: 'ptEcDueDate',
-        cell: ({ getValue }) => formatDate(getValue() as Date),
+        header: 'LWF Frequency',
+        accessorKey: 'lwfFrequency',
+        cell: ({ getValue }) => getFrequencyLabel(getValue() as string),
       },
       {
-        header: 'PT RC Due Date',
-        accessorKey: 'ptRcDueDate',
-        cell: ({ getValue }) => formatDate(getValue() as Date),
+        header: 'Payment Mode',
+        accessorKey: 'paymentFrequency',
+        cell: ({ getValue }) => getValue() === 'online' ? 'Online' : 'Offline',
+      },
+      {
+        header: 'PT EC Due Dates',
+        accessorKey: 'ptEcDueDates',
+        cell: ({ row }) => (
+          <div>
+            <div>First: {formatDate(row.original.ptEcFirstDueDate)}</div>
+            <div>Last: {formatDate(row.original.ptEcLastDueDate)}</div>
+          </div>
+        ),
+      },
+      {
+        header: 'PT RC Due Dates',
+        accessorKey: 'ptRcDueDates',
+        cell: ({ row }) => (
+          <div>
+            <div>First: {formatDate(row.original.ptRcFirstDueDate)}</div>
+            <div>Last: {formatDate(row.original.ptRcLastDueDate)}</div>
+          </div>
+        ),
+      },
+      {
+        header: 'LWF Due Dates',
+        accessorKey: 'lwfDueDates',
+        cell: ({ row }) => (
+          <div>
+            <div>First: {formatDate(row.original.lwfFirstDueDate)}</div>
+            <div>Last: {formatDate(row.original.lwfLastDueDate)}</div>
+          </div>
+        ),
       },
       {
         header: 'Actions',
         id: 'actions',
         cell: ({ row }) => (
-          <Tooltip title="Edit">
-            <Button
-              size="sm"
-              onClick={() => openEditDialog(row.original)}
-              icon={<MdEdit />}
-              className="text-blue-500"
-            />
-          </Tooltip>
+          <div className="flex gap-2">
+            <Tooltip title="Edit">
+              <Button
+                size="sm"
+                onClick={() => openEditDialog(row.original)}
+                icon={<MdEdit />}
+                className="text-blue-500"
+              />
+            </Tooltip>
+            <Tooltip title="Delete">
+              <Button
+                size="sm"
+                onClick={() => openDeleteConfirm(row.original.id)}
+                icon={<MdDelete />}
+                className="text-red-500"
+              />
+            </Tooltip>
+          </div>
         ),
       },
     ],
@@ -91,51 +141,74 @@ const StateTable: React.FC<StateTableProps> = ({ stateData, setStateData }) => {
     setEditDialogIsOpen(true);
   };
 
+  const openDeleteConfirm = (id: string) => {
+    setItemToDelete(id);
+    setDeleteConfirmOpen(true);
+  };
+
   const handleDialogClose = () => {
     setEditDialogIsOpen(false);
     setItemToEdit(null);
   };
 
-  const handleEditConfirm = () => {
-    if (itemToEdit) {
-      
-      toast.push(
-        <Notification
-          title="Success"
-          type="success"
-        >
-          The item has been updated successfully.
-        </Notification>
-      );
+  const handleDelete = async () => {
+    if (itemToDelete) {
+      try {
+        await onDelete(itemToDelete);
+        toast.push(
+          <Notification title="Success" type="success">
+            State deleted successfully
+          </Notification>
+        );
+        setDeleteConfirmOpen(false);
+        setItemToDelete(null);
+      } catch (error) {
+        // Error handling is done at the parent level
+      }
+    }
+  };
 
-      handleDialogClose();
+  const handleEditConfirm = async () => {
+    if (itemToEdit) {
+      try {
+        await onUpdate(itemToEdit.id, itemToEdit);
+        toast.push(
+          <Notification title="Success" type="success">
+            State updated successfully
+          </Notification>
+        );
+        handleDialogClose();
+      } catch (error) {
+        // Error handling is done at the parent level
+      }
     }
   };
 
   const handleInputChange = (name: string, value: string | Date | null | React.ChangeEvent<HTMLInputElement>) => {
+    if (!itemToEdit) return;
+
     if (value === null) {
-      // Handle null value (e.g., when clearing a date picker)
-      setItemToEdit(prevState => ({
-        ...prevState!,
+      setItemToEdit(prev => ({
+        ...prev!,
         [name]: null
       }));
     } else if (typeof value === 'object' && 'target' in value) {
-      // This is an event object from OutlinedInput
-      setItemToEdit(prevState => ({
-        ...prevState!,
+      setItemToEdit(prev => ({
+        ...prev!,
         [name]: value.target.value
       }));
     } else {
-      // This is a direct value from OutlinedSelect or DatePicker
-      setItemToEdit(prevState => ({
-        ...prevState!,
-        [name]: value
-      }));
+      setItemToEdit(prev => {
+        const updated = { ...prev!, [name]: value };
+        if (name.includes('Frequency')) {
+          const lastDueDateField = name.replace('Frequency', 'LastDueDate');
+          if (value === 'yearly' || value === 'monthly') {
+            updated[lastDueDateField] = null;
+          }
+        }
+        return updated;
+      });
     }
-  };
-
-  const onPaginationChange = (page: number) => {
-    setCurrentPage(page);
   };
 
   return (
@@ -143,20 +216,13 @@ const StateTable: React.FC<StateTableProps> = ({ stateData, setStateData }) => {
       <DataTable
         columns={columns}
         data={stateData.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
-        loading={false}
+        loading={loading}
         stickyHeader={true}
         stickyFirstColumn={true}
         stickyLastColumn={true}
       />
 
-      <div className="mt-4">
-        <Pagination
-          currentPage={currentPage}
-          totalPages={Math.ceil(stateData.length / pageSize)}
-          onChange={onPaginationChange}
-        />
-      </div>
-
+      {/* Edit Dialog */}
       <Dialog isOpen={editDialogIsOpen} onClose={handleDialogClose}>
         <h5 className="mb-4">Edit State</h5>
         <div className='flex flex-col gap-4'>
@@ -165,33 +231,89 @@ const StateTable: React.FC<StateTableProps> = ({ stateData, setStateData }) => {
             value={itemToEdit?.stateName || ''}
             onChange={(e) => handleInputChange('stateName', e)}
           />
-          <OutlinedSelect 
-            label="PT EC Frequency"
-            options={frequencyOptions}
-            value={itemToEdit?.ptEcFrequency || ''}
-            onChange={(value) => handleInputChange('ptEcFrequency', value)}
-          />
-          <OutlinedSelect 
-            label="PT RC Frequency"
-            options={frequencyOptions}
-            value={itemToEdit?.ptRcFrequency || ''}
-            onChange={(value) => handleInputChange('ptRcFrequency', value)}
-          />
-          <DatePicker 
-            value={itemToEdit?.ptEcDueDate}
-            onChange={(date) => handleInputChange('ptEcDueDate', date)}
-          />
-          <DatePicker 
-            value={itemToEdit?.ptRcDueDate}
-            onChange={(date) => handleInputChange('ptRcDueDate', date)}
-          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <OutlinedSelect 
+                label="PT EC Frequency"
+                options={frequencyOptions}
+                value={itemToEdit?.ptEcFrequency || ''}
+                onChange={(value) => handleInputChange('ptEcFrequency', value)}
+              />
+              <DatePicker 
+                placeholder="PT EC First Due Date"
+                value={itemToEdit?.ptEcFirstDueDate}
+                onChange={(date) => handleInputChange('ptEcFirstDueDate', date)}
+              />
+              <DatePicker 
+                placeholder="PT EC Last Due Date"
+                value={itemToEdit?.ptEcLastDueDate}
+                onChange={(date) => handleInputChange('ptEcLastDueDate', date)}
+                disabled={itemToEdit?.ptEcFrequency !== 'half-yearly'}
+              />
+            </div>
+            <div>
+              <OutlinedSelect 
+                label="PT RC Frequency"
+                options={frequencyOptions}
+                value={itemToEdit?.ptRcFrequency || ''}
+                onChange={(value) => handleInputChange('ptRcFrequency', value)}
+              />
+              <DatePicker 
+                placeholder="PT RC First Due Date"
+                value={itemToEdit?.ptRcFirstDueDate}
+                onChange={(date) => handleInputChange('ptRcFirstDueDate', date)}
+              />
+              <DatePicker 
+                placeholder="PT RC Last Due Date"
+                value={itemToEdit?.ptRcLastDueDate}
+                onChange={(date) => handleInputChange('ptRcLastDueDate', date)}
+                disabled={itemToEdit?.ptRcFrequency !== 'half-yearly'}
+              />
+            </div>
+          </div>
+          <div>
+            <OutlinedSelect 
+              label="LWF Frequency"
+              options={frequencyOptions}
+              value={itemToEdit?.lwfFrequency || ''}
+              onChange={(value) => handleInputChange('lwfFrequency', value)}
+            />
+            <DatePicker 
+              placeholder="LWF First Due Date"
+              value={itemToEdit?.lwfFirstDueDate}
+              onChange={(date) => handleInputChange('lwfFirstDueDate', date)}
+            />
+            <DatePicker 
+              placeholder="LWF Last Due Date"
+              value={itemToEdit?.lwfLastDueDate}
+              onChange={(date) => handleInputChange('lwfLastDueDate', date)}
+              disabled={itemToEdit?.lwfFrequency !== 'half-yearly'}
+            />
+          </div>
         </div>
         <div className="text-right mt-6">
           <Button variant="plain" onClick={handleDialogClose}>
             Cancel
           </Button>
           <Button variant="solid" onClick={handleEditConfirm}>
-            Confirm
+            Save Changes
+          </Button>
+        </div>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog 
+        isOpen={deleteConfirmOpen} 
+        onClose={() => setDeleteConfirmOpen(false)}
+      >
+        <h5 className="mb-4">Confirm Delete</h5>
+        <p>Are you sure you want to delete this state? This action cannot be undone.</p>
+        <div className="text-right mt-6">
+          <Button variant="plain" onClick={() => setDeleteConfirmOpen(false)}>
+            Cancel
+          </Button>
+          <Button variant="solid" className="bg-red-500" onClick={handleDelete}>
+            Delete
           </Button>
         </div>
       </Dialog>
