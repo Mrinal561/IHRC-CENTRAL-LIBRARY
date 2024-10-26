@@ -16,10 +16,11 @@ import {
   deleteState,
   clearError  } from '@/store/slices/state/stateSlice';
 import { AppDispatch, RootState } from '@/store';
+import { transformStatePayload } from '@/@types/stateTransformer';
 
 const frequencyOptions = [
   { value: 'yearly', label: 'Yearly' },
-  { value: 'half-yearly', label: 'Half Yearly' },
+  { value: 'half_yearly', label: 'Half Yearly' },
   { value: 'monthly', label: 'Monthly' },
 ];
 
@@ -34,10 +35,10 @@ const State = () => {
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newStateData, setNewStateData] = useState({
-    stateName: '',
-    ptEcFrequency: '',
-    ptRcFrequency: '',
-    lwfFrequency: '',
+    name: '',
+    ptec_frequency: '',
+    ptrc_frequency: '',
+    lwf_frequency: '',
     paymentFrequency: '',
     ptEcFirstDueDate: null,
     ptEcLastDueDate: null,
@@ -92,7 +93,9 @@ const State = () => {
 
   const handleConfirm = async () => {
     try {
-      await dispatch(createState(newStateData)).unwrap();
+      console.log("creating the state")
+      const transformedData = transformStatePayload(newStateData);
+      await dispatch(createState(transformedData)).unwrap();
       toast.push(
         <Notification title="Success" type="success">
           State assigned successfully!
@@ -155,10 +158,10 @@ const State = () => {
   const handleDialogClose = () => {
     setIsDialogOpen(false);
     setNewStateData({
-      stateName: '',
-      ptEcFrequency: '',
-      ptRcFrequency: '',
-      lwfFrequency: '',
+      name: '',
+      ptec_frequency: '',
+      ptrc_frequency: '',
+      lwf_frequency: '',
       paymentFrequency: '',
       ptEcFirstDueDate: null,
       ptEcLastDueDate: null,
@@ -207,8 +210,8 @@ const State = () => {
               <label className="text-gray-600 mb-2 block">State Name</label>
               <OutlinedInput 
                 label="Enter state name"
-                value={newStateData.stateName}
-                onChange={(e) => handleInputChange('stateName', e)}
+                value={newStateData.name}
+                onChange={(e) => handleInputChange('name', e)}
               />
             </div>
             <div className="w-1/2">
@@ -225,28 +228,28 @@ const State = () => {
           {/* PT EC Row */}
           <FrequencyRow
             title="PT EC Frequency"
-            frequencyName="ptEcFrequency"
+            frequencyName="ptec_frequency"
             firstDateName="ptEcFirstDueDate"
             lastDateName="ptEcLastDueDate"
-            frequency={newStateData.ptEcFrequency}
+            frequency={newStateData.ptec_frequency}
           />
 
           {/* PT RC Row */}
           <FrequencyRow
             title="PT RC Frequency"
-            frequencyName="ptRcFrequency"
+            frequencyName="ptrc_frequency"
             firstDateName="ptRcFirstDueDate"
             lastDateName="ptRcLastDueDate"
-            frequency={newStateData.ptRcFrequency}
+            frequency={newStateData.ptrc_frequency}
           />
 
           {/* LWF Row */}
           <FrequencyRow
             title="LWF Frequency"
-            frequencyName="lwfFrequency"
+            frequencyName="lwf_frequency"
             firstDateName="lwfFirstDueDate"
             lastDateName="lwfLastDueDate"
-            frequency={newStateData.lwfFrequency}
+            frequency={newStateData.lwf_frequency}
           />
         </div>
 
@@ -267,3 +270,4 @@ const State = () => {
 };
 
 export default State;
+

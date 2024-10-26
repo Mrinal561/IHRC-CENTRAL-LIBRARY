@@ -7,10 +7,10 @@ import httpClient from '@/api/http-client';
 
 export interface StateData {
   id: string;
-  stateName: string;
-  ptEcFrequency: string;
-  ptRcFrequency: string;
-  lwfFrequency: string;
+  name: string;
+  ptec_frequency: string;
+  ptrc_frequency: string;
+  lwf_frequency: string;
   paymentFrequency: string;
   ptEcFirstDueDate: Date | null;
   ptEcLastDueDate: Date | null;
@@ -51,6 +51,7 @@ export const createState = createAsyncThunk(
   'state/createState',
   async (stateData: Omit<StateData, 'id'>, { rejectWithValue }) => {
     try {
+      console.log("inside omit")
       const { data } = await httpClient.post(endpoints.state.create(), stateData);
       return data;
     } catch (error: any) {

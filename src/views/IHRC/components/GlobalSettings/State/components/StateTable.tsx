@@ -24,12 +24,12 @@ const frequencyOptions = [
   { value: 'monthly', label: 'Monthly' },
 ];
 
-const StateTable: React.FC<StateTableProps> = ({ 
-  stateData, 
+const StateTable = ({ 
+  stateData,
   loading,
   onUpdate,
   onDelete
-}) => {
+}:StateTableProps):JSX.Element  => {
   const dispatch = useAppDispatch();  
   const [editDialogIsOpen, setEditDialogIsOpen] = React.useState(false);
   const [itemToEdit, setItemToEdit] = React.useState<StateData | null>(null);
@@ -56,21 +56,21 @@ const StateTable: React.FC<StateTableProps> = ({
     () => [
       {
         header: 'State Name',
-        accessorKey: 'stateName',
+        accessorKey: 'name',
       },
       {
         header: 'PT EC Frequency',
-        accessorKey: 'ptEcFrequency',
+        accessorKey: 'ptec_frequency',
         cell: ({ getValue }) => getFrequencyLabel(getValue() as string),
       },
       {
         header: 'PT RC Frequency',
-        accessorKey: 'ptRcFrequency',
+        accessorKey: 'ptrc_frequency',
         cell: ({ getValue }) => getFrequencyLabel(getValue() as string),
       },
       {
         header: 'LWF Frequency',
-        accessorKey: 'lwfFrequency',
+        accessorKey: 'lwf_frequency',
         cell: ({ getValue }) => getFrequencyLabel(getValue() as string),
       },
       {
@@ -215,7 +215,7 @@ const StateTable: React.FC<StateTableProps> = ({
     <div className="relative">
       <DataTable
         columns={columns}
-        data={stateData.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+        data={stateData}
         loading={loading}
         stickyHeader={true}
         stickyFirstColumn={true}
@@ -228,7 +228,7 @@ const StateTable: React.FC<StateTableProps> = ({
         <div className='flex flex-col gap-4'>
           <OutlinedInput 
             label="State Name"
-            value={itemToEdit?.stateName || ''}
+            value={itemToEdit?.name || ''}
             onChange={(e) => handleInputChange('stateName', e)}
           />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -236,8 +236,8 @@ const StateTable: React.FC<StateTableProps> = ({
               <OutlinedSelect 
                 label="PT EC Frequency"
                 options={frequencyOptions}
-                value={itemToEdit?.ptEcFrequency || ''}
-                onChange={(value) => handleInputChange('ptEcFrequency', value)}
+                value={itemToEdit?.ptec_frequency || ''}
+                onChange={(value) => handleInputChange('ptec_frequency', value)}
               />
               <DatePicker 
                 placeholder="PT EC First Due Date"
@@ -248,15 +248,15 @@ const StateTable: React.FC<StateTableProps> = ({
                 placeholder="PT EC Last Due Date"
                 value={itemToEdit?.ptEcLastDueDate}
                 onChange={(date) => handleInputChange('ptEcLastDueDate', date)}
-                disabled={itemToEdit?.ptEcFrequency !== 'half-yearly'}
+                disabled={itemToEdit?.ptec_frequency !== 'half-yearly'}
               />
             </div>
             <div>
               <OutlinedSelect 
                 label="PT RC Frequency"
                 options={frequencyOptions}
-                value={itemToEdit?.ptRcFrequency || ''}
-                onChange={(value) => handleInputChange('ptRcFrequency', value)}
+                value={itemToEdit?.ptrc_frequency || ''}
+                onChange={(value) => handleInputChange('ptrc_frequency', value)}
               />
               <DatePicker 
                 placeholder="PT RC First Due Date"
@@ -267,7 +267,7 @@ const StateTable: React.FC<StateTableProps> = ({
                 placeholder="PT RC Last Due Date"
                 value={itemToEdit?.ptRcLastDueDate}
                 onChange={(date) => handleInputChange('ptRcLastDueDate', date)}
-                disabled={itemToEdit?.ptRcFrequency !== 'half-yearly'}
+                disabled={itemToEdit?.ptrc_frequency !== 'half-yearly'}
               />
             </div>
           </div>
@@ -275,8 +275,8 @@ const StateTable: React.FC<StateTableProps> = ({
             <OutlinedSelect 
               label="LWF Frequency"
               options={frequencyOptions}
-              value={itemToEdit?.lwfFrequency || ''}
-              onChange={(value) => handleInputChange('lwfFrequency', value)}
+              value={itemToEdit?.lwf_frequency || ''}
+              onChange={(value) => handleInputChange('lwf_frequency', value)}
             />
             <DatePicker 
               placeholder="LWF First Due Date"
@@ -287,7 +287,7 @@ const StateTable: React.FC<StateTableProps> = ({
               placeholder="LWF Last Due Date"
               value={itemToEdit?.lwfLastDueDate}
               onChange={(date) => handleInputChange('lwfLastDueDate', date)}
-              disabled={itemToEdit?.lwfFrequency !== 'half-yearly'}
+              disabled={itemToEdit?.lwf_frequency !== 'half-yearly'}
             />
           </div>
         </div>
