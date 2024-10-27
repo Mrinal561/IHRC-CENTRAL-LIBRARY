@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Button, Dialog, Tooltip, Notification, toast } from '@/components/ui';
 import { MdEdit, MdDelete } from 'react-icons/md';
 import DataTable, { ColumnDef } from '@/components/shared/DataTable';
@@ -10,7 +10,9 @@ import { StateData } from '@/store/slices/state/stateSlice';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '@/store';
 import { useAppDispatch } from '@/store';
-
+import { getStates } from '@/services/StateService';
+import { fetchStates } from '@/store/slices/state/stateSlice';
+import { log } from 'console';
 interface StateTableProps {
   stateData: StateData[];
   loading: boolean;
@@ -37,6 +39,7 @@ const StateTable = ({
   const [pageSize] = React.useState(10);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = React.useState(false);
   const [itemToDelete, setItemToDelete] = React.useState<string | null>(null);
+  const [stateTable, setStateTable] = React.useState([])
 
   const formatDate = (date: Date | null) => {
     if (!date) return '';
@@ -52,6 +55,21 @@ const StateTable = ({
     return option ? option.label : value;
   };
 
+    useEffect(()=>{
+      // dispatch(fetchStates()).then(({payload})=>{
+      //   console.log(payload)
+      // })
+      // const { payload: data }: any = await dispatch(fetchStates());
+      fetchStateDataTable();
+    },[]);
+
+    const fetchStateDataTable = async () => {
+      const { payload: data }: any = await dispatch(fetchStates()); 
+      setStateTable(data.data)
+      console.log(stateTable)
+      console.log(data)
+
+    }
   const columns: ColumnDef<StateData>[] = useMemo(
     () => [
       {
@@ -215,7 +233,7 @@ const StateTable = ({
     <div className="relative">
       <DataTable
         columns={columns}
-        data={stateData}
+        data={stateTable}
         loading={loading}
         stickyHeader={true}
         stickyFirstColumn={true}

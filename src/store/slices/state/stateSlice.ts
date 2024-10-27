@@ -37,13 +37,9 @@ const initialState: StateState = {
 // Async thunks for API calls
 export const fetchStates = createAsyncThunk(
   'state/fetchStates',
-  async (_, { rejectWithValue }) => {
-    try {
+  async () => {
       const { data } = await httpClient.get(endpoints.state.getAll());
       return data;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch states');
-    }
   }
 );
 
