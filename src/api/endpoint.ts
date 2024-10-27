@@ -22,6 +22,13 @@ export const endpoints = {
         create: () => api('superadmin/district'),
         update: (id: string) => api(`superadmin/district/${id}`),
         delete: (id: string) => api(`superadmin/district/${id}`)
+    },
+    compliances: {
+        getAll: () => api('superadmin/compliance'),
+        getById: (id: string) => api(`superadmin/compliance/${id}`),
+        create: () => api('superadmin/compliance'),
+        update: (id: string) => api(`superadmin/compliance/${id}`),
+        delete: (id: string) => api(`superadmin/compliance/${id}`)
     }
 
     

@@ -6,12 +6,13 @@ import locale, { LocaleState } from './slices/locale/localeSlice'
 import theme, { ThemeState } from './slices/theme/themeSlice'
 import state, { StateState } from '@/store/slices/state/stateSlice'
 import RtkQueryService from '@/services/RtkQueryService'
-
+import compliance, { ComplianceState } from './slices/compliances/compliancesSlice'
 export type RootState = CombinedState<{
     auth: CombinedState<AuthState>
     base: CombinedState<BaseState>
     login:CombinedState<AuthenticationState>
     state: StateState,
+    compliance: ComplianceState,
     locale: LocaleState
     theme: ThemeState
     /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -29,6 +30,7 @@ const staticReducers = {
     theme,
     login,
     state,
+    compliance,
     [RtkQueryService.reducerPath]: RtkQueryService.reducer,
 }
 
