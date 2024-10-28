@@ -31,9 +31,4 @@ export async function updateCompliance(id: string, data: any){
     data,
   })
 }
-export async function deleteCompliance(id: string){
-  return ApiService.fetchData({
-    url: endpoints.compliances.delete(id),
-    method: 'delete',
-  })
-}
+

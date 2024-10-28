@@ -16,7 +16,7 @@ export async function getDistrictById(id: string) {
   });
 }
 
-export async function createDistrict(data: Omit<DistrictData, 'id'>) {
+export async function createDistrict(data: DistrictData) {
   return ApiService.fetchData({
     url: endpoints.district.create(),
     method: 'post',
@@ -24,7 +24,7 @@ export async function createDistrict(data: Omit<DistrictData, 'id'>) {
   });
 }
 
-export async function updateDistrict(id: string, data: Partial<DistrictData>) {
+export async function updateDistrict(id: string, data: DistrictData) {
   return ApiService.fetchData({
     url: endpoints.district.update(id),
     method: 'put',
@@ -32,9 +32,3 @@ export async function updateDistrict(id: string, data: Partial<DistrictData>) {
   });
 }
 
-export async function deleteDistrict(id: string) {
-  return ApiService.fetchData({
-    url: endpoints.district.delete(id),
-    method: 'delete',
-  })
-}

@@ -14,21 +14,24 @@ export const endpoints = {
         getById: (id: string) => api(`superadmin/state/${id}`),
         create: () => api('superadmin/state'),
         update: (id: string) => api(`superadmin/state/${id}`),
-        delete: (id: string) => api(`superadmin/state/${id}`),
     },
     district: {
         getAll: () => api('superadmin/district'),
         getById: (id: string) => api(`superadmin/district/${id}`),
         create: () => api('superadmin/district'),
         update: (id: string) => api(`superadmin/district/${id}`),
-        delete: (id: string) => api(`superadmin/district/${id}`)
     },
     compliances: {
         getAll: () => api('superadmin/compliance'),
         getById: (id: string) => api(`superadmin/compliance/${id}`),
         create: () => api('superadmin/compliance'),
         update: (id: string) => api(`superadmin/compliance/${id}`),
-        delete: (id: string) => api(`superadmin/compliance/${id}`)
+    },
+    pf: {
+        getAll: () => api('superadmin/pfconfig'),
+        getById: (id: string) => api(`superadmin/pfconfig/${id}`),
+        create: () => api('superadmin/pfconfig'),
+        update: (id: string) => api(`superadmin/pfconfig/${id}`),
     }
 
     

@@ -18,6 +18,7 @@
         statutory_auth:string;
         approval_required:boolean;
         criticality:string;
+        // default_due_Date: Date;
     }
 
 export type ComplianceResponseData = {
@@ -39,4 +40,6 @@ export type ComplianceResponseData = {
         statutory_auth:string;
         approval_required:boolean;
         criticality:string;
+        default_due_Date: Date;
+
 }

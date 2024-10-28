@@ -58,4 +58,18 @@ export const protectedRoutes = [
         component: lazy(() => import('@/views/IHRC/components/GlobalSettings/Compliance/components/ComplianceAddForm')),
         authority: [],
     },
+    {
+        key: 'compliance.edit',
+        path: `${APP_PREFIX_PATH}/compliance/edit/:id`,
+        component: lazy(() => import('@/views/IHRC/components/GlobalSettings/Compliance/components/ComplianceEditForm')),
+        authority: [],
+    },
+    {
+        key: 'compliance.details',
+        path: `${APP_PREFIX_PATH}/compliance/details/:id`,
+        component: lazy(() => 
+            import('@/views/IHRC/components/GlobalSettings/Compliance/components/ComplianceDetail')
+        ),
+        authority: [],
+    }
 ]

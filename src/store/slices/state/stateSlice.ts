@@ -45,15 +45,10 @@ export const fetchStates = createAsyncThunk(
 
 export const createState = createAsyncThunk(
   'state/createState',
-  async (stateData: Omit<StateData, 'id'>, { rejectWithValue }) => {
-    try {
-      console.log("inside omit")
+  async (stateData: StateData) => {
       const { data } = await httpClient.post(endpoints.state.create(), stateData);
       return data;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to create state');
     }
-  }
 );
 
 export const updateState = createAsyncThunk(
@@ -68,17 +63,7 @@ export const updateState = createAsyncThunk(
   }
 );
 
-export const deleteState = createAsyncThunk(
-  'state/deleteState',
-  async (id: string, { rejectWithValue }) => {
-    try {
-      await httpClient.delete(endpoints.state.delete(id));
-      return id;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to delete state');
-    }
-  }
-);
+
 
 export const fetchStateById = createAsyncThunk(
   'state/fetchStateById',
@@ -147,19 +132,7 @@ const stateSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
-      // Delete State
-      .addCase(deleteState.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(deleteState.fulfilled, (state, action) => {
-        state.loading = false;
-        state.states = state.states.filter((s) => s.id !== action.payload);
-      })
-      .addCase(deleteState.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload as string;
-      })
+      
       // Fetch State by ID
       .addCase(fetchStateById.pending, (state) => {
         state.loading = true;
