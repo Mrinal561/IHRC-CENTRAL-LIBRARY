@@ -8,7 +8,7 @@ export const publicRoutes: Routes = [...authRoute]
 export const protectedRoutes = [
     {
         key: 'home',
-        path: '/home',
+        path: '/dashboard',
         component: lazy(() => import('@/views/IHRC/components/Home/Home')),
         authority: [],
     },
