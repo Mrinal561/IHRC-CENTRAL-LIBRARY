@@ -6,6 +6,9 @@ import { Link } from 'react-router-dom'
 import classNames from 'classnames'
 import { HiOutlineLogout, HiOutlineUser } from 'react-icons/hi'
 import type { CommonProps } from '@/@types/common'
+import { setIsAuthenticated } from '@/store/slices/login'
+import { useAppDispatch } from '@/store'
+import Cookies from 'js-cookie'
 
 type DropdownList = {
     label: string
@@ -16,8 +19,8 @@ type DropdownList = {
 const dropdownItemList: DropdownList[] = []
 
 const _UserDropdown = ({ className }: CommonProps) => {
-
-    const { signOut } = useAuth()
+    // const { signOut } = useAuth()
+    const dispatch = useAppDispatch()
 
     const UserAvatar = (
         <div className={classNames(className, 'flex items-center gap-2')}>
@@ -54,8 +57,8 @@ const _UserDropdown = ({ className }: CommonProps) => {
                         eventKey={item.label}
                         className="mb-1 px-0"
                     >
-                        <Link 
-                            className="flex h-full w-full px-2" 
+                        <Link
+                            className="flex h-full w-full px-2"
                             to={item.path}
                         >
                             <span className="flex gap-2 items-center w-full">
@@ -71,7 +74,10 @@ const _UserDropdown = ({ className }: CommonProps) => {
                 <Dropdown.Item
                     eventKey="Sign Out"
                     className="gap-2"
-                    onClick={signOut}
+                    onClick={() => {
+                        dispatch(setIsAuthenticated(false))
+                        Cookies.remove('token')
+                    }}
                 >
                     <span className="text-xl opacity-50">
                         <HiOutlineLogout />

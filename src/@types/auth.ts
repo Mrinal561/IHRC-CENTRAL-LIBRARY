@@ -13,6 +13,7 @@ export type SignInResponse = {
     }
 }
 
+
 export type SignUpResponse = SignInResponse
 
 export type SignUpCredential = {

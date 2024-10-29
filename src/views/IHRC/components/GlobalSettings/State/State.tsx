@@ -1,116 +1,212 @@
-import React, { useState } from 'react';
-import AdaptableCard from '@/components/shared/AdaptableCard';
+
+
+import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { Button, Dialog, Notification, toast } from '@/components/ui';
 import { HiPlusCircle } from 'react-icons/hi';
-import BulkUpload from './components/BulkUpload';
-import StateTable from './components/StateTable';
+import AdaptableCard from '@/components/shared/AdaptableCard';
 import OutlinedInput from '@/components/ui/OutlinedInput';
 import OutlinedSelect from '@/components/ui/Outlined/Outlined';
 import DatePicker from '@/components/ui/DatePicker';
-
-interface StateData {
-  id: string;
-  stateName: string;
-  ptEcFrequency: string;
-  ptRcFrequency: string;
-  ptEcDueDate: Date | null;
-  ptRcDueDate: Date | null;
-}
+import BulkUpload from './components/BulkUpload';
+import StateTable from './components/StateTable';
+import { 
+  fetchStates, 
+  createState, 
+  updateState,
+  clearError 
+} from '@/store/slices/state/stateSlice';
+import { AppDispatch, RootState } from '@/store';
+import { transformStatePayload } from '@/@types/stateTransformer';
 
 const frequencyOptions = [
   { value: 'yearly', label: 'Yearly' },
-  { value: 'half-yearly', label: 'Half Yearly' },
+  { value: 'half_yearly', label: 'Half Yearly' },
   { value: 'monthly', label: 'Monthly' },
 ];
 
-const initialDummyData: StateData[] = [
-  {
-    id: '1',
-    stateName: 'Gujarat',
-    ptEcFrequency: 'yearly',
-    ptRcFrequency: 'monthly',
-    ptEcDueDate: new Date('2024-09-30'),
-    ptRcDueDate: new Date('2024-09-15'),
-  },
-  {
-    id: '2',
-    stateName: 'Maharashtra',
-    ptEcFrequency: 'yearly',
-    ptRcFrequency: 'monthly',
-    ptEcDueDate: new Date('2024-06-30'),
-    ptRcDueDate: new Date('2024-06-30'),
-  },
-  {
-    id: '3',
-    stateName: 'Karnataka',
-    ptEcFrequency: 'yearly',
-    ptRcFrequency: 'monthly',
-    ptEcDueDate: new Date('2024-04-30'),
-    ptRcDueDate: new Date('2024-04-20'),
-  },
+const paymentOptions = [
+  { value: 'online', label: 'Online' },
+  { value: 'offline', label: 'Offline' },
 ];
 
+const initialStateData = {
+  name: '',
+  ptec_frequency: '',
+  ptrc_frequency: '',
+  lwf_frequency: '',
+  paymentFrequency: '',
+  ptEcFirstDueDate: null,
+  ptEcLastDueDate: null,
+  ptRcFirstDueDate: null,
+  ptRcLastDueDate: null,
+  lwfFirstDueDate: null,
+  lwfLastDueDate: null,
+};
+
 const State = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const { states, loading, error } = useSelector((state: RootState) => state.state);
+  const [stateTableLoading, setStateTableLoading] = useState(false)
+
+  
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [stateData, setStateData] = useState<StateData[]>(initialDummyData);
-  const [newStateData, setNewStateData] = useState<Omit<StateData, 'id'>>({
-    stateName: '',
-    ptEcFrequency: '',
-    ptRcFrequency: '',
-    ptEcDueDate: null,
-    ptRcDueDate: null
-  });
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null)
+
+  const [currentStateId, setCurrentStateId] = useState(null);
+  const [stateData, setStateData] = useState(initialStateData);
+  const [stateTableData, setStateTableData] = useState([]);
+
+  useEffect(() => {
+    fetchStateData()
+  }, [])
+
+
+  const fetchStateData = async () => {
+    const { payload: data } = await dispatch(
+      fetchStates())
+      setStateTableData(data.data)
+    
+  }
+
+  useEffect(() => {
+    if (error) {
+      toast.push(
+        <Notification title="Error" type="danger">
+          {error}
+        </Notification>
+      );
+      dispatch(clearError());
+    }
+  }, [error, dispatch]);
+
+  const handleEdit = (stateToEdit) => {
+    setIsEditMode(true);
+    setCurrentStateId(stateToEdit.id);
+    console.log(stateToEdit);
+    setStateData({
+      name: stateToEdit.name,
+      ptec_frequency: stateToEdit.ptec_frequency,
+      ptrc_frequency: stateToEdit.ptrc_frequency,
+      lwf_frequency: stateToEdit.lwf_frequency,
+      paymentFrequency: stateToEdit.payment_mode,
+      ptEcFirstDueDate: stateToEdit.ptec_payment_due_date?.first_date || null,
+      ptEcLastDueDate: stateToEdit.ptec_payment_due_date?.last_date || null,
+      ptRcFirstDueDate: stateToEdit.ptrc_payment_due_date?.first_date || null,
+      ptRcLastDueDate: stateToEdit.ptrc_payment_due_date?.last_date || null,
+      lwfFirstDueDate: stateToEdit.lwf_payment_due_date?.first_date || null,
+      lwfLastDueDate: stateToEdit.lwf_payment_due_date?.last_date || null,
+    });
+    setIsDialogOpen(true);
+  };
 
   const handleInputChange = (name: string, value: string | Date | null | React.ChangeEvent<HTMLInputElement>) => {
     if (value === null) {
-      // Handle null value (e.g., when clearing a date picker)
-      setNewStateData(prevState => ({
-        ...prevState,
-        [name]: null
-      }));
+      setStateData(prev => ({ ...prev, [name]: null }));
     } else if (typeof value === 'object' && 'target' in value) {
-      // This is an event object from OutlinedInput
-      setNewStateData(prevState => ({
-        ...prevState,
-        [name]: value.target.value
-      }));
+      setStateData(prev => ({ ...prev, [name]: value.target.value }));
     } else {
-      // This is a direct value from OutlinedSelect or DatePicker
-      setNewStateData(prevState => ({
-        ...prevState,
-        [name]: value
-      }));
+      setStateData(prev => {
+        const updated = { ...prev, [name]: value };
+        if (name.includes('Frequency')) {
+          const lastDueDateField = name.replace('Frequency', 'LastDueDate');
+          if (value === 'yearly' || value === 'monthly') {
+            updated[lastDueDateField] = null;
+          }
+        }
+        return updated;
+      });
     }
-  };
-
-  const handleAssignState = () => {
-    setIsDialogOpen(true);
   };
 
   const handleDialogClose = () => {
     setIsDialogOpen(false);
-    setNewStateData({
-      stateName: '',
-      ptEcFrequency: '',
-      ptRcFrequency: '',
-      ptEcDueDate: null,
-      ptRcDueDate: null
-    });
+    setIsEditMode(false);
+    setCurrentStateId(null);
+    setStateData(initialStateData);
   };
 
-  const handleConfirm = () => {
-    
-    toast.push(
-      <Notification title="Success" type="success">
-        State assigned successfully!
-      </Notification>
-    );
-    handleDialogClose();
+
+  const handleConfirm = async () => {
+    try {
+      const transformedData = transformStatePayload(stateData);
+      if (isEditMode && editingId) {
+
+        await dispatch(updateState({ id: currentStateId, data: transformedData }));
+       
+        handleDialogClose()
+        setStateTableLoading(true)
+
+        // await dispatch()
+        toast.push(
+          <Notification title="Success" type="success">
+            State updated successfully!
+          </Notification>
+        );
+        
+      } else {
+        await dispatch(createState(transformedData)).unwrap();
+        handleDialogClose()
+        setStateTableLoading(true)
+        toast.push(
+          <Notification title="Success" type="success">
+            State created successfully!
+          </Notification>
+        );
+        
+      }
+    } catch (error) {
+      // Error handling is done in the useEffect above
+      
+    }
+
   };
+
+  
+
+  const FrequencyRow = ({ 
+    title,
+    frequencyName,
+    firstDateName,
+    lastDateName,
+    frequency,
+  }) => (
+    <div className="flex gap-4">
+      <div className="w-1/3">
+        <label className="text-gray-600 mb-2 block">{title}</label>
+        <OutlinedSelect
+          label="Frequency"
+          options={frequencyOptions}
+          value={frequency}
+          onChange={(value) => handleInputChange(frequencyName, value)}
+        />
+      </div>
+      <div className="w-1/3">
+        <label className="text-gray-600 mb-2 block">First Due Date</label>
+        <DatePicker
+          className="w-full"
+          placeholder="Select date"
+          value={stateData[firstDateName]}
+          onChange={(date) => handleInputChange(firstDateName, date)}
+        />
+      </div>
+      <div className="w-1/3">
+        <label className="text-gray-600 mb-2 block">Last Due Date</label>
+        <DatePicker
+          className="w-full"
+          placeholder="Select date"
+          value={stateData[lastDateName]}
+          onChange={(date) => handleInputChange(lastDateName, date)}
+          disabled={frequency !== 'half_yearly'}
+        />
+      </div>
+    </div>
+  );
 
   return (
     <AdaptableCard className="h-full" bodyClass="h-full">
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-10">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6">
         <div className="mb-4 lg:mb-0">
           <h3 className="text-2xl font-bold">State Manager</h3>
         </div>
@@ -120,83 +216,83 @@ const State = () => {
             variant="solid"
             size="sm"
             icon={<HiPlusCircle />}
-            onClick={handleAssignState}
+            onClick={() => setIsDialogOpen(true)}
           >
             Add State
           </Button>
         </div>
       </div>
       
-      <StateTable stateData={stateData} setStateData={setStateData} />
+      <StateTable 
+       tableLoading={stateTableLoading}
+       setStateTableLoading={setStateTableLoading}
+        stateData={stateTableData} 
+        loading={loading}
+        onEdit={handleEdit}
+      />
 
       <Dialog
+     
         isOpen={isDialogOpen}
         onClose={handleDialogClose}
         onRequestClose={handleDialogClose}
       >
-        <h5 className="mb-4">Assign State</h5>
+        <h5 className="mb-6">{isEditMode ? 'Edit State' : 'Add State'}</h5>
         <div className="flex flex-col gap-6">
-          <div className='flex flex-col gap-3'>
-            <label>State Name</label>
-            <OutlinedInput 
-              label='State'
-              value={newStateData.stateName}
-              onChange={(e) => handleInputChange('stateName', e)}
-            />
-          </div>
-
-          <div className='flex gap-3'>
-            <div className='flex flex-col gap-3 w-full'>
-              <label>Select PT EC Frequency</label>
-              <OutlinedSelect 
-                label='PT EC Frequency'
-                options={frequencyOptions}
-                value={newStateData.ptEcFrequency}
-                onChange={(value) => handleInputChange('ptEcFrequency', value)}
+          <div className="flex gap-4">
+            <div className="w-1/2">
+              <label className="text-gray-600 mb-2 block">State Name</label>
+              <OutlinedInput 
+                label="Enter state name"
+                value={stateData.name}
+                onChange={(e) => handleInputChange('name', e)}
               />
             </div>
-            
-            <div className='flex flex-col gap-3 w-full'>
-              <label>Select PT RC Frequency</label>
-              <OutlinedSelect 
-                label='PT RC Frequency'
-                options={frequencyOptions}
-                value={newStateData.ptRcFrequency}
-                onChange={(value) => handleInputChange('ptRcFrequency', value)}
+            <div className="w-1/2">
+              <label className="text-gray-600 mb-2 block">Payment Mode</label>
+              <OutlinedSelect
+                label="Select payment mode"
+                options={paymentOptions}
+                value={stateData.paymentFrequency}
+                onChange={(value) => handleInputChange('paymentFrequency', value)}
               />
             </div>
           </div>
 
-          <div className='flex gap-3 mb-4'>
-            <div className='flex flex-col gap-3 w-full'>
-              <label>Choose PT EC Due Date</label>
-              <DatePicker 
-                size='sm'
-                value={newStateData.ptEcDueDate}
-                onChange={(date) => handleInputChange('ptEcDueDate', date)}
-              />
-            </div>
-            
-            <div className='flex flex-col gap-3 w-full'>
-              <label>Choose PT RC Due Date</label>
-              <DatePicker 
-                size='sm'
-                value={newStateData.ptRcDueDate}
-                onChange={(date) => handleInputChange('ptRcDueDate', date)}
-              />
-            </div>
-          </div>
+          <FrequencyRow
+            title="PT EC Frequency"
+            frequencyName="ptec_frequency"
+            firstDateName="ptEcFirstDueDate"
+            lastDateName="ptEcLastDueDate"
+            frequency={stateData.ptec_frequency}
+          />
+
+          <FrequencyRow
+            title="PT RC Frequency"
+            frequencyName="ptrc_frequency"
+            firstDateName="ptRcFirstDueDate"
+            lastDateName="ptRcLastDueDate"
+            frequency={stateData.ptrc_frequency}
+          />
+
+          <FrequencyRow
+            title="LWF Frequency"
+            frequencyName="lwf_frequency"
+            firstDateName="lwfFirstDueDate"
+            lastDateName="lwfLastDueDate"
+            frequency={stateData.lwf_frequency}
+          />
         </div>
-        <div className="text-right mt-6">
+
+        <div className="flex justify-end gap-2 mt-6">
           <Button
-            className="mr-2"
             variant="plain"
             onClick={handleDialogClose}
           >
             Cancel
           </Button>
           <Button variant="solid" onClick={handleConfirm}>
-            Confirm
+            {isEditMode ? 'Update' : 'Confirm'}
           </Button>
         </div>
       </Dialog>

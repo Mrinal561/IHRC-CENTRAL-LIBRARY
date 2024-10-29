@@ -68,8 +68,8 @@ const navigationConfig: NavigationTree[] = [
             },
             {
                 key: 'groupMenu.collapse.item5',
-                path: '/version-history',
-                title: 'Version History',
+                path: '/register-template',
+                title: 'Register Template',
                 translateKey: 'nav.groupMenu.collapse.item5',
                 icon: '',
                 type: NAV_ITEM_TYPE_ITEM,

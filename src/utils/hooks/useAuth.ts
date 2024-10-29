@@ -1,6 +1,9 @@
 import { apiSignIn, apiSignOut, apiSignUp } from '@/services/AuthService'
+import { loginApiSignIn } from '@/services/LoginAuthService'
 import {
     setUser,
+    // setLoginUser,
+    // logInSuccess,
     signInSuccess,
     signOutSuccess,
     useAppSelector,
@@ -11,6 +14,9 @@ import { REDIRECT_URL_KEY } from '@/constants/app.constant'
 import { useNavigate } from 'react-router-dom'
 import useQuery from './useQuery'
 import type { SignInCredential, SignUpCredential } from '@/@types/auth'
+import { LogInCredential } from '../../@types/login'
+import PassportSvg from '../../assets/svg/PassportSvg'
+import Cookies from 'js-cookie'
 
 type Status = 'success' | 'failed'
 
@@ -24,7 +30,7 @@ function useAuth() {
     const { token, signedIn } = useAppSelector((state) => state.auth.session)
 
     const signIn = async (
-        values: SignInCredential
+        values: SignInCredential,
     ): Promise<
         | {
               status: Status
@@ -45,14 +51,58 @@ function useAuth() {
                                 userName: 'Anonymous',
                                 authority: ['USER'],
                                 email: '',
-                            }
-                        )
+                            },
+                        ),
                     )
                 }
                 const redirectUrl = query.get(REDIRECT_URL_KEY)
                 navigate(
-                    redirectUrl ? redirectUrl : appConfig.authenticatedEntryPath
+                    redirectUrl
+                        ? redirectUrl
+                        : appConfig.authenticatedEntryPath,
                 )
+                return {
+                    status: 'success',
+                    message: '',
+                }
+            }
+            // eslint-disable-next-line  @typescript-eslint/no-explicit-any
+        } catch (errors: any) {
+            return {
+                status: 'failed',
+                message: errors?.response?.data?.message || errors.toString(),
+            }
+        }
+    }
+
+    const LogIn = async (
+        values: LogInCredential,
+    ): Promise<
+        | {
+              status: Status
+              message: string
+          }
+        | undefined
+    > => {
+        try {
+            const resp = await loginApiSignIn(values)
+            if (resp.data) {
+                const { token } = resp.data
+                // dispatch(logInSuccess(token))
+                if (resp.data.user) {
+                    // dispatch(
+                    //     setLoginUser(
+                    //         resp.data.user || {
+                    //             userName: '',
+                    //             password: '',
+                    //         },
+                    //     ),
+                    // )
+                }
+                // const redirectUrl = query.get(REDIRECT_URL_KEY)
+                // navigate(
+                //     redirectUrl ? redirectUrl : appConfig.authenticatedEntryPath
+                // )
                 return {
                     status: 'success',
                     message: '',
@@ -81,13 +131,15 @@ function useAuth() {
                                 userName: 'Anonymous',
                                 authority: ['USER'],
                                 email: '',
-                            }
-                        )
+                            },
+                        ),
                     )
                 }
                 const redirectUrl = query.get(REDIRECT_URL_KEY)
                 navigate(
-                    redirectUrl ? redirectUrl : appConfig.authenticatedEntryPath
+                    redirectUrl
+                        ? redirectUrl
+                        : appConfig.authenticatedEntryPath,
                 )
                 return {
                     status: 'success',
@@ -111,7 +163,7 @@ function useAuth() {
                 userName: '',
                 email: '',
                 authority: [],
-            })
+            }),
         )
         navigate(appConfig.unAuthenticatedEntryPath)
     }
@@ -122,10 +174,13 @@ function useAuth() {
     }
 
     return {
-        authenticated: token && signedIn,
+        authenticated: useAppSelector(
+            (state) => state.login.user.authenticated,
+        ),
         signIn,
         signUp,
         signOut,
+        LogIn,
     }
 }
 

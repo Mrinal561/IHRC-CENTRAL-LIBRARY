@@ -46,9 +46,9 @@ export const protectedRoutes = [
     },
     {
         key: 'groupMenu.collapse.item5',
-        path: '/version-history',
+        path: '/register-template',
         component: lazy(() =>
-            import('@/views/IHRC/components/GlobalSettings/VersionHistory/VersionHistory')
+            import('@/views/IHRC/components/GlobalSettings/RegisterTemplate/RegisterTemplate')
         ),
         authority: [],
     },
@@ -58,4 +58,18 @@ export const protectedRoutes = [
         component: lazy(() => import('@/views/IHRC/components/GlobalSettings/Compliance/components/ComplianceAddForm')),
         authority: [],
     },
+    {
+        key: 'compliance.edit',
+        path: `${APP_PREFIX_PATH}/compliance/edit/:id`,
+        component: lazy(() => import('@/views/IHRC/components/GlobalSettings/Compliance/components/ComplianceEditForm')),
+        authority: [],
+    },
+    {
+        key: 'compliance.details',
+        path: `${APP_PREFIX_PATH}/compliance/details/:id`,
+        component: lazy(() => 
+            import('@/views/IHRC/components/GlobalSettings/Compliance/components/ComplianceDetail')
+        ),
+        authority: [],
+    }
 ]
