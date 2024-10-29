@@ -48,20 +48,16 @@ export const fetchStates = createAsyncThunk(
 export const createState = createAsyncThunk(
   'state/createState',
   async (stateData: StateData) => {
-      const { data } = await httpClient.post(endpoints.state.create(), stateData);
+      const { data } = await httpClient.post(endpoints.state.create(), stateData, );
       return data;
     }
 );
 
 export const updateState = createAsyncThunk(
   'state/updateState',
-  async ({ id, data }: { id: string; data: Partial<StateData> }, { rejectWithValue }) => {
-    try {
+  async ({ id, data }: { id: string; data: StateData }) => {
       const response = await httpClient.put(endpoints.state.update(id), data);
       return response.data;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to update state');
-    }
   }
 );
 

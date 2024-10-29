@@ -1,3 +1,5 @@
+
+
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Button, Dialog, Notification, toast } from '@/components/ui';
@@ -53,13 +55,15 @@ const State = () => {
   const [stateTableData, setStateTableData] = useState([]);
 
   useEffect(() => {
-    fetchStateDataTable();
-  }, []);
+    fetchStateData()
+  }, [])
 
-  const fetchStateDataTable = async () => {
-    const { payload: data } = await dispatch(fetchStates()); 
-    setStateTableData(data.data);
-  };
+
+  const fetchStateData = async () => {
+    const { payload: data } = await dispatch(
+      fetchStates(1, 0),
+    )
+  }
 
   useEffect(() => {
     if (error) {
@@ -75,6 +79,7 @@ const State = () => {
   const handleEdit = (stateToEdit) => {
     setIsEditMode(true);
     setCurrentStateId(stateToEdit.id);
+    console.log(stateToEdit);
     setStateData({
       name: stateToEdit.name,
       ptec_frequency: stateToEdit.ptec_frequency,
@@ -110,34 +115,34 @@ const State = () => {
     }
   };
 
+
   const handleConfirm = async () => {
     try {
       const transformedData = transformStatePayload(stateData);
       if (isEditMode) {
         await dispatch(updateState({ id: currentStateId, data: transformedData })).unwrap();
+        await dispatch()
         toast.push(
           <Notification title="Success" type="success">
             State updated successfully!
           </Notification>
         );
+        
       } else {
-        await dispatch(createState(transformedData)).unwrap();
+        await dispatch(createState(transformedData));
         toast.push(
           <Notification title="Success" type="success">
             State created successfully!
           </Notification>
         );
+        
       }
     } catch (error) {
       // Error handling is done in the useEffect above
     }
-    toast.push(
-      <Notification title="Success" type="success">
-        State created successfully!
-      </Notification>
-    );
-    handleDialogClose();
-    fetchStateDataTable();
+    handleDialogClose()
+    fetchStateData();
+
   };
 
   const handleDialogClose = () => {
