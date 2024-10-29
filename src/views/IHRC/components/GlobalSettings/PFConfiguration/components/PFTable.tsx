@@ -94,6 +94,10 @@ const PFTable = ({
         }))
         fetchPfData(1, value)
     }
+    useEffect(() => {
+        fetchPfData(1, 10)
+        setPfTableLoading(false)
+    }, [])
 
     useEffect(() => {
         if (tableLoading) {
