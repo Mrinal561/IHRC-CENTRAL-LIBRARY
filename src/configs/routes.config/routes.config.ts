@@ -8,68 +8,93 @@ export const publicRoutes: Routes = [...authRoute]
 export const protectedRoutes = [
     {
         key: 'home',
-        path: '/dashboard',
+        path: '/home',
         component: lazy(() => import('@/views/IHRC/components/Home/Home')),
         authority: [],
     },
     {
         key: 'groupMenu.collapse.item1',
         path: '/state',
-        component: lazy(() =>
-            import('@/views/IHRC/components/GlobalSettings/State/State')
+        component: lazy(
+            () => import('@/views/IHRC/components/GlobalSettings/State/State'),
         ),
         authority: [],
     },
     {
         key: 'groupMenu.collapse.item2',
         path: '/district',
-        component: lazy(() =>
-            import('@/views/IHRC/components/GlobalSettings/District/District')
+        component: lazy(
+            () =>
+                import(
+                    '@/views/IHRC/components/GlobalSettings/District/District'
+                ),
         ),
         authority: [],
     },
     {
         key: 'groupMenu.collapse.item3',
         path: '/compliance',
-        component: lazy(() =>
-            import('@/views/IHRC/components/GlobalSettings/Compliance/Compliance')
+        component: lazy(
+            () =>
+                import(
+                    '@/views/IHRC/components/GlobalSettings/Compliance/Compliance'
+                ),
         ),
         authority: [],
     },
     {
         key: 'groupMenu.collapse.item4',
         path: '/pf-configuration',
-        component: lazy(() =>
-            import('@/views/IHRC/components/GlobalSettings/PFConfiguration/PFConfiguration')
+        component: lazy(
+            () =>
+                import(
+                    '@/views/IHRC/components/GlobalSettings/PFConfiguration/PFConfiguration'
+                ),
         ),
         authority: [],
     },
     {
         key: 'groupMenu.collapse.item5',
         path: '/register-template',
-        component: lazy(() =>
-            import('@/views/IHRC/components/GlobalSettings/RegisterTemplate/RegisterTemplate')
+        component: lazy(
+            () =>
+                import(
+                    '@/views/IHRC/components/GlobalSettings/RegisterTemplate/RegisterTemplate'
+                ),
         ),
         authority: [],
     },
     {
         key: 'customChecklist.customChecklistForm',
         path: '/add-compliance-form',
-        component: lazy(() => import('@/views/IHRC/components/GlobalSettings/Compliance/components/ComplianceAddForm')),
+        component: lazy(
+            () =>
+                import(
+                    '@/views/IHRC/components/GlobalSettings/Compliance/components/ComplianceAddForm'
+                ),
+        ),
         authority: [],
     },
     {
         key: 'compliance.edit',
         path: `${APP_PREFIX_PATH}/compliance/edit/:id`,
-        component: lazy(() => import('@/views/IHRC/components/GlobalSettings/Compliance/components/ComplianceEditForm')),
+        component: lazy(
+            () =>
+                import(
+                    '@/views/IHRC/components/GlobalSettings/Compliance/components/ComplianceEditForm'
+                ),
+        ),
         authority: [],
     },
     {
         key: 'compliance.details',
         path: `${APP_PREFIX_PATH}/compliance/details/:id`,
-        component: lazy(() => 
-            import('@/views/IHRC/components/GlobalSettings/Compliance/components/ComplianceDetail')
+        component: lazy(
+            () =>
+                import(
+                    '@/views/IHRC/components/GlobalSettings/Compliance/components/ComplianceDetail'
+                ),
         ),
         authority: [],
-    }
+    },
 ]
