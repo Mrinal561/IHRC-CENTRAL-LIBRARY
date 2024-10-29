@@ -8,7 +8,8 @@ import { useDispatch } from 'react-redux';
 import { fetchStates } from '@/store/slices/state/stateSlice';
 
 
-const StateTable = ({ stateData, loading, onEdit }) => {
+const StateTable = ({ tableLoading,
+  setStateTableLoading, stateData, loading, onEdit }: any) => {
   const dispatch = useDispatch<AppDispatch>()
   const [stateTableData, setStateTableData] = useState([])
 
@@ -107,7 +108,16 @@ const StateTable = ({ stateData, loading, onEdit }) => {
 
   useEffect(() => {
     fetchStateData(1, 10)
+    setStateTableLoading(false)
   }, [])
+
+
+  useEffect(() => {
+    if (tableLoading) {
+        fetchStateData(1, 10)
+        setStateTableLoading(false)
+    }
+}, [tableLoading])
 
 
   const fetchStateData = async (page: number, size: number) => {

@@ -47,9 +47,13 @@ const initialStateData = {
 const State = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { states, loading, error } = useSelector((state: RootState) => state.state);
+  const [stateTableLoading, setStateTableLoading] = useState(false)
+
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null)
+
   const [currentStateId, setCurrentStateId] = useState(null);
   const [stateData, setStateData] = useState(initialStateData);
   const [stateTableData, setStateTableData] = useState([]);
@@ -61,8 +65,9 @@ const State = () => {
 
   const fetchStateData = async () => {
     const { payload: data } = await dispatch(
-      fetchStates(1, 0),
-    )
+      fetchStates())
+      setStateTableData(data.data)
+    
   }
 
   useEffect(() => {
@@ -115,13 +120,25 @@ const State = () => {
     }
   };
 
+  const handleDialogClose = () => {
+    setIsDialogOpen(false);
+    setIsEditMode(false);
+    setCurrentStateId(null);
+    setStateData(initialStateData);
+  };
+
 
   const handleConfirm = async () => {
     try {
       const transformedData = transformStatePayload(stateData);
-      if (isEditMode) {
-        await dispatch(updateState({ id: currentStateId, data: transformedData })).unwrap();
-        await dispatch()
+      if (isEditMode && editingId) {
+
+        await dispatch(updateState({ id: currentStateId, data: transformedData }));
+       
+        handleDialogClose()
+        setStateTableLoading(true)
+
+        // await dispatch()
         toast.push(
           <Notification title="Success" type="success">
             State updated successfully!
@@ -129,7 +146,9 @@ const State = () => {
         );
         
       } else {
-        await dispatch(createState(transformedData));
+        await dispatch(createState(transformedData)).unwrap();
+        handleDialogClose()
+        setStateTableLoading(true)
         toast.push(
           <Notification title="Success" type="success">
             State created successfully!
@@ -139,18 +158,12 @@ const State = () => {
       }
     } catch (error) {
       // Error handling is done in the useEffect above
+      
     }
-    handleDialogClose()
-    fetchStateData();
 
   };
 
-  const handleDialogClose = () => {
-    setIsDialogOpen(false);
-    setIsEditMode(false);
-    setCurrentStateId(null);
-    setStateData(initialStateData);
-  };
+  
 
   const FrequencyRow = ({ 
     title,
@@ -211,12 +224,15 @@ const State = () => {
       </div>
       
       <StateTable 
+       tableLoading={stateTableLoading}
+       setStateTableLoading={setStateTableLoading}
         stateData={stateTableData} 
         loading={loading}
         onEdit={handleEdit}
       />
 
       <Dialog
+     
         isOpen={isDialogOpen}
         onClose={handleDialogClose}
         onRequestClose={handleDialogClose}
