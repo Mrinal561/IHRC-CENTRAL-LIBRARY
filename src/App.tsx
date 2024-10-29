@@ -44,7 +44,7 @@ function App() {
     return (
         <PersistGate loading={null} persistor={persistor}>
             {!loading && (
-                <BrowserRouter>
+                <BrowserRouter basename='ihrc-library-ui'>
                     <Theme>
                         <Layout />
                     </Theme>
