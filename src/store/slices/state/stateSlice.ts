@@ -37,8 +37,10 @@ const initialState: StateState = {
 // Async thunks for API calls
 export const fetchStates = createAsyncThunk(
   'state/fetchStates',
-  async () => {
-      const { data } = await httpClient.get(endpoints.state.getAll());
+  async (param: any) => {
+      const { data } = await httpClient.get(endpoints.state.getAll(), { 
+        params: param,
+      });
       return data;
   }
 );

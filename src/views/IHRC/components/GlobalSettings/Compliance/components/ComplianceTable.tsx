@@ -24,12 +24,17 @@ const ComplianceTable = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchComplianceData();
+    fetchComplianceData(1, 10);
   }, []);
 
-  const fetchComplianceData = async () => {
-      const { payload: data } = await dispatch(fetchCompliances());
+  const fetchComplianceData = async (page: number, size: number) => {
+      const { payload: data } = await dispatch(fetchCompliances({page: page, page_size: size}));
       setComplianceTableData(data.data);
+      setTableData((prev) => ({
+        ...prev,
+        total: data?.paginate_data.totalResult,
+        pageIndex: data?.paginate_data.page,
+    }))
      
   };
 
@@ -166,6 +171,30 @@ const ComplianceTable = () => {
     },
   ], []);
 
+
+  
+  const [tableData, setTableData] = useState({
+    total: 0,
+    pageIndex: 1,
+    pageSize: 10,
+    query: '',
+    sort: { order: '', key: '' },
+  });
+
+  const onPaginationChange = (page: number) => {
+    setTableData(prev => ({ ...prev, pageIndex: page }));
+    fetchComplianceData(page, tableData.pageSize)
+  };
+
+  const onSelectChange = (value: number) => {
+    setTableData((prev) => ({
+      ...prev,
+      pageSize: Number(value),
+      pageIndex: 1,
+  }))
+  fetchComplianceData(1, value)
+  };
+
   return (
     <div className="w-full">
       <DataTable
@@ -175,6 +204,14 @@ const ComplianceTable = () => {
         skeletonAvatarProps={{ className: 'rounded-md' }}
         loading={false}
         stickyHeader={true}
+        pagingData={{
+          total: tableData.total,
+          pageIndex: tableData.pageIndex,
+          pageSize: tableData.pageSize,
+        }}
+        onPaginationChange={onPaginationChange}
+        onSelectChange={onSelectChange}
+        selectable={true}
       />
       
       <Dialog
