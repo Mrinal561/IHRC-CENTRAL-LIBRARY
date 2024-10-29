@@ -31,7 +31,7 @@ httpClient.interceptors.response.use(
             // &&
             // !error.request.responseURL.includes('superadmin/profile')
         ) {
-            // store.dispatch(setIsAuthenticated(false))
+            store.dispatch(setIsAuthenticated(false))
         }
         return Promise.reject(error)
     },
