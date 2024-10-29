@@ -1,12 +1,18 @@
 import { Provider } from 'react-redux'
 import { BrowserRouter } from 'react-router-dom'
 import { PersistGate } from 'redux-persist/integration/react'
-import store, { persistor } from './store'
+import store, {
+    fetchAuthUser,
+    persistor,
+    setIsAuthenticated,
+    useAppDispatch,
+} from './store'
 import Theme from '@/components/template/Theme'
 import Layout from '@/components/layouts'
 // import mockServer from './mock'
 import appConfig from '@/configs/app.config'
 import './locales'
+import { useEffect, useState } from 'react'
 
 const environment = process.env.NODE_ENV
 
@@ -18,16 +24,33 @@ const environment = process.env.NODE_ENV
 //     mockServer({ environment })
 // }
 function App() {
+    const [loading, setLoading] = useState(true)
+    const dispatch = useAppDispatch()
+    useEffect(() => {
+        appInitial()
+    }, [])
+
+    const appInitial = async () => {
+        dispatch(fetchAuthUser()).then(({ payload }) => {
+            if (payload) {
+                dispatch(setIsAuthenticated(true))
+            } else {
+                dispatch(setIsAuthenticated(false))
+            }
+            setLoading(false)
+        })
+    }
+
     return (
-        <Provider store={store}>
-            <PersistGate loading={null} persistor={persistor}>
+        <PersistGate loading={null} persistor={persistor}>
+            {!loading && (
                 <BrowserRouter>
                     <Theme>
                         <Layout />
                     </Theme>
                 </BrowserRouter>
-            </PersistGate>
-        </Provider>
+            )}
+        </PersistGate>
     )
 }
 
