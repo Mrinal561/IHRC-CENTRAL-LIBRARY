@@ -1,17 +1,21 @@
-import React, { useMemo, useState } from 'react';
-import { Button, Dialog, Tooltip } from '@/components/ui';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Button, Dialog, toast, Tooltip, Notification } from '@/components/ui';
 import { MdEdit, MdDelete } from 'react-icons/md';
 import DataTable from '@/components/shared/DataTable';
-import { PFConfigData } from '@/store/slices/pfConfig/pfConfigSlice';
+import { fetchPFConfigs, PFConfigData } from '@/store/slices/pfConfig/pfConfigSlice';
 import Loading from '@/components/shared/Loading';
 import dayjs from 'dayjs';
 import { BiTrash } from 'react-icons/bi';
 import { FiEdit } from 'react-icons/fi';
+import { useDispatch } from 'react-redux';
+import { AppDispatch, fetchAuthUser } from '@/store';
 
 
 const PFTable = ({ pfConfigurationData, loading, onEdit }) => {
+  const dispatch = useDispatch<AppDispatch>();
 
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
+  const [pfTableData, setPfTableData] = useState([]);
 
 
 
@@ -64,7 +68,7 @@ const PFTable = ({ pfConfigurationData, loading, onEdit }) => {
   );
 
   const [tableData, setTableData] = useState({
-    total: pfConfigurationData.length,
+    total: 0,
     pageIndex: 1,
     pageSize: 10,
     query: '',
@@ -73,26 +77,48 @@ const PFTable = ({ pfConfigurationData, loading, onEdit }) => {
 
   const onPaginationChange = (page: number) => {
     setTableData(prev => ({ ...prev, pageIndex: page }));
+    fetchPfData(page, tableData.pageSize);
   };
 
   const onSelectChange = (value: number) => {
     setTableData(prev => ({ ...prev, pageSize: Number(value), pageIndex: 1 }));
+    fetchPfData(1, value)
   };
+
+  useEffect(() => {
+    fetchPfData(1, 10);
+  }, []);
+
+  const fetchPfData = async (page: number, size: number) => {
+    const { payload: data } = await dispatch(fetchPFConfigs(page, size));
+    setPfTableData(data.data);
+    setTableData(prev => ({ ...prev, total: data.paginate_data.totalResult, pageIndex: data.paginate_data.page }));
+  };
+
+  const openNotification = (type: 'success' | 'info' | 'danger' | 'warning', message: string) => {
+    toast.push(
+      <Notification title={type.charAt(0).toUpperCase() + type.slice(1)} type={type}>
+        {message}
+      </Notification>
+    );
+  };
+
+
 
 
   return (
     <>
       <DataTable 
-        data={pfConfigurationData} 
+        data={pfTableData} 
         columns={columns} 
         loading={loading}
         stickyHeader={true}
         stickyFirstColumn={true}
         stickyLastColumn={true}
         pagingData={{
-          total: pfConfigurationData.total,
-          pageIndex: pfConfigurationData.pageIndex,
-          pageSize: pfConfigurationData.pageSize,
+          total: tableData.total,
+          pageIndex: tableData.pageIndex,
+          pageSize: tableData.pageSize,
         }}
         onPaginationChange={onPaginationChange}
         onSelectChange={onSelectChange}

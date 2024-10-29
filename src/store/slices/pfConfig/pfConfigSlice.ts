@@ -31,8 +31,12 @@ const initialState: PFConfigState = {
 // Async Thunks
 export const fetchPFConfigs = createAsyncThunk(
   'pfConfig/fetchPFConfigs',
-  async () => {
-    const { data } = await httpClient.get(endpoints.pf.getAll());
+  async (pageIndex:any , size:any) => {
+    const { data } = await httpClient.get(endpoints.pf.getAll(),{params:{
+      page:pageIndex,
+      page_size:size
+
+    }})
     return data;
   }
 );
