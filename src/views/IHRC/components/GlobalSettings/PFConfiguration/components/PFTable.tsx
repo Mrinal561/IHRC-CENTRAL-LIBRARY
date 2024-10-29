@@ -13,7 +13,13 @@ import { FiEdit } from 'react-icons/fi'
 import { useDispatch } from 'react-redux'
 import { AppDispatch, fetchAuthUser } from '@/store'
 
-const PFTable = ({ pfConfigurationData, loading, onEdit }: any) => {
+const PFTable = ({
+    tableLoading,
+    setPfTableLoading,
+    pfConfigurationData,
+    loading,
+    onEdit,
+}: any) => {
     const dispatch = useDispatch<AppDispatch>()
 
     const [selectedId, setSelectedId] = React.useState<string | null>(null)
@@ -88,10 +94,17 @@ const PFTable = ({ pfConfigurationData, loading, onEdit }: any) => {
         }))
         fetchPfData(1, value)
     }
-
     useEffect(() => {
         fetchPfData(1, 10)
+        setPfTableLoading(false)
     }, [])
+
+    useEffect(() => {
+        if (tableLoading) {
+            fetchPfData(1, 10)
+            setPfTableLoading(false)
+        }
+    }, [tableLoading])
 
     const fetchPfData = async (page: number, size: number) => {
         const { payload: data } = await dispatch(
