@@ -32,8 +32,10 @@ export const endpoints = {
         getById: (id: string) => api(`superadmin/pfconfig/${id}`),
         create: () => api('superadmin/pfconfig'),
         update: (id: string) => api(`superadmin/pfconfig/${id}`),
+    },
+    common: {
+        getStatesAll: () => api('/states')
     }
-
     
 
 }

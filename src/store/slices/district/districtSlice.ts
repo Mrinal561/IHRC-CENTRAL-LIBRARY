@@ -1,10 +1,11 @@
+
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 import { endpoints } from '@/api/endpoint';
 import httpClient from '@/api/http-client';
 
 export interface DistrictData {
-  id: string;
+  // id: string;
   name: string;
   state_id: number;
 }
@@ -36,8 +37,10 @@ export const fetchStates = createAsyncThunk(
 
 export const fetchDistricts = createAsyncThunk(
   'district/fetchDistricts',
-  async () => {
-    const { data } = await httpClient.get(endpoints.district.getAll());
+  async (param:any) => {
+    const { data } = await httpClient.get(endpoints.district.getAll(),{
+      params: param,
+    });
     return data;
   }
 );
@@ -112,7 +115,7 @@ const districtSlice = createSlice({
       })
       .addCase(createDistrict.fulfilled, (state, action) => {
         state.loading = false;
-        state.districts.push(action.payload);
+        // state.districts.push(action.payload);
       })
       .addCase(createDistrict.rejected, (state, action) => {
         state.loading = false;
@@ -125,7 +128,7 @@ const districtSlice = createSlice({
       })
       .addCase(updateDistrict.fulfilled, (state, action) => {
         state.loading = false;
-        const index = state.districts.findIndex((d) => d.id === action.payload.id);
+        const index = state.districts.findIndex((d) => d.state_id === action.payload.id);
         if (index !== -1) {
           state.districts[index] = action.payload;
         }
