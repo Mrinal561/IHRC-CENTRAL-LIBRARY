@@ -1,5 +1,5 @@
 import axios from 'axios'
-import store from '@/store'
+import store, { setIsAuthenticated } from '@/store'
 // import { login } from '@/store/features/auth';
 // import { loginUser } from '@/store/features/auth/authSlice'
 import Cookies from 'js-cookie'
@@ -27,10 +27,11 @@ httpClient.interceptors.response.use(
     (response) => response,
     (error) => {
         if (
-            error.response?.status === 401 &&
-            !error.request.responseURL.includes('superadmin/profile')
+            error.response?.status === 401
+            // &&
+            // !error.request.responseURL.includes('superadmin/profile')
         ) {
-            // store.dispatch(loginUser());
+            store.dispatch(setIsAuthenticated(false))
         }
         return Promise.reject(error)
     },

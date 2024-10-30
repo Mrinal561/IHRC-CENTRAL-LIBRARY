@@ -29,11 +29,8 @@ const Layout = () => {
     const authenticated = useAppSelector(
         (state) => state.login.user.authenticated,
     )
-
     useDirection()
-
     useLocale()
-
     const AppLayout = useMemo(() => {
         console.log('check', authenticated)
         if (authenticated) {
