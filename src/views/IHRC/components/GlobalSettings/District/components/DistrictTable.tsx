@@ -113,7 +113,7 @@ const DistrictTable: React.FC<DistrictTableProps> = ({ districtData, setDistrict
       <div className="mt-4">
         <Pagination
           currentPage={currentPage}
-          // totalPages={Math.ceil(districtData.length / pageSize)}
+          totalPages={Math.ceil(districtData.length / pageSize)}
           onChange={onPaginationChange}
         />
       </div>
@@ -152,4 +152,3 @@ const DistrictTable: React.FC<DistrictTableProps> = ({ districtData, setDistrict
 };
 
 export default DistrictTable;
-
