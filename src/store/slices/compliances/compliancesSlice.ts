@@ -3,6 +3,8 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { endpoints } from '@/api/endpoint';
 import httpClient from '@/api/http-client';
+import { AxiosError } from 'axios';
+import { toast, Notification } from '@/components/ui';
 
 export interface ComplianceData {
   id: string;
@@ -49,11 +51,39 @@ export const fetchCompliances = createAsyncThunk(
   }
 );
 
+// const openNotification = (type: 'success' | 'info' | 'danger' | 'warning', message: string, error?: any) => {
+//   let errorMessage = message;
+//   // if (error && error.response && error.response.data && error.response.data.message) {
+//   //   errorMessage = error.response.data.message.join(', ');
+//   // }
+//   toast.push(
+//     <Notification title="Error" type={type}>
+//       {errorMessage}
+//     </Notification>
+//   );
+// };
+
 export const createCompliance = createAsyncThunk(
   'compliance/createCompliance',
   async (complianceData: ComplianceData) => {
+    try{
+
       const { data } = await httpClient.post(endpoints.compliances.create(), complianceData);
       return data;
+    }
+    catch(error : any) {
+      const err = error as AxiosError<any>;
+      JSON.stringify(err.response?.data.message)
+      err.response?.data.message.map((v: string) => {
+        // openNotification('danger', 'Failed to create compliance', v)
+      //   toast.push(
+      //     <Notification title="Copy Success" type="success">
+      //     </Notification>,
+
+      // )
+       
+    })
+    }
     } 
 );
 
@@ -113,8 +143,12 @@ const complianceSlice = createSlice({
         }
       })
       .addCase(createCompliance.rejected, (state, action) => {
+        console.log(action.payload);
+        
         state.loading = false;
         state.error = action.payload as string;
+        console.log(state.error);
+        
       })
       // Update Compliance
       .addCase(updateCompliance.pending, (state) => {
