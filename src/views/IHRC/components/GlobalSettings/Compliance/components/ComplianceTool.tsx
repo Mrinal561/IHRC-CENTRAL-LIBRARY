@@ -7,6 +7,8 @@ import BulkUpload from './BulkUpload';
 
 const ComplianceTool = () => {
 
+
+    
     const navigate = useNavigate();
 
     const handleClick = () => {
