@@ -86,13 +86,14 @@ const ComplianceTable = () => {
 
 
   const columns = useMemo(
-    () => [    // {
-    //   header: 'ID',
-    //   accessorKey: 'Compliance_Id',
-    //   cell: (props) => (
-    //     <div className="w-20 text-start">{props.getValue()}</div>
-    //   ),
-    // },
+    () => [    
+    {
+       header: 'ID',
+       accessorKey: 'record_id',
+       cell: (props) => (
+         <div className="w-20 text-start">{props.getValue()}</div>
+       ),
+     },
     {
       header: 'Header',
       accessorKey: 'header',
@@ -122,6 +123,34 @@ const ComplianceTable = () => {
         <div className="w-24">{props.getValue()}</div>
       ),
     },
+    // {
+    //   header: 'Clause',
+    //   accessorKey: 'clause',
+    //   cell: (props) => (
+    //     <div className="w-24">{props.getValue()}</div>
+    //   ),
+    // },
+    {
+        header: 'Category',
+        accessorKey: 'category',
+        cell: (props) => (
+          <div className="w-24">{props.getValue()}</div>
+        ),
+      },
+      {
+        header: 'Legislation',
+        accessorKey: 'legislation',
+        cell: (props) => (
+          <div className="w-24">{props.getValue()}</div>
+        ),
+      },
+      {
+        header: 'Penalty Description',
+        accessorKey: 'penalty_description',
+        cell: (props) => (
+          <div className="w-24">{props.getValue()}</div>
+        ),
+      },
     {
       header: 'Criticality',
       accessorKey: 'criticality',
