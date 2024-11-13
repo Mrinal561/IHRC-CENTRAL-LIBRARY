@@ -71,8 +71,8 @@ export const createCompliance = createAsyncThunk(
             )
             return data
         } catch (error: any) {
-            const err = error as AxiosError<any>
-            return rejectWithValue(err.response?.data.message)
+            // const err = error as AxiosError<any>
+            return rejectWithValue(error.response?.data.message)
         }
     },
 )
