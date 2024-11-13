@@ -114,6 +114,51 @@ const ComplianceAddForm = () => {
         return true
     }
 
+    const formatErrorMessages = (errors: any): string => {
+        // If errors is an array, join them with line breaks
+        if (Array.isArray(errors)) {
+            return errors.join('\n');
+        }
+        // If errors is an object, extract all error messages
+        else if (typeof errors === 'object' && errors !== null) {
+            const messages: string[] = [];
+            Object.entries(errors).forEach(([key, value]) => {
+                if (Array.isArray(value)) {
+                    messages.push(...value);
+                } else if (typeof value === 'string') {
+                    messages.push(value);
+                }
+            });
+            return messages.join('\n');
+        }
+        // If it's a single string error
+        return String(errors);
+    };
+    
+    const showErrorNotification = (errors: any) => {
+        const formattedMessage = formatErrorMessages(errors);
+        
+        // Split the formatted message into individual error messages
+        const errorMessages = formattedMessage.split('\n').filter(Boolean); // Filter out empty strings
+        
+        toast.push(
+          <Notification title="Error" type="danger">
+            <div style={{ whiteSpace: 'pre-line' }}>
+              {errorMessages.length > 1? ( // Check if there are multiple error messages
+                <ul style={{ padding: 0, margin: 0, listStyle: 'disc inside' }}>
+                  {errorMessages.map((message, index) => (
+                    <li key={index} style={{ marginBottom: '0.5rem' }}>{message}</li>
+                  ))}
+                </ul>
+              ) : (
+                <span>{formattedMessage}</span> // If only one error message, display as before
+              )}
+            </div>
+          </Notification>
+        );
+      };
+    
+
     const handleSubmit = async () => {
         try {
             if (!validateForm()) return
@@ -123,14 +168,22 @@ const ComplianceAddForm = () => {
             const result = await dispatch(createCompliance(transformedData))
                 .unwrap()
                 .catch((error: any) => {
-                    error.map((v: string) =>
-                        toast.push(
-                            <Notification title="Error" type="danger">
-                                {v}
-                            </Notification>,
-                        ),
-                    )
-                })
+                    // Handle different error formats
+                    if (error.response?.data?.message) {
+                        // API error response
+                        showErrorNotification(error.response.data.message);
+                    } else if (error.message) {
+                        // Regular error object
+                        showErrorNotification(error.message);
+                    } else if (Array.isArray(error)) {
+                        // Array of error messages
+                        showErrorNotification(error);
+                    } else {
+                        // Fallback error message
+                        showErrorNotification('An unexpected error occurred. Please try again.');
+                    }
+                    throw error; // Re-throw to prevent navigation
+                });
 
             console.log('result' + result)
 
@@ -139,7 +192,7 @@ const ComplianceAddForm = () => {
                 navigate(-1)
             }
         } catch (error: any) {
-            openNotification('danger', 'Failed to create compliance', error)
+            // openNotification('danger', 'Failed to create compliance', error)
             console.log(error)
         } finally {
             setIsLoading(false)
