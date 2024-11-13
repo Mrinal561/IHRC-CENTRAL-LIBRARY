@@ -9,6 +9,7 @@ const Compliance = () => {
                 <div className="mb-4 lg:mb-0">
                     <h3 className="text-2xl font-bold"> Compliances</h3>
                    
+                   
                 </div>
                 <ComplianceTool />
       </div>
