@@ -26,6 +26,8 @@ export const endpoints = {
         getById: (id: string) => api(`superadmin/compliance/${id}`),
         create: () => api('superadmin/compliance'),
         update: (id: string) => api(`superadmin/compliance/${id}`),
+        downloadFormat: () => api(`upload/sample_files/master-compliance.xlsx`),
+        bulkCreate: () => api(`/superadmin/compliance/bulk-upload`),
     },
     pf: {
         getAll: () => api('superadmin/pfconfig'),
@@ -35,7 +37,8 @@ export const endpoints = {
     },
     common: {
         getStatesAll: () => api('/states')
-    }
+    },
+
     
 
 }
