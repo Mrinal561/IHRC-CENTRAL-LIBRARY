@@ -1,61 +1,103 @@
 import React, { useState } from 'react';
 import { Button, Dialog, Input, Notification, toast } from '@/components/ui';
 import { HiDownload, HiUpload } from 'react-icons/hi';
+import { endpoints } from '@/api/endpoint';
+import httpClient from '@/api/http-client';
 
-const documentPath = "../store/AllMappedCompliancesDetails.xls";
-
-const BulkUpload = () => {
+const BulkUpload = ({ refreshTable }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [remark, setRemark] = useState('');
   const [file, setFile] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const handleUploadClick = () => {
     setIsDialogOpen(true);
   };
 
-  const handleConfirm = () => {
-    setIsDialogOpen(false);
-    // Here you would typically handle the file upload and remark submission
-    // For this example, we'll just show a success notification
-    toast.push(
-      <Notification
-        title="Success"
-        type="success"
-      >
-        Upload successful!
-      </Notification>,
-      {
-        placement: 'top-end',
+  const handleConfirm = async () => {
+    try {
+      setIsUploading(true);
+      
+      if (!file) {
+        toast.push(
+          <Notification title="Error" type="danger">
+            Please select a file to upload
+          </Notification>
+        );
+        return;
       }
-    );
+  
+      const formData = new FormData();
+      formData.append('document', file);
+      formData.append('remark', remark);
+      
+      const res = await httpClient.post(
+        endpoints.compliances.bulkCreate(),
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+  
+      if (res) {
+        toast.push(
+          <Notification title="Success" type="success">
+            Upload successful!
+          </Notification>
+        );
+        
+        // Close dialog and reset state
+        handleCancel();
+        
+        // Refresh the table data
+        await refreshTable();
+      }
+    } catch (error) {
+      toast.push(
+        <Notification title="Error" type="danger">
+          Upload failed. Please try again.
+        </Notification>
+      );
+      console.error('Upload error:', error);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleCancel = () => {
     setIsDialogOpen(false);
     setRemark('');
     setFile(null);
+    setIsUploading(false);
   };
 
-  const handleDownload = (e) => {
-    e.preventDefault();
-    // Implement the download functionality here
-    // For example, you could use the `fetch` API to download the file
-    fetch(documentPath)
-      .then(response => response.blob())
-      .then(blob => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = url;
-        a.download = 'AllMappedCompliancesDetails.xls';
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-      })
-      .catch(() => console.error('Download failed'));
+  const handleDownload = async () => {
+    try {
+      const res = await httpClient.get(endpoints.compliances.downloadFormat(), {
+        responseType: "blob",
+      });
+      
+      const blob = new Blob([res.data], { type: "text/xlsx" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "MasterCompliance.xlsx");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Download error:', error);
+      toast.push(
+        <Notification title="Error" type="danger">
+          Failed to download template. Please try again.
+        </Notification>
+      );
+    }
   };
 
-  const handleFileChange = (event) => {
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
       setFile(event.target.files[0]);
     }
@@ -77,11 +119,11 @@ const BulkUpload = () => {
         onClose={handleCancel}
         width={450}
       >
-        <h5 className="mb-4"> Add Compliances</h5>
+        <h5 className="mb-4">Add Compliances</h5>
         <div className="my-4 flex gap-2 items-center">
           <p>Download Bulk Upload Format</p>
-          <a href={documentPath} onClick={handleDownload} className="text-blue-600 hover:underline">
-            <Button size="xs" icon={<HiDownload />} >Download</Button>
+          <a onClick={handleDownload} className="text-blue-600 hover:underline">
+            <Button size="xs" icon={<HiDownload />}>Download</Button>
           </a>
         </div>
         <div className="flex flex-col gap-2">
@@ -92,7 +134,7 @@ const BulkUpload = () => {
             className="mb-4"
           />
         </div>
-        <p>Please Enter the Remark:</p>
+        <p>Enter the Remark:</p>
         <textarea
           className="w-full p-2 border rounded mb-2"
           rows={3}
@@ -105,6 +147,7 @@ const BulkUpload = () => {
             size="sm"
             className="mr-2"
             onClick={handleCancel}
+            disabled={isUploading}
           >
             Cancel
           </Button>
@@ -112,8 +155,9 @@ const BulkUpload = () => {
             variant="solid"
             size="sm"
             onClick={handleConfirm}
+            loading={isUploading}
           >
-            Confirm
+            {isUploading ? 'Uploading...' : 'Confirm'}
           </Button>
         </div>
       </Dialog>
