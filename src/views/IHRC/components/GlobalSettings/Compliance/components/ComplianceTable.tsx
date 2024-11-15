@@ -141,7 +141,11 @@ const ComplianceTable = () => {
         header: 'Legislation',
         accessorKey: 'legislation',
         cell: (props) => (
-          <div className="w-24">{props.getValue()}</div>
+          <div className="w-48 truncate">
+          {props.getValue()?.length > 50 
+            ? `${props.getValue().substring(0, 50)}...` 
+            : props.getValue()}
+        </div>
         ),
       },
       {
