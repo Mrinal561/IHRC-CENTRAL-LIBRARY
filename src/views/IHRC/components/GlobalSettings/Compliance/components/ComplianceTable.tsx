@@ -134,7 +134,7 @@ const ComplianceTable = () => {
         header: 'Category',
         accessorKey: 'category',
         cell: (props) => (
-          <div className="w-24">{props.getValue()}</div>
+          <div className="w-48">{props.getValue()}</div>
         ),
       },
       {
@@ -152,7 +152,7 @@ const ComplianceTable = () => {
         header: 'Penalty Description',
         accessorKey: 'penalty_description',
         cell: (props) => (
-          <div className="w-24">{props.getValue()}</div>
+          <div className="w-40">{props.getValue()}</div>
         ),
       },
     {
