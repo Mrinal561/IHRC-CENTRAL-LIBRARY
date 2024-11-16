@@ -28,13 +28,27 @@ const ComplianceTable = () => {
   }, []);
 
   const fetchComplianceData = async (page: number, size: number) => {
+    setIsLoading(true);
+    try{
+
       const { payload: data } = await dispatch(fetchCompliances({page: page, page_size: size}));
       setComplianceTableData(data.data);
       setTableData((prev) => ({
         ...prev,
         total: data?.paginate_data.totalResult,
         pageIndex: data?.paginate_data.page,
-    }))
+      }))
+    }
+    catch(error){
+      console.error('Failed to fetch compliances:', error);
+      toast.push(
+        <Notification title="Error" type="danger">
+          Failed to fetch Compliances
+        </Notification>
+      );
+    } finally {
+      setIsLoading(false);
+    }
      
   };
 
@@ -47,7 +61,7 @@ const ComplianceTable = () => {
   };
 
   const handleViewDetails = (compliance) => {
-    navigate(`/app/compliance/details/${compliance.id}`, {
+    navigate(`/app/compliance/details/${compliance.uuid}`, {
         state: compliance
     });
   };
@@ -63,26 +77,26 @@ const ComplianceTable = () => {
     setDialogIsOpen(true);
   };
 
-  const handleConfirmDelete = async () => {
-    if (!itemToDelete?.id) return;
+  // const handleConfirmDelete = async () => {
+  //   if (!itemToDelete?.id) return;
 
-    try {
-      setIsLoading(true);
-      const result = await dispatch(deleteCompliance(itemToDelete.id)).unwrap();
+  //   try {
+  //     setIsLoading(true);
+  //     const result = await dispatch(deleteCompliance(itemToDelete.id)).unwrap();
       
-      // If deletion was successful
-      openNotification('success', 'Compliance deleted successfully');
-      // Refresh the table data
-      await fetchComplianceData();
-    } catch (error: any) {
-      console.error('Error deleting compliance:', error);
-      openNotification('danger', error?.message || 'Failed to delete compliance');
-    } finally {
-      setIsLoading(false);
-      setDialogIsOpen(false);
-      setItemToDelete(null);
-    }
-  };
+  //     // If deletion was successful
+  //     openNotification('success', 'Compliance deleted successfully');
+  //     // Refresh the table data
+  //     await fetchComplianceData();
+  //   } catch (error: any) {
+  //     console.error('Error deleting compliance:', error);
+  //     openNotification('danger', error?.message || 'Failed to delete compliance');
+  //   } finally {
+  //     setIsLoading(false);
+  //     setDialogIsOpen(false);
+  //     setItemToDelete(null);
+  //   }
+  // };
 
 
   const columns = useMemo(
@@ -91,10 +105,10 @@ const ComplianceTable = () => {
        header: 'ID',
        accessorKey: 'record_id',
        cell: (props) => (
-         <div className="w-20 text-start">{props.getValue()}</div>
+         <div className="w-40 text-start">{props.getValue()}</div>
        ),
      },
-    {
+     {
       header: 'Header',
       accessorKey: 'header',
       cell: (props) => (
@@ -103,6 +117,16 @@ const ComplianceTable = () => {
         </Tooltip>
       ),
     },
+     {
+      header: 'Legislation',
+      accessorKey: 'legislation',
+      cell: (props) => (
+        <Tooltip title={props.getValue()} placement="top">
+        <div className="w-96">{props.getValue()}</div>
+        </Tooltip>
+      ),
+    },
+   
     {
       header: 'Description',
       accessorKey: 'description',
@@ -120,7 +144,7 @@ const ComplianceTable = () => {
       header: 'Type',
       accessorKey: 'type',
       cell: (props) => (
-        <div className="w-24">{props.getValue()}</div>
+        <div className="w-28">{props.getValue()}</div>
       ),
     },
     // {
@@ -134,21 +158,19 @@ const ComplianceTable = () => {
         header: 'Category',
         accessorKey: 'category',
         cell: (props) => (
-          <div className="w-24">{props.getValue()}</div>
+          <Tooltip title={props.getValue()} placement="top">
+          <div className="w-48">{props.getValue()}</div>
+          </Tooltip>
         ),
       },
-      {
-        header: 'Legislation',
-        accessorKey: 'legislation',
-        cell: (props) => (
-          <div className="w-24">{props.getValue()}</div>
-        ),
-      },
+     
       {
         header: 'Penalty Description',
         accessorKey: 'penalty_description',
         cell: (props) => (
-          <div className="w-24">{props.getValue()}</div>
+          <Tooltip title={props.getValue()} placement="top">
+          <div className="w-56">{props.getValue()}</div>
+          </Tooltip>
         ),
       },
     {
@@ -174,27 +196,28 @@ const ComplianceTable = () => {
       id: 'actions',
       cell: ({ row }) => (
         <div className="flex space-x-2">
-          <Tooltip title="View Details" placement="top">
+          <Tooltip title="View Compliance Details" placement="top">
             <Button
               size="sm"
               icon={<RiEyeLine />}
               onClick={() => handleViewDetails(row.original)}
             />
           </Tooltip>
-          <Tooltip title="Edit" placement="top">
+          <Tooltip title="Edit Compliance" placement="top">
             <Button
               size="sm"
               icon={<MdEdit />}
               onClick={() => handleEdit(row.original)}
             />
           </Tooltip>
-          {/* <Tooltip title="Delete" placement="top">
+          <Tooltip title="Delete Compliance" placement="top">
             <Button
               size="sm"
               icon={<FiTrash />}
-              onClick={() => handleDelete(row.original)}
+               className="text-red-500"
+              // onClick={() => handleDelete(row.original)}
             />
-          </Tooltip> */}
+          </Tooltip>
         </div>
       ),
     },
@@ -231,8 +254,10 @@ const ComplianceTable = () => {
         data={complianceTableData}
         skeletonAvatarColumns={[0]}
         skeletonAvatarProps={{ className: 'rounded-md' }}
-        loading={false}
+        loading={isLoading}
         stickyHeader={true}
+        stickyFirstColumn={true}
+        stickyLastColumn={true}
         pagingData={{
           total: tableData.total,
           pageIndex: tableData.pageIndex,
@@ -265,7 +290,7 @@ const ComplianceTable = () => {
               variant="solid"
               size="sm"
               className="bg-red-500 hover:bg-red-600 text-white"
-              onClick={handleConfirmDelete}
+              // onClick={handleConfirmDelete}
             >
               {isLoading ? 'Deleting...' : 'Delete'}
             </Button>

@@ -12,22 +12,22 @@ export const protectedRoutes = [
         component: lazy(() => import('@/views/IHRC/components/Home/Home')),
         authority: [],
     },
-    {
-        key: 'groupMenu.collapse.item1',
-        path: '/state',
-        component: lazy(() =>
-            import('@/views/IHRC/components/GlobalSettings/State/State')
-        ),
-        authority: [],
-    },
-    {
-        key: 'groupMenu.collapse.item2',
-        path: '/district',
-        component: lazy(() =>
-            import('@/views/IHRC/components/GlobalSettings/District/District')
-        ),
-        authority: [],
-    },
+    // {
+    //     key: 'groupMenu.collapse.item1',
+    //     path: '/state',
+    //     component: lazy(() =>
+    //         import('@/views/IHRC/components/GlobalSettings/State/State')
+    //     ),
+    //     authority: [],
+    // },
+    // {
+    //     key: 'groupMenu.collapse.item2',
+    //     path: '/district',
+    //     component: lazy(() =>
+    //         import('@/views/IHRC/components/GlobalSettings/District/District')
+    //     ),
+    //     authority: [],
+    // },
     {
         key: 'groupMenu.collapse.item3',
         path: '/compliance',
@@ -36,14 +36,14 @@ export const protectedRoutes = [
         ),
         authority: [],
     },
-    {
-        key: 'groupMenu.collapse.item4',
-        path: '/pf-configuration',
-        component: lazy(() =>
-            import('@/views/IHRC/components/GlobalSettings/PFConfiguration/PFConfiguration')
-        ),
-        authority: [],
-    },
+    // {
+    //     key: 'groupMenu.collapse.item4',
+    //     path: '/pf-configuration',
+    //     component: lazy(() =>
+    //         import('@/views/IHRC/components/GlobalSettings/PFConfiguration/PFConfiguration')
+    //     ),
+    //     authority: [],
+    // },
     {
         key: 'groupMenu.collapse.item5',
         path: '/register-template',
