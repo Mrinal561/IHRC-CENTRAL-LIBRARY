@@ -9,7 +9,9 @@ import { useDispatch } from 'react-redux'
 import { AppDispatch } from '@/store'
 import { createCompliance } from '@/store/slices/compliances/compliancesSlice'
 import { DatePicker } from '@/components/ui/DatePicker'
-
+import httpClient from '@/api/http-client'
+import { endpoints } from '@/api/endpoint'
+import { showErrorNotification } from '@/components/ui/ErrorMessage'
 interface SelectOption {
     value: string
     label: string
@@ -19,6 +21,8 @@ const ComplianceAddForm = () => {
     const dispatch = useDispatch<AppDispatch>()
     const navigate = useNavigate()
     const [isLoading, setIsLoading] = useState(false)
+    const [states, setStates] = useState<SelectOption[]>([]);
+    const [selectedStates, setSelectedStates] = useState<SelectOption | null>(null);
 
     const [formData, setFormData] = useState({
         legislation: '',
@@ -31,25 +35,74 @@ const ComplianceAddForm = () => {
         caluse: '',
         type: '',
         frequency: '',
+        scope: '',
+        state_id: null,        
         statutory_auth: '',
         approval_required: true,
         criticality: '',
         penalty_type: '',
         first_date: '',
+        second_date: '',
+        third_date: '',
         last_date: '',
         scheduled_frequency: '',
         proof_mandatory: true,
     })
 
     // State to control last_date field
-    const [isLastDateEnabled, setIsLastDateEnabled] = useState(false)
+    const [dateFieldsState, setDateFieldsState] = useState({
+        isSecondDateEnabled: false,
+        isThirdDateEnabled: false,
+        isLastDateEnabled: false
+    })
 
     // Effect to handle last_date field enablement
+
+
+
     useEffect(() => {
-        setIsLastDateEnabled(formData.frequency === 'half_yearly')
-        // Reset last_date when frequency changes and it's not half_yearly
-        if (formData.frequency !== 'half_yearly') {
-            setFormData(prev => ({ ...prev, last_date: '' }))
+        switch (formData.frequency) {
+            case 'quarterly':
+                setDateFieldsState({
+                    isSecondDateEnabled: true,
+                    isThirdDateEnabled: true,
+                    isLastDateEnabled: true
+                })
+                break
+            case 'half_yearly':
+                setDateFieldsState({
+                    isSecondDateEnabled: false,
+                    isThirdDateEnabled: false,
+                    isLastDateEnabled: true
+                })
+                // Clear disabled date fields
+                setFormData(prev => ({
+                    ...prev,
+                    second_date: '',
+                    third_date: ''
+                }))
+                break
+            case 'yearly':
+            case 'monthly':
+                setDateFieldsState({
+                    isSecondDateEnabled: false,
+                    isThirdDateEnabled: false,
+                    isLastDateEnabled: false
+                })
+                // Clear disabled date fields
+                setFormData(prev => ({
+                    ...prev,
+                    second_date: '',
+                    third_date: '',
+                    last_date: ''
+                }))
+                break
+            default:
+                setDateFieldsState({
+                    isSecondDateEnabled: false,
+                    isThirdDateEnabled: false,
+                    isLastDateEnabled: false
+                })
         }
     }, [formData.frequency])
 
@@ -71,12 +124,56 @@ const ComplianceAddForm = () => {
             penalty_type: data.penalty_type,
             default_due_date: {
                 first_date: data.first_date || null,
+                second_date: data.second_date || null,
+                third_date: data.third_date || null,
                 last_date: data.last_date || null,
             },
+            scope: formData.scope,
+            state_id: formData.scope === 'state' ? formData.state_id : null,
             scheduled_frequency: data.scheduled_frequency,
             proof_mandatory: data.proof_mandatory,
         }
     }
+
+    const showNotification = (type: 'success' | 'info' | 'danger' | 'warning', message: string) => {
+        toast.push(
+          <Notification
+            title={type.charAt(0).toUpperCase() + type.slice(1)}
+            type={type}
+          >
+            {message}
+          </Notification>
+        );
+      };
+
+    const loadStates = async () => {
+        try {
+          setIsLoading(true);
+          const response = await httpClient.get(endpoints.common.getStatesAll())
+          
+          if (response.data) {
+            const formattedStates = response.data.map((state: any) => ({
+              label: state.name,
+              value: String(state.id)
+            }));
+            
+            console.log('Formatted States:', formattedStates); // Debug log
+            setStates(formattedStates);
+          } else {
+            console.error('Invalid state data structure:', response.data);
+            showNotification('danger', 'Invalid state data received');
+          }
+        } catch (error) {
+          console.error('Failed to load states:', error);
+          showNotification('danger', 'Failed to load states');
+        } finally {
+          setIsLoading(false);
+        }
+      };
+    
+      useEffect(() => {
+        loadStates();
+      }, []);
 
     const openNotification = (
         type: 'success' | 'info' | 'danger' | 'warning',
@@ -114,7 +211,7 @@ const ComplianceAddForm = () => {
             'criticality',
             'first_date',
             'penalty_type',
-            'scheduled_frequency'
+            'scheduled_frequency',
         ]
 
         const missingFields = requiredFields.filter((field) => !formData[field])
@@ -130,45 +227,6 @@ const ComplianceAddForm = () => {
         return true
     }
 
-    const formatErrorMessages = (errors: any): string => {
-        if (Array.isArray(errors)) {
-            return errors.join('\n')
-        } else if (typeof errors === 'object' && errors !== null) {
-            const messages: string[] = []
-            Object.entries(errors).forEach(([key, value]) => {
-                if (Array.isArray(value)) {
-                    messages.push(...value)
-                } else if (typeof value === 'string') {
-                    messages.push(value)
-                }
-            })
-            return messages.join('\n')
-        }
-        return String(errors)
-    }
-
-    const showErrorNotification = (errors: any) => {
-        const formattedMessage = formatErrorMessages(errors)
-        const errorMessages = formattedMessage.split('\n').filter(Boolean)
-
-        toast.push(
-            <Notification title="Error" type="danger">
-                <div style={{ whiteSpace: 'pre-line' }}>
-                    {errorMessages.length > 1 ? (
-                        <ul style={{ padding: 0, margin: 0, listStyle: 'disc inside' }}>
-                            {errorMessages.map((message, index) => (
-                                <li key={index} style={{ marginBottom: '0.5rem' }}>
-                                    {message}
-                                </li>
-                            ))}
-                        </ul>
-                    ) : (
-                        <span>{formattedMessage}</span>
-                    )}
-                </div>
-            </Notification>,
-        )
-    }
 
     const handleSubmit = async () => {
         try {
@@ -207,10 +265,20 @@ const ComplianceAddForm = () => {
             // Handle date values - convert Date object to ISO string or empty string
             const dateValue = value ? value.toISOString().split('T')[0] : ''
             setFormData(prev => ({ ...prev, [field]: dateValue }))
-        } else {
+        } 
+        if (field === 'scope') {
+            setFormData(prev => ({
+                ...prev,
+                scope: value,
+                state_id: value === 'central' ? null : prev.state_id
+            }))
+            console.log(formData);
+            
+            return
+        } 
             setFormData(prev => ({ ...prev, [field]: value }))
         }
-    }
+    
     // Options for select fields
 
     const criticalityOptions: SelectOption[] = [
@@ -220,13 +288,17 @@ const ComplianceAddForm = () => {
     ]
 
     const typeOptions: SelectOption[] = [
-        { value: 'ongoing', label: 'On going' },
+        { value: 'on_going', label: 'On going' },
+        { value: 'time_based', label: 'Time Based' },
+        { value: 'event_based', label: 'Event Based' },
+        { value: 'one_time', label: 'One Time' },
     ]
 
     const frequencyOptions: SelectOption[] = [
         { value: 'monthly', label: 'Monthly' },
         { value: 'half_yearly', label: 'Half Yearly' },
         { value: 'yearly', label: 'Yearly' },
+        { value: 'quarterly', label: 'Quarterly' },
     ]
 
     const scheduledOptions: SelectOption[] = [
@@ -237,6 +309,26 @@ const ComplianceAddForm = () => {
     const penaltyType: SelectOption[] = [
         { value: 'fine', label: 'Fine' }
     ]
+
+    const scopeOptions: SelectOption[] = [
+        { value: 'central', label: 'Central' },
+        { value: 'state', label: 'State' },
+    ]
+
+
+      // Handle state selection
+  const handleStateChange = (option: SelectOption | null) => {
+    setSelectedStates(option);
+    if (option) {
+      setFormData(prev => ({
+        ...prev,
+        state_id: parseInt(option.value),
+        // State: option.label,
+        // District: '' // Reset district when state changes
+      }));
+    }
+  };
+
 
 return (
     <div className="p-2 bg-white rounded-lg">
@@ -311,6 +403,48 @@ return (
 
                 
             </div>
+
+            {/*Scope */}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <p className="mb-2">
+                        Scope <span className="text-red-500">*</span>
+                    </p>
+                    <OutlinedSelect
+                        label="Select Scope"
+                        options={scopeOptions}
+                        value={scopeOptions.find(option => option.value === formData.scope)}
+                        onChange={(selectedOption: SelectOption | null) => 
+                            handleInputChange('scope', selectedOption?.value || '')
+                        }
+                    />
+                </div>
+
+
+                 {/*  state */}
+                 {formData.scope === 'state' && (
+
+                     <div >
+                    <p className="mb-2">State</p>
+                    <OutlinedSelect
+                        label="Select State"
+                        options={states}
+                        value={selectedStates}
+                        onChange={handleStateChange}
+                        // onChange={(selectedOption: SelectOption | null) => {
+                            //     // Only allow state selection if scope is 'state'
+                            //     if (formData.scope === 'state') {
+                                //         handleStateChange(selectedOption);
+                                //     }
+                        // }}
+                        />
+                </div>
+
+            )}
+                
+            </div>
+
 
             <div className="grid grid-row-1 md:grid-row-1 gap-4">
 
@@ -475,28 +609,7 @@ return (
                         }}
                     />
                 </div>
-                <div>
-                    <p className="mb-2">First Due Date <span className="text-red-500">*</span></p>
-                    <DatePicker
-                            // label="First Due Date"
-                            placeholder="Select first due date"
-                            value={formData.first_date ? new Date(formData.first_date) : null}
-                            onChange={(date: Date | null) => handleInputChange('first_date', date)}
-                        />
-                </div>
-                <div>
-                    <p className="mb-2">Last Due Date</p>
-                    <DatePicker
-                            placeholder="Select last due date"
-                            value={formData.last_date ? new Date(formData.last_date) : null}
-                            onChange={(date: Date | null) => handleInputChange('last_date', date)}
-                            disabled={!isLastDateEnabled}
-                        />
-                </div>
-            </div>
 
-            {/* 17-18. Scheduled Frequency and Proof */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <p className="mb-2">Scheduled Frequency <span className="text-red-500">*</span></p>
                     <OutlinedSelect
@@ -533,7 +646,47 @@ return (
                         }}
                     />
                 </div>
+               
             </div>
+
+            {/* 17-18. Scheduled Frequency and Proof */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <p className="mb-2">First Due Date <span className="text-red-500">*</span></p>
+                <DatePicker
+                    placeholder="Select first due date"
+                    value={formData.first_date ? new Date(formData.first_date) : null}
+                    onChange={(date: Date | null) => handleInputChange('first_date', date)}
+                />
+            </div>
+            <div>
+                <p className="mb-2">Second Due Date</p>
+                <DatePicker
+                    placeholder="Select second due date"
+                    value={formData.second_date ? new Date(formData.second_date) : null}
+                    onChange={(date: Date | null) => handleInputChange('second_date', date)}
+                    disabled={!dateFieldsState.isSecondDateEnabled}
+                />
+            </div>
+            <div>
+                <p className="mb-2">Third Due Date</p>
+                <DatePicker
+                    placeholder="Select third due date"
+                    value={formData.third_date ? new Date(formData.third_date) : null}
+                    onChange={(date: Date | null) => handleInputChange('third_date', date)}
+                    disabled={!dateFieldsState.isThirdDateEnabled}
+                />
+            </div>
+            <div>
+                <p className="mb-2">Last Due Date</p>
+                <DatePicker
+                    placeholder="Select last due date"
+                    value={formData.last_date ? new Date(formData.last_date) : null}
+                    onChange={(date: Date | null) => handleInputChange('last_date', date)}
+                    disabled={!dateFieldsState.isLastDateEnabled}
+                />
+            </div>
+        </div>
 
             <div className="flex justify-end gap-2">
                 <Button
@@ -560,3 +713,9 @@ return (
 )
 }
 export default ComplianceAddForm
+
+
+
+
+
+
