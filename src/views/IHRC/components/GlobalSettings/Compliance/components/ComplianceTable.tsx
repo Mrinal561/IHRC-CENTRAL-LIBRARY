@@ -1,5 +1,3 @@
-
-
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
@@ -24,28 +22,44 @@ const ComplianceTable = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchComplianceData(1, 10);
+    // fetchComplianceData(1, 10);
+    fetchComplianceData(tableData.pageIndex, tableData.pageSize);
+
   }, []);
 
   const fetchComplianceData = async (page: number, size: number) => {
     setIsLoading(true);
     try{
 
-      const { payload: data } = await dispatch(fetchCompliances({page: page, page_size: size}));
-      setComplianceTableData(data.data);
-      setTableData((prev) => ({
-        ...prev,
-        total: data?.paginate_data.totalResult,
-        pageIndex: data?.paginate_data.page,
-      }))
+      const { payload } = await dispatch(fetchCompliances({page: page, page_size: size}));
+     
+
+      if (payload?.data && payload?.paginateData) {
+        setComplianceTableData(payload.data);
+        setTableData(prev => ({
+            ...prev,
+            total: payload.paginateData.totalResult,
+            totalPages: payload.paginateData.totalPages,
+            pageIndex: page, 
+            pageSize: size
+        }));
+
+        console.log('Updated table data:', {
+            data: payload.data.length,
+            total: payload.paginateData.totalResult,
+            currentPage: page,
+            pageSize: size
+        });
+    }
+
     }
     catch(error){
       console.error('Failed to fetch compliances:', error);
-      toast.push(
-        <Notification title="Error" type="danger">
-          Failed to fetch Compliances
-        </Notification>
-      );
+      // toast.push(
+      //   <Notification title="Error" type="danger">
+      //     Failed to fetch Compliances
+      //   </Notification>
+      // );
     } finally {
       setIsLoading(false);
     }
@@ -109,15 +123,15 @@ const ComplianceTable = () => {
        ),
      },
      {
-      header: 'Header',
-      accessorKey: 'header',
+      header: 'Scope',
+      accessorKey: 'scope',
       cell: (props) => (
         <Tooltip title={props.getValue()} placement="top">
-          <div className="w-40 truncate">{props.getValue()}</div>
+          <div className="w-40 truncate uppercase">{props.getValue()}</div>
         </Tooltip>
       ),
     },
-     {
+    {
       header: 'Legislation',
       accessorKey: 'legislation',
       cell: (props) => (
@@ -126,6 +140,16 @@ const ComplianceTable = () => {
         </Tooltip>
       ),
     },
+     {
+      header: 'Header',
+      accessorKey: 'header',
+      cell: (props) => (
+        <Tooltip title={props.getValue()} placement="top">
+          <div className="w-40 truncate">{props.getValue()}</div>
+        </Tooltip>
+      ),
+    },
+    
    
     {
       header: 'Description',
@@ -227,24 +251,44 @@ const ComplianceTable = () => {
   
   const [tableData, setTableData] = useState({
     total: 0,
+    totalPages: 0,
     pageIndex: 1,
     pageSize: 10,
     query: '',
     sort: { order: '', key: '' },
   });
 
+  // const onPaginationChange = (page: number) => {
+  //   setTableData(prev => ({ ...prev, pageIndex: page }));
+  //   fetchComplianceData(page, tableData.pageSize)
+  // };
   const onPaginationChange = (page: number) => {
+    console.log('Changing to page:', page);
     setTableData(prev => ({ ...prev, pageIndex: page }));
-    fetchComplianceData(page, tableData.pageSize)
+
+    fetchComplianceData(page, tableData.pageSize);
   };
 
+  // const onSelectChange = (value: number) => {
+  //   const newPageSize = Number(value);
+
+  //   setTableData((prev) => ({
+  //     ...prev,
+  //     pageSize: newPageSize,
+  //     pageIndex: 1,
+  // }))
+  // fetchComplianceData(1, newPageSize)
+  // };
+
   const onSelectChange = (value: number) => {
-    setTableData((prev) => ({
+    const newPageSize = Number(value);
+    console.log('Changing page size to:', newPageSize);
+    setTableData(prev => ({
       ...prev,
-      pageSize: Number(value),
-      pageIndex: 1,
-  }))
-  fetchComplianceData(1, value)
+      pageSize: newPageSize,
+      pageIndex: 1
+    }));
+    fetchComplianceData(1, newPageSize);
   };
 
   return (
@@ -267,6 +311,8 @@ const ComplianceTable = () => {
         onSelectChange={onSelectChange}
         selectable={true}
       />
+
+    
       
       <Dialog
         isOpen={dialogIsOpen}

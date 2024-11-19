@@ -30,7 +30,13 @@ export interface ComplianceState {
     compliances: ComplianceData[]
     loading: boolean
     error: string | null
-    currentCompliance: ComplianceData | null
+    currentCompliance: ComplianceData | null;
+    paginateData: {
+        totalResults: number;
+        totalPages: number;
+        page: number;
+        limit: number;
+      } | null;
 }
 
 const initialState: ComplianceState = {
@@ -38,28 +44,37 @@ const initialState: ComplianceState = {
     loading: false,
     error: null,
     currentCompliance: null,
+    paginateData: null,
+
 }
 
 // Async thunks for API calls
 export const fetchCompliances = createAsyncThunk(
     'compliance/fetchCompliances',
-    async () => {
-        const { data } = await httpClient.get(endpoints.compliances.getAll())
-        return data
+    async  ({ page, page_size }: { page: number, page_size: number }, { rejectWithValue }) => {
+        try{
+            const { data } = await httpClient.get(endpoints.compliances.getAll(), {
+                params: {
+                    page,
+                    page_size: page_size,
+                  },
+            })
+            return {
+                data: data.data,
+                paginateData: {
+                    totalResults: data.paginate_data.totalResults,
+                    totalPages: data.paginate_data.totalPages || 0,
+                    page: page, // Use the requested page number
+                    limit: page_size, 
+                },
+              };
+        }
+        catch(error : any) {
+            return rejectWithValue(error.response?.data.message)
+        }
     },
 )
 
-// const openNotification = (type: 'success' | 'info' | 'danger' | 'warning', message: string, error?: any) => {
-//   let errorMessage = message;
-//   // if (error && error.response && error.response.data && error.response.data.message) {
-//   //   errorMessage = error.response.data.message.join(', ');
-//   // }
-//   toast.push(
-//     <Notification title="Error" type={type}>
-//       {errorMessage}
-//     </Notification>
-//   );
-// };
 
 export const createCompliance = createAsyncThunk(
     'compliance/createCompliance',
@@ -116,7 +131,8 @@ const complianceSlice = createSlice({
             })
             .addCase(fetchCompliances.fulfilled, (state, action) => {
                 state.loading = false
-                state.compliances = action.payload?.data || []
+                state.compliances = action.payload.data;
+                state.paginateData = action.payload.paginateData;
             })
             .addCase(fetchCompliances.rejected, (state, action) => {
                 state.loading = false
