@@ -213,7 +213,7 @@ const ComplianceTable: React.FC<ComplianceDataProps> = ({
       accessorKey: 'scope',
       cell: (props) => (
         <Tooltip title={props.getValue()} placement="top">
-          <div className="w-40 truncate uppercase">{props.getValue()}</div>
+          <div className="w-24 truncate uppercase">{props.getValue()}</div>
         </Tooltip>
       ),
     },
@@ -222,7 +222,7 @@ const ComplianceTable: React.FC<ComplianceDataProps> = ({
       accessorKey: 'legislation',
       cell: (props) => (
         <Tooltip title={props.getValue()} placement="top">
-        <div className="w-96">{props.getValue()}</div>
+        <div className="w-96 truncate">{props.getValue()}</div>
         </Tooltip>
       ),
     },
