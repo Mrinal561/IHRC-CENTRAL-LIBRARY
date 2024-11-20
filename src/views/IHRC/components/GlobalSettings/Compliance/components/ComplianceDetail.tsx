@@ -70,7 +70,7 @@ const ComplianceDetail = () => {
 
     return (
         <AdaptableCard className="p-4">
-            <div className="lg:flex items-center gap-2 mb-8">
+            <div className="flex items-center gap-2 mb-8">
                 <div className='w-6 h-6 rounded-full flex items-center justify-center hover:bg-[#7c828e]/30 hover:text-[#5d6169] hover:rounded-full'>
                     <Button
                         size="sm"
@@ -79,13 +79,13 @@ const ComplianceDetail = () => {
                         onClick={() => navigate(-1)}
                     />
                 </div>
-                <h3 className="mb-4 lg:mb-0">Compliance Details</h3>
+                <h3 className="">Compliance Details</h3>
             </div>
 
             {/* Header Section */}
             <div className="border p-4 rounded-md mb-6">
-                <h2 className="text-xl font-semibold mb-2">{compliance.legislation}</h2>
-                <p className="text-sm mb-2"><strong>Legislation:</strong> {compliance.header}</p>
+                <h2 className="text-base font-semibold mb-2">{compliance.legislation}</h2>
+                <p className="text-sm mb-2"><strong>Header:</strong> {compliance.header}</p>
                 <div className="flex items-center gap-2">
                 <Badge className={scopeColor.dotClass} />
                 <p className={`capitalize font-semibold ${scopeColor.textClass}`}>
