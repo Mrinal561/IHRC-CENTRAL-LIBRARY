@@ -8,18 +8,33 @@ import { RiEyeLine } from 'react-icons/ri';
 import { FiTrash } from 'react-icons/fi';
 import type { ColumnDef } from '@/components/shared/DataTable';
 import { AppDispatch, RootState } from '@/store';
-import { fetchCompliances } from '@/store/slices/compliances/compliancesSlice';
+import {  deleteCompliance, fetchCompliances } from '@/store/slices/compliances/compliancesSlice';
+import { showErrorNotification } from '@/components/ui/ErrorMessage';
+import { ComplianceData } from '@/@types/compliance';
+interface ComplianceDataProps {
+  complianceData: ComplianceData[];
+  isLoading: boolean;
+  onDataChange: (page?: number, pageSize?: number) => void;
+}
 
 
-const ComplianceTable = () => {
+const ComplianceTable: React.FC<ComplianceDataProps> = ({ 
+  complianceData, 
+  isLoading,  
+  onDataChange,
+}) => {
     const dispatch = useDispatch<AppDispatch>();
 
-  const [complianceTableData, setComplianceTableData] = useState([]);
+  const [complianceTableData, setComplianceTableData] = useState<ComplianceData[]>([]);;
   const [dialogIsOpen, setDialogIsOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  // const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
+
+  useEffect(()=>{
+    setComplianceTableData(complianceData);
+  }, [complianceData])
 
   useEffect(() => {
     // fetchComplianceData(1, 10);
@@ -28,7 +43,7 @@ const ComplianceTable = () => {
   }, []);
 
   const fetchComplianceData = async (page: number, size: number) => {
-    setIsLoading(true);
+    // setIsLoading (true);
     try{
 
       const { payload } = await dispatch(fetchCompliances({page: page, page_size: size}));
@@ -61,7 +76,7 @@ const ComplianceTable = () => {
       //   </Notification>
       // );
     } finally {
-      setIsLoading(false);
+      // setIsLoading(false);
     }
      
   };
@@ -86,22 +101,93 @@ const ComplianceTable = () => {
     })
   };
 
-  const handleDelete = (compliance) => {
+  const handleDelete = (compliance : ComplianceData) => {
     setItemToDelete(compliance);
     setDialogIsOpen(true);
   };
+
+  const handleDialogClose = () => {
+    setDialogIsOpen(false);
+    // setEditDialogIsOpen(false);
+    setItemToDelete(null);
+    // setItemToEdit(null);
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (itemToDelete?.id) {
+        try {
+          const response=  await dispatch(deleteCompliance(itemToDelete.id))
+          .unwrap()
+          .catch((error: any) => {
+            // Handle different error formats
+            if (error.response?.data?.message) {
+                // API error response
+                showErrorNotification(error.response.data.message);
+            } else if (error.message) {
+                // Regular error object
+                showErrorNotification(error.message);
+            } else if (Array.isArray(error)) {
+                // Array of error messages
+                showErrorNotification(error);
+            } else {
+                // Fallback error message
+                // showErrorNotification('An unexpected error occurred. Please try again.');
+            }
+            throw error; // Re-throw to prevent navigation
+        });
+
+        if(response){
+          handleDialogClose();
+            
+            const newTotal = tableData.total - 1;
+            const lastPage = Math.ceil(newTotal / tableData.pageSize);
+            const newPageIndex = tableData.pageIndex > lastPage ? lastPage : tableData.pageIndex;
+            
+            onDataChange(newPageIndex, tableData.pageSize);
+            // showSuccessNotification('Company group deleted successfully');
+        }
+        } catch (error) {
+            showErrorNotification(error);
+            console.log(error);
+            
+        }
+        handleDialogClose();
+    }
+};
 
   // const handleConfirmDelete = async () => {
   //   if (!itemToDelete?.id) return;
 
   //   try {
   //     setIsLoading(true);
-  //     const result = await dispatch(deleteCompliance(itemToDelete.id)).unwrap();
+  //     const result = await dispatch(deleteCompliance(itemToDelete.id))
+  //     .unwrap()
+  //     .catch((error: any) => {
+  //       // Handle different error formats
+  //       if (error.response?.data?.message) {
+  //           // API error response
+  //           showErrorNotification(error.response.data.message);
+  //       } else if (error.message) {
+  //           // Regular error object
+  //           showErrorNotification(error.message);
+  //       } else if (Array.isArray(error)) {
+  //           // Array of error messages
+  //           showErrorNotification(error);
+  //       } else {
+  //           // Fallback error message
+  //           // showErrorNotification('An unexpected error occurred. Please try again.');
+  //       }
+  //       throw error; // Re-throw to prevent navigation
+  //   });
+
+  //   if(result) {
+  //     // handleDialogClose();
+  //   }
       
   //     // If deletion was successful
-  //     openNotification('success', 'Compliance deleted successfully');
+  //     // openNotification('success', 'Compliance deleted successfully');
   //     // Refresh the table data
-  //     await fetchComplianceData();
+  //     // await fetchComplianceData();
   //   } catch (error: any) {
   //     console.error('Error deleting compliance:', error);
   //     openNotification('danger', error?.message || 'Failed to delete compliance');
@@ -239,7 +325,7 @@ const ComplianceTable = () => {
               size="sm"
               icon={<FiTrash />}
                className="text-red-500"
-              // onClick={() => handleDelete(row.original)}
+              onClick={() => handleDelete(row.original)}
             />
           </Tooltip>
         </div>
@@ -295,7 +381,7 @@ const ComplianceTable = () => {
     <div className="w-full">
       <DataTable
         columns={columns}
-        data={complianceTableData}
+        data={complianceData}
         skeletonAvatarColumns={[0]}
         skeletonAvatarProps={{ className: 'rounded-md' }}
         loading={isLoading}
@@ -336,7 +422,7 @@ const ComplianceTable = () => {
               variant="solid"
               size="sm"
               className="bg-red-500 hover:bg-red-600 text-white"
-              // onClick={handleConfirmDelete}
+              onClick={handleDeleteConfirm}
             >
               {isLoading ? 'Deleting...' : 'Delete'}
             </Button>

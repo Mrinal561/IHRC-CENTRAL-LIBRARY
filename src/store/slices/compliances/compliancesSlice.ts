@@ -3,28 +3,8 @@ import { endpoints } from '@/api/endpoint'
 import httpClient from '@/api/http-client'
 import { AxiosError } from 'axios'
 import { toast, Notification } from '@/components/ui'
+import { ComplianceData } from '@/@types/compliance'
 
-export interface ComplianceData {
-    id: string
-    legislation: string
-    category: string
-    penalty_type: string
-    first_date: Date
-    last_date: Date
-    scheduled_frequency: string
-    proof_mandatory: Boolean
-    header: string
-    description: string
-    penalty_description: string
-    applicablility: string
-    bare_act_text: string
-    type: string
-    caluse: string
-    frequency: string
-    statutory_auth: string
-    approval_required: boolean
-    criticality: string
-}
 
 export interface ComplianceState {
     compliances: ComplianceData[]
@@ -111,6 +91,21 @@ export const fetchComplianceById = createAsyncThunk(
     },
 )
 
+export const deleteCompliance = createAsyncThunk(
+    'compliance/deleteCompliance',
+    async (id: string, { rejectWithValue }) => {
+      try {
+        console.log(id)
+        await httpClient.delete(endpoints.compliances.delete(id));
+       return id;
+      } catch (error: any) {
+        const err = error as AxiosError<any>
+        return rejectWithValue(err.response?.data?.message);
+      }
+    }
+  );
+
+
 const complianceSlice = createSlice({
     name: 'compliance',
     initialState,
@@ -186,6 +181,20 @@ const complianceSlice = createSlice({
                 state.loading = false
                 state.error = action.payload as string
             })
+            .addCase(deleteCompliance.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+              })
+              .addCase(deleteCompliance.fulfilled, (state, action) => {
+                state.loading = false;
+              //   state.companyGroups = state.companyGroups.filter((g) => g.id !== action.payload);
+              })
+              .addCase(deleteCompliance.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+              })
+
+
     },
 })
 
