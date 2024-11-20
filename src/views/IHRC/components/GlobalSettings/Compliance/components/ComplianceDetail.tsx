@@ -1,60 +1,61 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import AdaptableCard from '@/components/shared/AdaptableCard'
 import Badge from '@/components/ui/Badge'
 import { Button } from '@/components/ui'
 import { IoArrowBack } from 'react-icons/io5'
+import { ComplianceData } from '@/@types/compliance'
+import httpClient from '@/api/http-client'
+import { endpoints } from '@/api/endpoint'
 
-interface ComplianceData {
-    id: number
-    uuid: string
-    legislation: string
-    category: string
-    penalty_type: string
-    default_due_date: {
-        first_date: string
-        last_date: string
-    }
-    scheduled_frequency: string
-    proof_mandatory: boolean
-    header: string
-    description: string
-    penalty_description: string
-    applicablility: string
-    bare_act_text: string
-    type: string
-    caluse: string
-    frequency: string
-    statutory_auth: string
-    approval_required: boolean
-    criticality: string
-    created_type: string
-    created_at: string
-    updated_at: string
+
+interface StateData {
+    id: number;
+    name: string;
 }
 
-// const categorizationColor: Record<string, { label: string; dotClass: string; textClass: string }> = {
-//   // Default configuration for ALL categories
-//   '*': { // <--- Using '*' as a wildcard to match all categories
-//     label: (category: string) => category, // Returns the original category label
-//     dotClass: 'bg-emerald-500',
-//     textClass: 'text-emerald-500',
-//   },
-// };
 
-const getCategorizationColor = (category: string): { label: string; dotClass: string; textClass: string } => {
+const getCategorizationColor = (scope: string): { label: string; dotClass: string; textClass: string } => {
   return {
-    label: category, // Returns the original category label
+    label: scope, // Returns the original category label
     dotClass: 'bg-emerald-500',
     textClass: 'text-emerald-500',
   };
 };
 
+
 const ComplianceDetail = () => {
     const location = useLocation()
     const navigate = useNavigate()
+    const [stateName, setStateName] = useState<string>('')
+    const [isLoading, setIsLoading] = useState(false)
+
+
 
     const compliance = location.state as ComplianceData | undefined
+
+    useEffect(() => {
+        const fetchStateName = async () => {
+            if (compliance?.state_id && compliance.scope === 'state') {
+                try {
+                    setIsLoading(true)
+                    const response = await httpClient.get(endpoints.common.getStatesAll())
+                    const states = response.data as StateData[]
+                    const state = states.find(state => state.id === compliance.state_id)
+                    if (state) {
+                        setStateName(state.name)
+                    }
+                } catch (error) {
+                    console.error('Error fetching state details:', error)
+                } finally {
+                    setIsLoading(false)
+                }
+            }
+        }
+
+        fetchStateName()
+    }, [compliance?.state_id])
+
 
     if (!compliance) {
         return <div>Compliance not found</div>
@@ -64,7 +65,7 @@ const ComplianceDetail = () => {
         return new Date(dateString).toLocaleDateString()
     }
 
-    const categoryColor = getCategorizationColor(compliance.category);
+    const scopeColor = getCategorizationColor(compliance.scope);
 
 
     return (
@@ -83,13 +84,16 @@ const ComplianceDetail = () => {
 
             {/* Header Section */}
             <div className="border p-4 rounded-md mb-6">
-                <h2 className="text-xl font-semibold mb-2">{compliance.header}</h2>
-                <p className="text-sm mb-2"><strong>Legislation:</strong> {compliance.legislation}</p>
+                <h2 className="text-xl font-semibold mb-2">{compliance.legislation}</h2>
+                <p className="text-sm mb-2"><strong>Legislation:</strong> {compliance.header}</p>
                 <div className="flex items-center gap-2">
-                <Badge className={categoryColor.dotClass} />
-                <span className={`capitalize font-semibold ${categoryColor.textClass}`}>
-                {compliance.category}
-                </span>
+                <Badge className={scopeColor.dotClass} />
+                <p className={`capitalize font-semibold ${scopeColor.textClass}`}>
+                        {compliance.scope}
+                        {compliance.scope === 'state' && stateName && (
+                            <span> ({stateName})</span>
+                        )}
+                    </p>
               </div>
             </div>
 
@@ -113,19 +117,20 @@ const ComplianceDetail = () => {
                     <div className="w-1/2">
                         <p className="text-sm mb-2"><strong>Compliance ID:</strong> {compliance.id}</p>
                         <p className="text-sm mb-2"><strong>UUID:</strong> {compliance.uuid}</p>
+                        <p className="text-sm mb-2"><strong>Category:</strong> {compliance.category}</p>
+                        {/* <p className="text-sm mb-2"><strong>State:</strong> {compliance.state_id}</p> */}
                         <p className="text-sm mb-2"><strong>Penalty Description:</strong> {compliance.penalty_description}</p>
                         <p className="text-sm mb-2"><strong>Applicability:</strong> {compliance.applicablility}</p>
                         <p className="text-sm mb-2"><strong>Clause:</strong> {compliance.caluse}</p>
                         <p className="text-sm mb-2"><strong>Type:</strong> {compliance.type}</p>
                         <p className="text-sm mb-2"><strong>Frequency:</strong> {compliance.frequency}</p>
-                        <p className="text-sm mb-2"><strong>Statutory Authority:</strong> {compliance.statutory_auth}</p>
                     </div>
                     {/* Right Column */}
                     <div className="w-1/2">
+                        <p className="text-sm mb-2"><strong>Statutory Authority:</strong> {compliance.statutory_auth}</p>
                         <p className="text-sm mb-2"><strong>Criticality:</strong> {compliance.criticality}</p>
                         <p className="text-sm mb-2"><strong>Penalty Type:</strong> {compliance.penalty_type}</p>
                         <p className="text-sm mb-2"><strong>Default Due Date:</strong> {formatDate(compliance.default_due_date.first_date)} - {formatDate(compliance.default_due_date.last_date)}</p>
-                        <p className="text-sm mb-2"><strong>Scheduled Frequency:</strong> {compliance.scheduled_frequency}</p>
                         <p className="text-sm mb-2"><strong>Proof Mandatory:</strong> {compliance.proof_mandatory ? 'Yes' : 'No'}</p>
                         <p className="text-sm mb-2"><strong>Approval Required:</strong> {compliance.approval_required ? 'Yes' : 'No'}</p>
                         <p className="text-sm mb-2"><strong>Created Type:</strong> {compliance.created_type}</p>

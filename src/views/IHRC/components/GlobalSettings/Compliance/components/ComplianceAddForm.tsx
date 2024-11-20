@@ -45,7 +45,7 @@ const ComplianceAddForm = () => {
         second_date: '',
         third_date: '',
         last_date: '',
-        scheduled_frequency: '',
+        // scheduled_frequency: '',
         proof_mandatory: true,
     })
 
@@ -130,7 +130,7 @@ const ComplianceAddForm = () => {
             },
             scope: formData.scope,
             state_id: formData.scope === 'state' ? formData.state_id : null,
-            scheduled_frequency: data.scheduled_frequency,
+            // scheduled_frequency: data.scheduled_frequency,
             proof_mandatory: data.proof_mandatory,
         }
     }
@@ -211,7 +211,7 @@ const ComplianceAddForm = () => {
             'criticality',
             'first_date',
             'penalty_type',
-            'scheduled_frequency',
+            // 'scheduled_frequency',
         ]
 
         const missingFields = requiredFields.filter((field) => !formData[field])
@@ -610,7 +610,7 @@ return (
                     />
                 </div>
 
-                <div>
+                {/* <div>
                     <p className="mb-2">Scheduled Frequency <span className="text-red-500">*</span></p>
                     <OutlinedSelect
                         label="Select Scheduled Frequency"
@@ -625,7 +625,7 @@ return (
                             )
                         }}
                     />
-                </div>
+                </div> */}
                 <div>
                     <p className="mb-2">Proof of Compliance</p>
                     <OutlinedSelect

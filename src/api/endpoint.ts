@@ -28,6 +28,7 @@ export const endpoints = {
         update: (id: string) => api(`superadmin/compliance/${id}`),
         downloadFormat: () => api(`upload/sample_files/master-compliance.xlsx`),
         bulkCreate: () => api(`/superadmin/compliance/bulk-upload`),
+        delete: (id: string) => api(`superadmin/compliance/${id}`),
     },
     pf: {
         getAll: () => api('superadmin/pfconfig'),
