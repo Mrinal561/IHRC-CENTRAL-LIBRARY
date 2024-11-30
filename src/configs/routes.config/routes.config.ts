@@ -14,12 +14,45 @@ export const protectedRoutes = [
     },
     // {
     //     key: 'groupMenu.collapse.item1',
-    //     path: '/state',
+    //     path: '/remittance-tracker',
     //     component: lazy(() =>
     //         import('@/views/IHRC/components/GlobalSettings/State/State')
     //     ),
     //     authority: [],
     // },
+    {
+        key: 'remittanceTracker.item1',
+        path: '/pf-setup',
+        component: lazy(() =>
+            import('@/views/IHRC/components/GlobalSettings/RemittanceTracker/PFSetup/PFSetup')
+        ),
+        authority: [],
+    },
+    {
+        key: 'remittanceTracker.item2',
+        path: '/esi-setup',
+        component: lazy(() =>
+            import('@/views/IHRC/components/GlobalSettings/RemittanceTracker/ESISetup/ESISetup')
+        ),
+        authority: [],
+    },
+    {
+        key: 'remittanceTracker.item3',
+        path: '/lwf-setup',
+        component: lazy(() =>
+            import('@/views/IHRC/components/GlobalSettings/RemittanceTracker/LWFSetup/LWFSetup')
+        ),
+        authority: [],
+    },
+    {
+        key: 'remittanceTracker.item4',
+        path: '/pt-setup',
+        component: lazy(() =>
+            import('@/views/IHRC/components/GlobalSettings/RemittanceTracker/PTSetup/PTSetup')
+        ),
+        authority: [],
+    },
+    
     // {
     //     key: 'groupMenu.collapse.item2',
     //     path: '/district',
@@ -36,14 +69,14 @@ export const protectedRoutes = [
         ),
         authority: [],
     },
-    // {
-    //     key: 'groupMenu.collapse.item4',
-    //     path: '/pf-configuration',
-    //     component: lazy(() =>
-    //         import('@/views/IHRC/components/GlobalSettings/PFConfiguration/PFConfiguration')
-    //     ),
-    //     authority: [],
-    // },
+    {
+        key: 'groupMenu.collapse.item4',
+        path: '/pf-configuration',
+        component: lazy(() =>
+            import('@/views/IHRC/components/GlobalSettings/PFConfiguration/PFConfiguration')
+        ),
+        authority: [],
+    },
     {
         key: 'groupMenu.collapse.item5',
         path: '/register-template',
