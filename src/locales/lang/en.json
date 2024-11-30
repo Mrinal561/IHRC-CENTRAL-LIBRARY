@@ -5,7 +5,17 @@
            "globalMenu": "Global Settings",
            "collapse": {
                 "collapse": "Global Settings",
-                "item1": "State",
+                "remittanceTracker" : {
+                    "collapse": {
+                        "collapse": "Remittance Tracker",
+                        "remittanceTracker": {
+                        "item1": "PF Setup",
+                        "item2": "ESI Setup",
+                        "item3": "LWF Setup",
+                        "item4": "PT Setup"
+                        }
+                    }
+                },
                 "item2": "District",
                 "item3": "Compliance",
                 "item4": "PF Configuration",

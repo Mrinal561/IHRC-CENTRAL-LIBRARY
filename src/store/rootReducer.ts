@@ -9,7 +9,7 @@ import RtkQueryService from '@/services/RtkQueryService'
 import compliance, { ComplianceState } from './slices/compliances/compliancesSlice'
 import pfconfig, { PFConfigState } from './slices/pfConfig/pfConfigSlice'
 import district, { DistrictState } from './slices/district/districtSlice'
-
+// import pfsetup, { PFSetup }
 
 
 export type RootState = CombinedState<{
