@@ -5,7 +5,7 @@ import { Button, Tooltip } from '@/components/ui';
 import { MdEdit } from 'react-icons/md';
 import { AppDispatch } from '@/store'
 import { useDispatch } from 'react-redux';
-import { fetchPFSetups } from '@/store/slices/pfsetup/pfSetupSlice'; 
+import { fetchPFSetups } from '@/store/slices/pfsetup/pfsetupSlice'; 
 import loadingAnimation from '@/assets/lotties/system-regular-716-spinner-three-dots-loop-scale.json'
 import Lottie from 'lottie-react';
 import { HiOutlineViewGrid } from 'react-icons/hi'
