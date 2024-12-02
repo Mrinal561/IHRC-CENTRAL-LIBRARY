@@ -1,16 +1,17 @@
-
-
-
 import React, { useEffect, useState } from 'react';
-import { Button, Dialog, Notification, toast } from '@/components/ui';
+import { Button, Checkbox, Dialog, Notification, toast } from '@/components/ui';
 import { HiPlusCircle } from 'react-icons/hi';
 import AdaptableCard from '@/components/shared/AdaptableCard';
 import OutlinedSelect from '@/components/ui/Outlined/Outlined';
 import DatePicker from '@/components/ui/DatePicker';
 import BulkUpload from './components/BulkUpload';
-import PTTable from './components/PTTable';
 import httpClient from '@/api/http-client';
 import { endpoints } from '@/api/endpoint';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '@/store';
+import { createPTRCConfig, createPTECConfig, resetPTSetupState } from '@/store/slices/ptConfig/ptConfigSlice';
+import { PTECConfigData, PTRCConfigData } from '@/@types/ptConfig';
+import PTTable from './components/PTTable';
 
 const frequencyOptions = [
   { value: 'monthly', label: 'Monthly' },
@@ -38,6 +39,9 @@ interface SelectOption {
 }
 
 const PTSetup = () => {
+  const dispatch = useDispatch();
+  const { loading, error, success } = useSelector((state: RootState) => state.ptconfig);
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentPFId, setCurrentPFId] = useState<string | null>(null);
@@ -46,6 +50,7 @@ const PTSetup = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [states, setStates] = useState<SelectOption[]>([]);
   const [selectedStates, setSelectedStates] = useState<SelectOption | null>(null);
+  const [isActive, setIsActive] = useState(false);
 
   const [dateFieldsState, setDateFieldsState] = useState({
     ptEc: {
@@ -294,39 +299,51 @@ const PTSetup = () => {
     }
   
     try {
-      // Prepare data for submission
-      const submissionData = {
-        ...pfData,
-        stateId: selectedStates?.value,
-        id: currentPFId // Will be null for new entry
+      // Prepare PTEC Config Data
+      const ptecConfigData: PTECConfigData = {
+        payment_mode: 'online', // You might want to make this dynamic
+        frequency: pfData.ptEcFrequency as 'monthly' | 'half_yearly' | 'yearly' | 'quarterly',
+        payment_due_date: {
+          first_date: pfData.ptEcFirstDueDate || '',
+          second_date: pfData.ptEcSecondDueDate || '',
+          third_date: pfData.ptEcThirdDueDate || '',
+          last_date: pfData.ptEcFourthDueDate || ''
+        },
+        active: true,
+        state_id: selectedStates?.value
       };
-  
-      // Simulated API call - replace with actual API endpoint
-      if (isEditMode && currentPFId) {
-        // Update existing record
-        // await httpClient.put(`${endpoints.ptSetup}/${currentPFId}`, submissionData);
-        
-        toast.push(
-          <Notification title="Success" type="success">
-            PT Setup updated successfully!
-          </Notification>
-        );
-      } else {
-        // Create new record
-        // await httpClient.post(endpoints.ptSetup, submissionData);
-        
-        toast.push(
-          <Notification title="Success" type="success">
-            PT Setup created successfully!
-          </Notification>
-        );
-      }
-  
+
+      // Prepare PTRC Config Data
+      const ptrcConfigData: PTRCConfigData = {
+        payment_mode: 'online', // You might want to make this dynamic
+        frequency: pfData.ptRcFrequency as 'monthly' | 'half_yearly' | 'yearly' | 'quarterly',
+        payment_due_date: {
+          first_date: pfData.ptRcFirstDueDate || '',
+          second_date: pfData.ptRcSecondDueDate || '',
+          third_date: pfData.ptRcThirdDueDate || '',
+          last_date: pfData.ptRcFourthDueDate || ''
+        },
+        active: true,
+        state_id: selectedStates?.value
+      };
+
+      // Dispatch PTEC and PTRC creation actions
+      const ptecResult = await dispatch(createPTECConfig(ptecConfigData)).unwrap();
+      const ptrcResult = await dispatch(createPTRCConfig(ptrcConfigData)).unwrap();
+
+      // Show success notification
+      toast.push(
+        <Notification title="Success" type="success">
+          PT Setup created successfully!
+        </Notification>
+      );
+
       // Close dialog and reset form
       handleDialogClose();
-  
-      // Optionally, refresh the table data
-      // fetchPTSetupData();
+
+      // Reset Redux state
+      dispatch(resetPTSetupState());
+
     } catch (error) {
       console.error('Error in PT Setup submission:', error);
       
@@ -335,8 +352,32 @@ const PTSetup = () => {
           Failed to save PT Setup. Please try again.
         </Notification>
       );
+
+      // Reset Redux state
+      dispatch(resetPTSetupState());
     }
   };
+
+
+  useEffect(() => {
+    if (success) {
+      toast.push(
+        <Notification title="Success" type="success">
+          PT Setup created successfully!
+        </Notification>
+      );
+      dispatch(resetPTSetupState());
+    }
+
+    if (error) {
+      toast.push(
+        <Notification title="Error" type="danger">
+          {error}
+        </Notification>
+      );
+      dispatch(resetPTSetupState());
+    }
+  }, [success, error, dispatch]);
 
   return (
     <AdaptableCard className="h-full" bodyClass="h-full">
@@ -345,7 +386,7 @@ const PTSetup = () => {
           <h3 className="text-2xl font-bold">PT Global Setup</h3>
         </div>
         <div className="flex gap-2">
-          <BulkUpload />
+          {/* <BulkUpload /> */}
           <Button
             variant="solid"
             size="sm"
@@ -499,6 +540,15 @@ const PTSetup = () => {
               </div>
             </div>
           </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Checkbox
+              checked={isActive}
+              onChange={(checked) => setIsActive(checked)}
+            />
+            <label className="text-gray-600">
+              Is PT applicable for Selected State
+            </label>
           </div>
 
          

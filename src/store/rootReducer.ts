@@ -9,7 +9,10 @@ import RtkQueryService from '@/services/RtkQueryService'
 import compliance, { ComplianceState } from './slices/compliances/compliancesSlice'
 import pfconfig, { PFConfigState } from './slices/pfConfig/pfConfigSlice'
 import district, { DistrictState } from './slices/district/districtSlice'
-// import pfsetup, { PFSetup }
+import esiconfig, { ESIConfigState } from './slices/esiConfig/esiConfigSlice'
+import lwfconfig, { LWFConfigState } from './slices/lwfConfig/lwfConfigSlice';
+import ptconfig,  { PTSetupState } from './slices/ptConfig/ptConfigSlice'
+
 
 
 export type RootState = CombinedState<{
@@ -19,6 +22,9 @@ export type RootState = CombinedState<{
     state: StateState,
     compliance: ComplianceState,
     pfconfig: PFConfigState,
+    esiconfig: ESIConfigState,
+    lwfconfig: LWFConfigState,
+    ptconfig: PTSetupState,
     district: DistrictState,
     locale: LocaleState
     theme: ThemeState
@@ -40,6 +46,9 @@ const staticReducers = {
     district,
     compliance,
     pfconfig,
+    esiconfig,
+    lwfconfig,
+    ptconfig,
     [RtkQueryService.reducerPath]: RtkQueryService.reducer,
 }
 

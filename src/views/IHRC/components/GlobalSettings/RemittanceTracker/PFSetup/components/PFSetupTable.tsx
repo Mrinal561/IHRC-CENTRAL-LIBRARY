@@ -5,63 +5,87 @@ import { Button, Tooltip } from '@/components/ui';
 import { MdEdit } from 'react-icons/md';
 import { AppDispatch } from '@/store'
 import { useDispatch } from 'react-redux';
-import { fetchPFSetups } from '@/store/slices/pfsetup/pfsetupSlice'; 
+import { fetchPFConfigs } from '@/store/slices/pfConfig/pfConfigSlice';
 import loadingAnimation from '@/assets/lotties/system-regular-716-spinner-three-dots-loop-scale.json'
 import Lottie from 'lottie-react';
 import { HiOutlineViewGrid } from 'react-icons/hi'
 
+interface PFSetupTableProps {
+  tableLoading?: boolean;
+  setTableLoading?: (loading: boolean) => void;
+  onEdit?: (row: any) => void;
+}
 
+interface PFConfig {
+  id: number;
+  pf_frequency: string;
+  payment_mode: string;
+  pt_payment_due_date: {
+    first_date?: string;
+    second_date?: string;
+    third_date?: string;
+    last_date?: string;
+  };
+}
 
-const PFSetupTable = ({ tableLoading, setTableLoading, onEdit }: any) => {
+const PFSetupTable: React.FC<PFSetupTableProps> = ({ 
+  tableLoading = false, 
+  setTableLoading, 
+  onEdit 
+}) => {
   const dispatch = useDispatch<AppDispatch>();
-  const [pfTableData, setPFTableData] = useState([]);
-  const [isLoading, setIsLoading] = useState(false)
- 
+  const [pfTableData, setPFTableData] = useState<PFConfig[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const formatDate = (date) => {
+  const formatDate = (date?: string) => {
     if (!date) return '-';
     return format(new Date(date), 'MMM dd, yyyy');
   };
 
-  const getFrequencyLabel = (value) => {
-    const labels = {
+  const getFrequencyLabel = (value: string) => {
+    const labels: { [key: string]: string } = {
       'yearly': 'Yearly',
       'half_yearly': 'Half Yearly',
-      'monthly': 'Monthly'
+      'monthly': 'Monthly',
+      'quarterly': 'Quarterly'
     };
     return labels[value] || value;
   };
 
   const columns = useMemo(
     () => [
+      // {
+      //   header: 'ID',
+      //   accessorKey: 'id',
+      // },
       {
-        header: 'State',
-        accessorKey: 'name',
+        header: 'Mode',
+        accessorKey: 'payment_mode',
       },
       {
         header: 'PF Frequency',
-        accessorKey: 'frequency',
-        cell: ({ row }) => getFrequencyLabel(row.original.frequency),
+        accessorKey: 'pf_frequency',
+        cell: ({ row }) => getFrequencyLabel(row.original.pf_frequency),
       },
       {
         header: 'First Due Date',
-        accessorKey: 'firstDueDate',
-        cell: ({ row }) => formatDate(row.original.firstDueDate),
+        accessorKey: 'first_date',
+        cell: ({ row }) => formatDate(row.original.pt_payment_due_date.first_date),
       },
       {
         header: 'Second Due Date',
-        accessorKey: 'secondDueDate',
-        cell: ({ row }) => formatDate(row.original.secondDueDate) || '-',
+        accessorKey: 'second_date',
+        cell: ({ row }) => formatDate(row.original.pt_payment_due_date.second_date) || '-',
       },
       {
         header: 'Third Due Date',
-        accessorKey: 'thirdDueDate',
-        cell: ({ row }) => formatDate(row.original.thirdDueDate) || '-',
+        accessorKey: 'third_date',
+        cell: ({ row }) => formatDate(row.original.pt_payment_due_date.third_date) || '-',
       },
       {
-        header: 'Fourth Due Date',
-        accessorKey: 'fourthDueDate',
-        cell: ({ row }) => formatDate(row.original.fourthDueDate) || '-',
+        header: 'Last Due Date',
+        accessorKey: 'last_date',
+        cell: ({ row }) => formatDate(row.original.pt_payment_due_date.last_date) || '-',
       },
       {
         header: 'Actions',
@@ -72,7 +96,7 @@ const PFSetupTable = ({ tableLoading, setTableLoading, onEdit }: any) => {
               <Button
                 size="sm"
                 icon={<MdEdit />}
-                onClick={() => onEdit(row.original)}
+                onClick={() => onEdit && onEdit(row.original)}
               />
             </Tooltip>
           </div>
@@ -91,31 +115,33 @@ const PFSetupTable = ({ tableLoading, setTableLoading, onEdit }: any) => {
   });
 
   useEffect(() => {
-    fetchPFSetupData(1, 10);
+    fetchPFSetupData(tableData.pageIndex, tableData.pageSize);
   }, []);
 
-  useEffect(() => {
-    if (tableLoading) {
-      fetchPFSetupData(1, 10);
-      setTableLoading(false);
-    }
-  }, [tableLoading]);
 
   const fetchPFSetupData = async (page: number, size: number) => {
+    setIsLoading(true);
     try {
-      // You'll need to implement this Redux action
-      const { payload: data } = await dispatch(
-        fetchPFSetups({ page, page_size: size })
+      const { payload } = await dispatch(
+        fetchPFConfigs({ page, page_size: size })
       );
       
-    //   setPFTableData(data?.data);
-    //   setTableData((prev) => ({
-    //     ...prev,
-    //     total: data?.paginate_data.totalResult,
-    //     pageIndex: data?.paginate_data.page,
-    //   }));
+      if (payload?.data && payload?.paginateData) {
+        setPFTableData(payload?.data);
+      setTableData((prev) => ({
+        ...prev,
+        total: payload.paginateData.totalResult,
+        totalPages: payload.paginateData.totalPages,
+        pageIndex: page, 
+        pageSize: size
+      }));
+      }
     } catch (error) {
       console.error('Failed to fetch PF setups', error);
+      setIsLoading(false);
+    }
+    finally{
+      setIsLoading(false);
     }
   };
 
@@ -134,52 +160,49 @@ const PFSetupTable = ({ tableLoading, setTableLoading, onEdit }: any) => {
   };
 
   if (isLoading) {
-    console.log("Loading....................");
-    
     return (
-        <div className="flex flex-col items-center justify-center h-96 text-gray-500  rounded-xl">
-            <div className="w-28 h-28">
-                <Lottie 
-                    animationData={loadingAnimation} 
-                    loop 
-                    className="w-24 h-24"
-                />
-            </div>
-            <p className="text-lg font-semibold">
-                Loading Data...
-            </p>
-
+      <div className="flex flex-col items-center justify-center h-96 text-gray-500 rounded-xl">
+        <div className="w-28 h-28">
+          <Lottie 
+            animationData={loadingAnimation} 
+            loop 
+            className="w-24 h-24"
+          />
         </div>
+        <p className="text-lg font-semibold">
+          Loading Data...
+        </p>
+      </div>
     );
-}
+  }
 
   return (
     <div className="relative">
-        {pfTableData.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-96 text-gray-500 border rounded-xl">
-                <HiOutlineViewGrid className="w-12 h-12 mb-4 text-gray-300" />
-                <p className="text-center">
-        No Data Available
-                </p>
-      </div>
-            ) : (
-      <DataTable
-        columns={columns}
-        data={pfTableData}
-        loading={isLoading}
-        stickyHeader={true}
-        stickyFirstColumn={true}
-        stickyLastColumn={true}
-        pagingData={{
-          total: tableData.total,
-          pageIndex: tableData.pageIndex,
-          pageSize: tableData.pageSize,
-        }}
-        onPaginationChange={onPaginationChange}
-        onSelectChange={onSelectChange}
-        selectable={true}
-      />
-    )}
+      {pfTableData.length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-96 text-gray-500 border rounded-xl">
+          <HiOutlineViewGrid className="w-12 h-12 mb-4 text-gray-300" />
+          <p className="text-center">
+            No Data Available
+          </p>
+        </div>
+      ) : (
+        <DataTable
+          columns={columns}
+          data={pfTableData}
+          loading={isLoading}
+          stickyHeader={true}
+          stickyFirstColumn={true}
+          stickyLastColumn={true}
+          pagingData={{
+            total: tableData.total,
+            pageIndex: tableData.pageIndex,
+            pageSize: tableData.pageSize,
+          }}
+          onPaginationChange={onPaginationChange}
+          onSelectChange={onSelectChange}
+          selectable={true}
+        />
+      )}
     </div>
   );
 };

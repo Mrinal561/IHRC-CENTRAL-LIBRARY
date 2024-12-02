@@ -1,14 +1,19 @@
 import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { Button, Dialog, Notification, toast } from '@/components/ui';
 import { HiPlusCircle } from 'react-icons/hi';
 import AdaptableCard from '@/components/shared/AdaptableCard';
 import OutlinedInput from '@/components/ui/OutlinedInput';
 import OutlinedSelect from '@/components/ui/Outlined/Outlined';
 import DatePicker from '@/components/ui/DatePicker';
+import Checkbox from '@/components/ui/Checkbox';
 import BulkUpload from './components/BulkUpload';
 import ESITable from './components/ESITable';
+import { fetchESIConfigs, createESIConfig, updateESIConfig, clearCurrentESIConfig  } from '@/store/slices/esiConfig/esiConfigSlice';
+import { AppDispatch, RootState } from '@/store';
 import httpClient from '@/api/http-client';
 import { endpoints } from '@/api/endpoint';
+import { showErrorNotification } from '@/components/ui/ErrorMessage';
 
 const frequencyOptions = [
   { value: 'monthly', label: 'Monthly' },
@@ -17,187 +22,259 @@ const frequencyOptions = [
   { value: 'quarterly', label: 'Quarterly' },
 ];
 
-const initialPFData = {
-  name: '',
-  frequency: '',
-  firstDueDate: null,
-  secondDueDate: null,
-  thirdDueDate: null,
-  fourthDueDate: null,
-};
-
 interface SelectOption {
-  value: string
-  label: string
+  value: string;
+  label: string;
 }
 
 const ESISetup = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const { esiConfigs, loading, error, currentESIConfig } = useSelector((state: RootState) => state.esiconfig);
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [currentPFId, setCurrentPFId] = useState<string | null>(null);
-  const [pfData, setPFData] = useState(initialPFData);
-  const [pfTableData, setPFTableData] = useState([]);
-  const [isLoading, setIsLoading] = useState(false)
   const [states, setStates] = useState<SelectOption[]>([]);
-  const [selectedStates, setSelectedStates] = useState<SelectOption | null>(null);
+  const [selectedState, setSelectedState] = useState<SelectOption | null>(null);
+  const [frequency, setFrequency] = useState<string>('');
+  const [isActive, setIsActive] = useState(false);
+
+  const [paymentDueDates, setPaymentDueDates] = useState({
+    firstDate: null,
+    secondDate: null,
+    thirdDate: null,
+    lastDate: null
+  });
 
   const [dateFieldsState, setDateFieldsState] = useState({
     isSecondDateEnabled: false,
     isThirdDateEnabled: false,
     isLastDateEnabled: false
-})
+  });
 
-const loadStates = async () => {
-  try {
-    setIsLoading(true);
-    const response = await httpClient.get(endpoints.common.getStatesAll())
-    
-    if (response.data) {
-      const formattedStates = response.data.map((state: any) => ({
-        label: state.name,
-        value: String(state.id)
-      }));
-      
-      console.log('Formatted States:', formattedStates); // Debug log
-      setStates(formattedStates);
-    } else {
-      console.error('Invalid state data structure:', response.data);
-      // showNotification('danger', 'Invalid state data received');
-    }
-  } catch (error) {
-    console.error('Failed to load states:', error);
-    // showNotification('danger', 'Failed to load states');
-  } finally {
-    setIsLoading(false);
-  }
-};
+  useEffect(() => {
+    loadStates();
+    dispatch(fetchESIConfigs({ page: 1, page_size: 10 }));
+  }, [dispatch]);
 
-useEffect(() => {
-  loadStates();
-}, []);
-
-
-const handleStateChange = (option: SelectOption | null) => {
-  setSelectedStates(option);
-};
-
-const handleInputChange = (name: string, value: any) => {
-
-  if (name === 'frequency') {
-    const frequencyValue = value && typeof value === 'object' && 'value' in value 
-      ? value.value 
-      : value;
-    
-    setPFData(prev => {
-      const updated = { ...prev, frequency: frequencyValue };
-      
-      // Reset date fields based on frequency
-      switch (frequencyValue) {
-        case 'monthly':
-        case 'yearly':
-          updated.secondDueDate = null;
-          updated.thirdDueDate = null;
-          updated.fourthDueDate = null;
-          setDateFieldsState({
-            isSecondDateEnabled: false,
-            isThirdDateEnabled: false,
-            isLastDateEnabled: false
-          });
-          break;
-        case 'half_yearly':
-          updated.secondDueDate = null;
-          updated.thirdDueDate = null;
-          setDateFieldsState({
-            isSecondDateEnabled: false,
-            isThirdDateEnabled: false,
-            isLastDateEnabled: true
-          });
-          break;
-        case 'quarterly':
-          setDateFieldsState({
-            isSecondDateEnabled: true,
-            isThirdDateEnabled: true,
-            isLastDateEnabled: true
-          });
-          break;
-      }
-      
-      return updated;
-    });
-  } else if (name in initialPFData) {
-    setPFData(prev => ({ ...prev, [name]: value }));
-  }
-};
-
-
-
-
-  const handleEdit = (pfToEdit) => {
-    setIsEditMode(true);
-    setCurrentPFId(pfToEdit.id);
-    setPFData({
-      name: pfToEdit.name,
-      frequency: pfToEdit.frequency,
-      firstDueDate: pfToEdit.firstDueDate,
-      secondDueDate: pfToEdit.secondDueDate,
-      thirdDueDate: pfToEdit.thirdDueDate,
-      fourthDueDate: pfToEdit.fourthDueDate,
-    });
-    setIsDialogOpen(true);
-  };
-
-  const handleDialogClose = () => {
-    setIsDialogOpen(false);
-    setIsEditMode(false);
-    setCurrentPFId(null);
-    setPFData(initialPFData);
-  };
-
-  const handleConfirm = async () => {
+  const loadStates = async () => {
     try {
-      // Here you would typically dispatch an action to create or update PF setup
-      // For now, we'll just simulate the action
-      if (isEditMode && currentPFId) {
-        // Update existing PF setup
-        toast.push(
-          <Notification title="Success" type="success">
-            PF Setup updated successfully!
-          </Notification>
-        );
-      } else {
-        // Create new PF setup
-        toast.push(
-          <Notification title="Success" type="success">
-            PF Setup created successfully!
-          </Notification>
-        );
+      const response = await httpClient.get(endpoints.common.getStatesAll());
+      
+      if (response.data) {
+        const formattedStates = response.data.map((state: any) => ({
+          label: state.name,
+          value: String(state.id)
+        }));
+        
+        setStates(formattedStates);
       }
-      handleDialogClose();
     } catch (error) {
-      // Error handling
+      console.error('Failed to load states:', error);
       toast.push(
         <Notification title="Error" type="danger">
-          Failed to save PF Setup
+          Failed to load states
         </Notification>
       );
     }
   };
 
-  // Helper function to determine if a due date should be disabled
-  const isDueDateDisabled = (dateIndex: number) => {
-    switch (pfData.frequency) {
+  const handleFrequencyChange = (selectedFrequency: any) => {
+    const frequencyValue = selectedFrequency?.value || '';
+    setFrequency(frequencyValue);
+    
+    // Reset date fields based on frequency
+    switch (frequencyValue) {
       case 'monthly':
       case 'yearly':
-        // Only first date is allowed
+        setPaymentDueDates({
+          firstDate: null,
+          secondDate: null,
+          thirdDate: null,
+          lastDate: null
+        });
+        setDateFieldsState({
+          isSecondDateEnabled: false,
+          isThirdDateEnabled: false,
+          isLastDateEnabled: false
+        });
+        break;
+      case 'half_yearly':
+        setPaymentDueDates(prev => ({
+          ...prev,
+          secondDate: null,
+          thirdDate: null
+        }));
+        setDateFieldsState({
+          isSecondDateEnabled: false,
+          isThirdDateEnabled: false,
+          isLastDateEnabled: true
+        });
+        break;
+      case 'quarterly':
+        setDateFieldsState({
+          isSecondDateEnabled: true,
+          isThirdDateEnabled: true,
+          isLastDateEnabled: true
+        });
+        break;
+    }
+  };
+
+  const isDueDateDisabled = (dateIndex: number) => {
+    switch (frequency) {
+      case 'monthly':
+      case 'yearly':
         return dateIndex > 0;
       case 'half_yearly':
-        // First and last dates are allowed
         return dateIndex > 0 && dateIndex < 3;
       case 'quarterly':
-        // All dates are allowed
         return false;
       default:
         return true;
+    }
+  };
+
+  const handleDialogClose = () => {
+    setIsDialogOpen(false);
+    setIsEditMode(false);
+    resetForm();
+  };
+
+  const resetForm = () => {
+    setSelectedState(null);
+    setFrequency('');
+    setIsActive(false);
+    setPaymentDueDates({
+      firstDate: null,
+      secondDate: null,
+      thirdDate: null,
+      lastDate: null
+    });
+    dispatch(clearCurrentESIConfig());
+  };
+
+  const handleConfirm = async () => {
+    // Validate form
+    if (!selectedState || !frequency || !paymentDueDates.firstDate) {
+      toast.push(
+        <Notification title="Error" type="danger">
+          Please fill all required fields
+        </Notification>
+      );
+      return;
+    }
+
+    const esiConfigData = {
+      frequency: frequency as 'monthly' | 'half_yearly' | 'yearly' | 'quarterly',
+      payment_due_date: {
+        first_date: paymentDueDates.firstDate,
+        second_date: paymentDueDates.secondDate,
+        third_date: paymentDueDates.thirdDate,
+        last_date: paymentDueDates.lastDate
+      },
+      payment_mode: 'online', // Default value, can be made configurable
+      active: isActive,
+      state_id: selectedState.value
+    };
+
+    try {
+      if (isEditMode && currentESIConfig?.id) {
+        const result = await dispatch(updateESIConfig({ 
+          id: currentESIConfig.id, 
+          data: esiConfigData 
+        }))
+        .unwrap()
+        .catch((error: any) => {
+          console.error('Full error object:', error);
+          console.error('Error response:', error.response);
+          console.error('Error message:', error.message);
+          
+          if (error.response?.data?.message) {
+            showErrorNotification(error.response.data.message)
+          } else if (error.message) {
+            showErrorNotification(error.message)
+          } else {
+            showErrorNotification('An unexpected error occurred. Please try again.')
+          }
+          throw error;
+        });
+        
+      } else {
+        const result = await dispatch(createESIConfig(esiConfigData))
+        .unwrap()
+        .catch((error: any) => {
+          console.error('Full error object:', error);
+          console.error('Error response:', error.response);
+          console.error('Error message:', error.message);
+          
+          if (error.response?.data?.message) {
+            showErrorNotification(error.response.data.message)
+          } else if (error.message) {
+            showErrorNotification(error.message)
+          } else {
+            showErrorNotification('An unexpected error occurred. Please try again.')
+          }
+          throw error;
+        });
+        
+        // toast.push(
+        //   <Notification title="Success" type="success">
+        //     ESI Configuration created successfully
+        //   </Notification>
+        // );
+        if(result) {
+          handleDialogClose();
+          dispatch(fetchESIConfigs({ page: 1, page_size: 10 }));
+        }
+      }
+      
+    } catch (error: any) {
+     console.log(error);
+     
+    }
+  };
+
+  const handleEdit = (config) => {
+    setIsEditMode(true);
+    setIsDialogOpen(true);
+    
+    // Set state from the selected configuration
+    const selectedStateObj = states.find(state => state.value === config.state_id);
+    setSelectedState(selectedStateObj || null);
+    setFrequency(config.frequency);
+    setIsActive(config.active);
+    
+    setPaymentDueDates({
+      firstDate: config.payment_due_date.first_date,
+      secondDate: config.payment_due_date.second_date,
+      thirdDate: config.payment_due_date.third_date,
+      lastDate: config.payment_due_date.last_date
+    });
+    
+    // Update date fields state based on frequency
+    switch (config.frequency) {
+      case 'monthly':
+      case 'yearly':
+        setDateFieldsState({
+          isSecondDateEnabled: false,
+          isThirdDateEnabled: false,
+          isLastDateEnabled: false
+        });
+        break;
+      case 'half_yearly':
+        setDateFieldsState({
+          isSecondDateEnabled: false,
+          isThirdDateEnabled: false,
+          isLastDateEnabled: true
+        });
+        break;
+      case 'quarterly':
+        setDateFieldsState({
+          isSecondDateEnabled: true,
+          isThirdDateEnabled: true,
+          isLastDateEnabled: true
+        });
+        break;
     }
   };
 
@@ -208,7 +285,7 @@ const handleInputChange = (name: string, value: any) => {
           <h3 className="text-2xl font-bold">ESI Global Setup</h3>
         </div>
         <div className="flex gap-2">
-          <BulkUpload />
+          {/* <BulkUpload /> */}
           <Button
             variant="solid"
             size="sm"
@@ -221,7 +298,6 @@ const handleInputChange = (name: string, value: any) => {
       </div>
       
       <ESITable 
-        // Add necessary props
         onEdit={handleEdit}
       />
 
@@ -236,17 +312,11 @@ const handleInputChange = (name: string, value: any) => {
             <div className="w-full">
               <label className="text-gray-600 mb-2 block">State</label>
               <OutlinedSelect
-                        label="Select State"
-                        options={states}
-                        value={selectedStates}
-                        onChange={handleStateChange}
-                        // onChange={(selectedOption: SelectOption | null) => {
-                            //     // Only allow state selection if scope is 'state'
-                            //     if (formData.scope === 'state') {
-                                //         handleStateChange(selectedOption);
-                                //     }
-                        // }}
-                        />
+                label="Select State"
+                options={states}
+                value={selectedState}
+                onChange={setSelectedState}
+              />
             </div>
           </div>
 
@@ -256,8 +326,8 @@ const handleInputChange = (name: string, value: any) => {
               <OutlinedSelect
                 label="Select ESI Frequency"
                 options={frequencyOptions}
-                value={frequencyOptions.find(option => option.value === pfData.frequency) || null}
-                onChange={(value) => handleInputChange('frequency', value)}
+                value={frequencyOptions.find(option => option.value === frequency) || null}
+                onChange={handleFrequencyChange}
               />
             </div>
           </div>
@@ -268,8 +338,8 @@ const handleInputChange = (name: string, value: any) => {
               <DatePicker
                 className="w-full"
                 placeholder="Select first due date"
-                value={pfData.firstDueDate}
-                onChange={(date) => handleInputChange('firstDueDate', date)}
+                value={paymentDueDates.firstDate}
+                onChange={(date) => setPaymentDueDates(prev => ({ ...prev, firstDate: date }))}
               />
             </div>
             <div className="w-1/2">
@@ -277,8 +347,8 @@ const handleInputChange = (name: string, value: any) => {
               <DatePicker
                 className="w-full"
                 placeholder="Select second due date"
-                value={pfData.secondDueDate}
-                onChange={(date) => handleInputChange('secondDueDate', date)}
+                value={paymentDueDates.secondDate}
+                onChange={(date) => setPaymentDueDates(prev => ({ ...prev, secondDate: date }))}
                 disabled={isDueDateDisabled(1)}
               />
             </div>
@@ -290,21 +360,31 @@ const handleInputChange = (name: string, value: any) => {
               <DatePicker
                 className="w-full"
                 placeholder="Select third due date"
-                value={pfData.thirdDueDate}
-                onChange={(date) => handleInputChange('thirdDueDate', date)}
+                value={paymentDueDates.thirdDate}
+                onChange={(date) => setPaymentDueDates(prev => ({ ...prev, thirdDate: date }))}
                 disabled={isDueDateDisabled(2)}
               />
             </div>
             <div className="w-1/2">
-              <label className="text-gray-600 mb-2 block">Fourth Due Date</label>
+              <label className="text-gray-600 mb-2 block">Last Due Date</label>
               <DatePicker
                 className="w-full"
-                placeholder="Select fourth due date"
-                value={pfData.fourthDueDate}
-                onChange={(date) => handleInputChange('fourthDueDate', date)}
+                placeholder="Select last due date"
+                value={paymentDueDates.lastDate}
+                onChange={(date) => setPaymentDueDates(prev => ({ ...prev, lastDate: date }))}
                 disabled={isDueDateDisabled(3)}
               />
             </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Checkbox
+              checked={isActive}
+              onChange={(checked) => setIsActive(checked)}
+            />
+            <label className="text-gray-600">
+              Is ESI applicable for Selected State
+            </label>
           </div>
         </div>
 
@@ -315,7 +395,11 @@ const handleInputChange = (name: string, value: any) => {
           >
             Cancel
           </Button>
-          <Button variant="solid" onClick={handleConfirm}>
+          <Button 
+            variant="solid" 
+            onClick={handleConfirm}
+            loading={loading}
+          >
             {isEditMode ? 'Update' : 'Confirm'}
           </Button>
         </div>

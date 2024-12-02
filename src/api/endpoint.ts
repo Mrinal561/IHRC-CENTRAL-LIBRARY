@@ -36,6 +36,27 @@ export const endpoints = {
         create: () => api('superadmin/pfconfig'),
         update: (id: string) => api(`superadmin/pfconfig/${id}`),
     },
+    esi: {
+        getAll: () => api('superadmin/state/config'),
+        getById: (id: string) => api(`superadmin/state/config/esi/${id}`),
+        create: () => api('superadmin/state/config/esi'),
+        update: (id: string) => api(`superadmin/state/config/esi/${id}`),
+      },
+    lwf: {
+        getAll: () => api('superadmin/state/config'),
+        getById: (id: string) => api(`superadmin/state/config/lwf/${id}`),
+        create: () => api('superadmin/state/config/lwf'),
+        update: (id: string) => api(`superadmin/state/config/lwf/${id}`),
+      },
+    pt: {
+        getAll: () => api('superadmin/state/config'),
+        ptecgetById: (id: string) => api(`superadmin/state/config/ptec/${id}`),
+        pteccreate: () => api('superadmin/state/config/ptrc'),
+        ptecupdate: (id: string) => api(`superadmin/state/config/ptec/${id}`),
+        ptrcgetById: (id: string) => api(`superadmin/state/config/ptrc/${id}`),
+        ptrccreate: () => api('superadmin/state/config/ptrc'),
+        ptrcupdate: (id: string) => api(`superadmin/state/config/ptrc/${id}`),
+    },
     common: {
         getStatesAll: () => api('/states')
     },

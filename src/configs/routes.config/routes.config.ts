@@ -69,14 +69,14 @@ export const protectedRoutes = [
         ),
         authority: [],
     },
-    {
-        key: 'groupMenu.collapse.item4',
-        path: '/pf-configuration',
-        component: lazy(() =>
-            import('@/views/IHRC/components/GlobalSettings/PFConfiguration/PFConfiguration')
-        ),
-        authority: [],
-    },
+    // {
+    //     key: 'groupMenu.collapse.item4',
+    //     path: '/pf-configuration',
+    //     component: lazy(() =>
+    //         import('@/views/IHRC/components/GlobalSettings/PFConfiguration/PFConfiguration')
+    //     ),
+    //     authority: [],
+    // },
     {
         key: 'groupMenu.collapse.item5',
         path: '/register-template',
