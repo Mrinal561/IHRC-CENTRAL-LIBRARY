@@ -1,16 +1,15 @@
 export type PFConfigData = {
-  pf_frequency: 'monthly' | 'half_yearly' | 'yearly';
+  payment_mode: 'online' | 'offline'
+  pf_frequency: 'monthly' | 'half_yearly' | 'yearly' | 'quarterly';
     pt_payment_due_date: {
       first_date: string;
-      last_date: string | null;
+      second_date: string;
+      third_date: string;
+      last_date: string;
     };
   }
   
   export type PFConfigResponseData = {
     id: string;
-    pf_frequency: string;
-    pt_payment_due_date: {
-      first_date: string;
-      last_date: string | null;
-    };
+    pfConfig: PFConfigData[]
 }

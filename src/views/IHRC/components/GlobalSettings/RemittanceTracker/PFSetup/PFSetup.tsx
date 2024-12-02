@@ -1,14 +1,21 @@
 import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { Button, Dialog, Notification, toast } from '@/components/ui';
 import { HiPlusCircle } from 'react-icons/hi';
 import AdaptableCard from '@/components/shared/AdaptableCard';
-import OutlinedInput from '@/components/ui/OutlinedInput';
 import OutlinedSelect from '@/components/ui/Outlined/Outlined';
 import DatePicker from '@/components/ui/DatePicker';
-import BulkUpload from './components/BulkUpload';
 import PFSetupTable from './components/PFSetupTable';
-import httpClient from '@/api/http-client';
-import { endpoints } from '@/api/endpoint';
+import { createPFConfig, updatePFConfig, fetchPFConfigs, PFConfigData } from '@/store/slices/pfConfig/pfConfigSlice';
+import { RootState, AppDispatch } from '@/store';
+import { showErrorNotification } from '@/components/ui/ErrorMessage'
+
+
+
+const paymentModeOptions = [
+  { value: 'online', label: 'Online' },
+  { value: 'offline', label: 'Offline' },
+];
 
 const frequencyOptions = [
   { value: 'monthly', label: 'Monthly' },
@@ -17,131 +24,136 @@ const frequencyOptions = [
   { value: 'quarterly', label: 'Quarterly' },
 ];
 
-const initialPFData = {
-  name: '',
-  frequency: '',
-  firstDueDate: null,
-  secondDueDate: null,
-  thirdDueDate: null,
-  fourthDueDate: null,
+const initialPFData: PFConfigData = {
+  payment_mode: 'online',
+  pf_frequency: 'monthly',
+  pt_payment_due_date: {
+    first_date: '',
+    second_date: '',
+    third_date: '',
+    last_date: '',
+  },
 };
 
 interface SelectOption {
-  value: string
-  label: string
+  value: string;
+  label: string;
 }
 
 const PFSetup = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const { pfConfigs, loading, error } = useSelector((state: RootState) => state.pfconfig);
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentPFId, setCurrentPFId] = useState<string | null>(null);
-  const [pfData, setPFData] = useState(initialPFData);
-  const [pfTableData, setPFTableData] = useState([]);
-  const [isLoading, setIsLoading] = useState(false)
-  const [states, setStates] = useState<SelectOption[]>([]);
-  const [selectedStates, setSelectedStates] = useState<SelectOption | null>(null);
+  const [pfData, setPFData] = useState<PFConfigData>(initialPFData);
+  const [selectedPaymentMode, setSelectedPaymentMode] = useState<SelectOption | null>(null);
+  const [selectedFrequency, setSelectedFrequency] = useState<SelectOption | null>(null);
 
   const [dateFieldsState, setDateFieldsState] = useState({
     isSecondDateEnabled: false,
     isThirdDateEnabled: false,
     isLastDateEnabled: false
-})
+  });
 
-const loadStates = async () => {
-  try {
-    setIsLoading(true);
-    const response = await httpClient.get(endpoints.common.getStatesAll())
-    
-    if (response.data) {
-      const formattedStates = response.data.map((state: any) => ({
-        label: state.name,
-        value: String(state.id)
+  useEffect(() => {
+    dispatch(fetchPFConfigs());
+  }, [dispatch]);
+
+  // useEffect(() => {
+  //   if (error) {
+  //     toast.push(
+  //       <Notification title="Error" type="danger">
+  //         {error}
+  //       </Notification>
+  //     );
+  //   }
+  // }, [error]);
+
+  const handlePaymentModeChange = (option: SelectOption | null) => {
+    setSelectedPaymentMode(option);
+    if (option) {
+      setPFData(prev => ({
+        ...prev,
+        payment_mode: option.value as 'online' | 'offline'
       }));
-      
-      console.log('Formatted States:', formattedStates); // Debug log
-      setStates(formattedStates);
-    } else {
-      console.error('Invalid state data structure:', response.data);
-      // showNotification('danger', 'Invalid state data received');
     }
-  } catch (error) {
-    console.error('Failed to load states:', error);
-    // showNotification('danger', 'Failed to load states');
-  } finally {
-    setIsLoading(false);
-  }
-};
+  };
 
-useEffect(() => {
-  loadStates();
-}, []);
+  const handleFrequencyChange = (option: SelectOption | null) => {
+    setSelectedFrequency(option);
+    if (option) {
+      const frequencyValue = option.value as PFConfigData['pf_frequency'];
+      setPFData(prev => {
+        const updated = { ...prev, pf_frequency: frequencyValue };
+        
+        // Reset date fields based on frequency
+        switch (frequencyValue) {
+          case 'monthly':
+          case 'yearly':
+            updated.pt_payment_due_date.second_date = '';
+            updated.pt_payment_due_date.third_date = '';
+            updated.pt_payment_due_date.last_date = '';
+            setDateFieldsState({
+              isSecondDateEnabled: false,
+              isThirdDateEnabled: false,
+              isLastDateEnabled: false
+            });
+            break;
+          case 'half_yearly':
+            updated.pt_payment_due_date.second_date = '';
+            updated.pt_payment_due_date.third_date = '';
+            setDateFieldsState({
+              isSecondDateEnabled: false,
+              isThirdDateEnabled: false,
+              isLastDateEnabled: true
+            });
+            break;
+          case 'quarterly':
+            setDateFieldsState({
+              isSecondDateEnabled: true,
+              isThirdDateEnabled: true,
+              isLastDateEnabled: true
+            });
+            break;
+        }
+        
+        return updated;
+      });
+    }
+  };
 
-
-const handleStateChange = (option: SelectOption | null) => {
-  setSelectedStates(option);
-};
-
-const handleInputChange = (name: string, value: any) => {
-
-  if (name === 'frequency') {
-    const frequencyValue = value && typeof value === 'object' && 'value' in value 
-      ? value.value 
-      : value;
-    
-    setPFData(prev => {
-      const updated = { ...prev, frequency: frequencyValue };
-      
-      // Reset date fields based on frequency
-      switch (frequencyValue) {
-        case 'monthly':
-        case 'yearly':
-          updated.secondDueDate = null;
-          updated.thirdDueDate = null;
-          updated.fourthDueDate = null;
-          setDateFieldsState({
-            isSecondDateEnabled: false,
-            isThirdDateEnabled: false,
-            isLastDateEnabled: false
-          });
-          break;
-        case 'half_yearly':
-          updated.secondDueDate = null;
-          updated.thirdDueDate = null;
-          setDateFieldsState({
-            isSecondDateEnabled: false,
-            isThirdDateEnabled: false,
-            isLastDateEnabled: true
-          });
-          break;
-        case 'quarterly':
-          setDateFieldsState({
-            isSecondDateEnabled: true,
-            isThirdDateEnabled: true,
-            isLastDateEnabled: true
-          });
-          break;
+  const handleDateChange = (field: keyof PFConfigData['pt_payment_due_date'], date: Date | null) => {
+    setPFData(prev => ({
+      ...prev,
+      pt_payment_due_date: {
+        ...prev.pt_payment_due_date,
+        [field]: date ? date.toISOString().split('T')[0] : ''
       }
-      
-      return updated;
-    });
-  } else if (name in initialPFData) {
-    setPFData(prev => ({ ...prev, [name]: value }));
-  }
-};
-
-
-
+    }));
+  };
 
   const handleEdit = (pfToEdit) => {
     setIsEditMode(true);
     setCurrentPFId(pfToEdit.id);
     setPFData({
-      name: pfToEdit.name,
-      frequency: pfToEdit.frequency,
-      firstDueDate: pfToEdit.firstDueDate,
-      secondDueDate: pfToEdit.secondDueDate,
-      thirdDueDate: pfToEdit.thirdDueDate,
-      fourthDueDate: pfToEdit.fourthDueDate,
+      payment_mode: pfToEdit.payment_mode,
+      pf_frequency: pfToEdit.pf_frequency,
+      pt_payment_due_date: {
+        first_date: pfToEdit.pt_payment_due_date.first_date,
+        second_date: pfToEdit.pt_payment_due_date.second_date || '',
+        third_date: pfToEdit.pt_payment_due_date.third_date || '',
+        last_date: pfToEdit.pt_payment_due_date.last_date || '',
+      }
+    });
+    setSelectedPaymentMode({ 
+      value: pfToEdit.payment_mode, 
+      label: pfToEdit.payment_mode === 'online' ? 'Online' : 'Offline' 
+    });
+    setSelectedFrequency({ 
+      value: pfToEdit.pf_frequency, 
+      label: frequencyOptions.find(f => f.value === pfToEdit.pf_frequency)?.label || ''
     });
     setIsDialogOpen(true);
   };
@@ -151,41 +163,71 @@ const handleInputChange = (name: string, value: any) => {
     setIsEditMode(false);
     setCurrentPFId(null);
     setPFData(initialPFData);
+    setSelectedPaymentMode(null);
+    setSelectedFrequency(null);
   };
 
   const handleConfirm = async () => {
     try {
-      // Here you would typically dispatch an action to create or update PF setup
-      // For now, we'll just simulate the action
       if (isEditMode && currentPFId) {
         // Update existing PF setup
-        toast.push(
-          <Notification title="Success" type="success">
-            PF Setup updated successfully!
-          </Notification>
-        );
+        const result = await dispatch(updatePFConfig({ 
+          id: currentPFId, 
+          data: pfData 
+        }))
+        .unwrap()  
+        .catch((error: any) => {
+          if (error.response?.data?.message) {
+              showErrorNotification(error.response.data.message)
+          } else if (error.message) {
+              showErrorNotification(error.message)
+          } else if (Array.isArray(error)) {
+              showErrorNotification(error)
+          } else {
+              showErrorNotification('An unexpected error occurred. Please try again.')
+          }
+          throw error
+      });
+        
+        // toast.push(
+        //   <Notification title="Success" type="success">
+        //     PF Setup updated successfully!
+        //   </Notification>
+        // );
       } else {
         // Create new PF setup
-        toast.push(
-          <Notification title="Success" type="success">
-            PF Setup created successfully!
-          </Notification>
-        );
+        const result = await dispatch(createPFConfig(pfData))
+        .unwrap()
+        .catch((error: any) => {
+          if (error.response?.data?.message) {
+              showErrorNotification(error.response.data.message)
+          } else if (error.message) {
+              showErrorNotification(error.message)
+          } else if (Array.isArray(error)) {
+              showErrorNotification(error)
+          } else {
+              showErrorNotification('An unexpected error occurred. Please try again.')
+          }
+          throw error
+      });
+        
+        // toast.push(
+        //   <Notification title="Success" type="success">
+        //     PF Setup created successfully!
+        //   </Notification>
+        // );
+        if(result) {
+          handleDialogClose();
+        }
       }
-      handleDialogClose();
     } catch (error) {
-      // Error handling
-      toast.push(
-        <Notification title="Error" type="danger">
-          Failed to save PF Setup
-        </Notification>
-      );
+      console.error(error)    
     }
   };
 
   // Helper function to determine if a due date should be disabled
   const isDueDateDisabled = (dateIndex: number) => {
-    switch (pfData.frequency) {
+    switch (pfData.pf_frequency) {
       case 'monthly':
       case 'yearly':
         // Only first date is allowed
@@ -208,7 +250,6 @@ const handleInputChange = (name: string, value: any) => {
           <h3 className="text-2xl font-bold">PF Global Setup</h3>
         </div>
         <div className="flex gap-2">
-          <BulkUpload />
           <Button
             variant="solid"
             size="sm"
@@ -221,7 +262,8 @@ const handleInputChange = (name: string, value: any) => {
       </div>
       
       <PFSetupTable 
-        // Add necessary props
+        data={pfConfigs}
+        loading={loading}
         onEdit={handleEdit}
       />
 
@@ -234,19 +276,13 @@ const handleInputChange = (name: string, value: any) => {
         <div className="flex flex-col gap-6">
           <div className="flex gap-4">
             <div className="w-full">
-              <label className="text-gray-600 mb-2 block">State</label>
+              <label className="text-gray-600 mb-2 block">Payment Mode</label>
               <OutlinedSelect
-                        label="Select State"
-                        options={states}
-                        value={selectedStates}
-                        onChange={handleStateChange}
-                        // onChange={(selectedOption: SelectOption | null) => {
-                            //     // Only allow state selection if scope is 'state'
-                            //     if (formData.scope === 'state') {
-                                //         handleStateChange(selectedOption);
-                                //     }
-                        // }}
-                        />
+                label="Select Payment Mode"
+                options={paymentModeOptions}
+                value={selectedPaymentMode}
+                onChange={handlePaymentModeChange}
+              />
             </div>
           </div>
 
@@ -256,8 +292,8 @@ const handleInputChange = (name: string, value: any) => {
               <OutlinedSelect
                 label="Select PF Frequency"
                 options={frequencyOptions}
-                value={frequencyOptions.find(option => option.value === pfData.frequency) || null}
-                onChange={(value) => handleInputChange('frequency', value)}
+                value={selectedFrequency}
+                onChange={handleFrequencyChange}
               />
             </div>
           </div>
@@ -268,8 +304,8 @@ const handleInputChange = (name: string, value: any) => {
               <DatePicker
                 className="w-full"
                 placeholder="Select first due date"
-                value={pfData.firstDueDate}
-                onChange={(date) => handleInputChange('firstDueDate', date)}
+                value={pfData.pt_payment_due_date.first_date ? new Date(pfData.pt_payment_due_date.first_date) : null}
+                onChange={(date) => handleDateChange('first_date', date)}
               />
             </div>
             <div className="w-1/2">
@@ -277,8 +313,8 @@ const handleInputChange = (name: string, value: any) => {
               <DatePicker
                 className="w-full"
                 placeholder="Select second due date"
-                value={pfData.secondDueDate}
-                onChange={(date) => handleInputChange('secondDueDate', date)}
+                value={pfData.pt_payment_due_date.second_date ? new Date(pfData.pt_payment_due_date.second_date) : null}
+                onChange={(date) => handleDateChange('second_date', date)}
                 disabled={isDueDateDisabled(1)}
               />
             </div>
@@ -290,8 +326,8 @@ const handleInputChange = (name: string, value: any) => {
               <DatePicker
                 className="w-full"
                 placeholder="Select third due date"
-                value={pfData.thirdDueDate}
-                onChange={(date) => handleInputChange('thirdDueDate', date)}
+                value={pfData.pt_payment_due_date.third_date ? new Date(pfData.pt_payment_due_date.third_date) : null}
+                onChange={(date) => handleDateChange('third_date', date)}
                 disabled={isDueDateDisabled(2)}
               />
             </div>
@@ -300,8 +336,8 @@ const handleInputChange = (name: string, value: any) => {
               <DatePicker
                 className="w-full"
                 placeholder="Select fourth due date"
-                value={pfData.fourthDueDate}
-                onChange={(date) => handleInputChange('fourthDueDate', date)}
+                value={pfData.pt_payment_due_date.last_date ? new Date(pfData.pt_payment_due_date.last_date) : null}
+                onChange={(date) => handleDateChange('last_date', date)}
                 disabled={isDueDateDisabled(3)}
               />
             </div>
@@ -315,7 +351,11 @@ const handleInputChange = (name: string, value: any) => {
           >
             Cancel
           </Button>
-          <Button variant="solid" onClick={handleConfirm}>
+          <Button 
+            variant="solid" 
+            onClick={handleConfirm}
+            disabled={loading}
+          >
             {isEditMode ? 'Update' : 'Confirm'}
           </Button>
         </div>
