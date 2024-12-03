@@ -144,21 +144,21 @@ const ESITable = ({ onEdit }: { onEdit: (config: any) => void }) => {
             </div>
         ),
       },
-      {
-        header: 'Actions',
-        id: 'actions',
-        cell: ({ row }) => (
-          <div className="flex space-x-2">
-            <Tooltip title="Edit" placement="top">
-              <Button
-                size="sm"
-                icon={<MdEdit />}
-                onClick={() => onEdit(row.original)}
-              />
-            </Tooltip>
-          </div>
-        ),
-      },
+      // {
+      //   header: 'Actions',
+      //   id: 'actions',
+      //   cell: ({ row }) => (
+      //     <div className="flex space-x-2">
+      //       <Tooltip title="Edit" placement="top">
+      //         <Button
+      //           size="sm"
+      //           icon={<MdEdit />}
+      //           onClick={() => onEdit(row.original)}
+      //         />
+      //       </Tooltip>
+      //     </div>
+      //   ),
+      // },
     ],
     [onEdit]
   );

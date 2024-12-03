@@ -292,7 +292,7 @@ const ESISetup = () => {
             icon={<HiPlusCircle />}
             onClick={() => setIsDialogOpen(true)}
           >
-            Add ESI Setup
+            Edit ESI Setup
           </Button>
         </div>
       </div>
@@ -306,7 +306,7 @@ const ESISetup = () => {
         onClose={handleDialogClose}
         onRequestClose={handleDialogClose}
       >
-        <h5 className="mb-6">{isEditMode ? 'Edit ESI Setup' : 'Add ESI Setup'}</h5>
+        <h5 className="mb-6">{'Edit ESI Setup'}</h5>
         <div className="flex flex-col gap-6">
           <div className="flex gap-4">
             <div className="w-full">
