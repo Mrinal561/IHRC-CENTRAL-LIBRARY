@@ -15,6 +15,7 @@ import {
 } from '@/store/slices/ptConfig/ptConfigSlice';
 import { PTConfigData } from '@/@types/ptConfig';
 import PTTable from './components/PTTable';
+import { showErrorNotification } from '@/components/ui/ErrorMessage';
 
 const frequencyOptions = [
   { value: 'monthly', label: 'Monthly' },
@@ -47,6 +48,7 @@ const PTSetup: React.FC = () => {
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [refreshCounter, setRefreshCounter] = useState(0);
   const [currentPTId, setCurrentPTId] = useState<string | null>(null);
   const [ptData, setPTData] = useState(initialPTData);
   const [states, setStates] = useState<SelectOption[]>([]);
@@ -324,107 +326,39 @@ const PTSetup: React.FC = () => {
         state_id: selectedState?.value
       };
   
-      await dispatch(createPTConfig(ptConfigData)).unwrap();
+      const result = await dispatch(createPTConfig(ptConfigData))
+      .unwrap()
+      .catch((error: any) => {
+        console.error('Full error object:', error);
+        console.error('Error response:', error.response);
+        console.error('Error message:', error.message);
+        
+        if (error.response?.data?.message) {
+          showErrorNotification(error.response.data.message)
+        } else if (error.message) {
+          showErrorNotification(error.message)
+        } else {
+          // showErrorNotification('An unexpected error occurred. Please try again.')
+          showErrorNotification(error);
+
+        }
+        throw error;
+      });
   
-      toast.push(
-        <Notification title="Success" type="success">
-          PT Setup created successfully!
-        </Notification>
-      );
-  
-      handleDialogClose();
-      dispatch(resetPTSetupState());
-      dispatch(fetchPTConfigs({ page: 1, page_size: 10 }));
+     
+  if(result) {
+
+    handleDialogClose();
+    dispatch(resetPTSetupState());
+    dispatch(fetchPTConfigs({ page: 1, page_size: 10 }));
+    setRefreshCounter(prev => prev + 1);   }
   
     } catch (error) {
       console.error('Error in PT Setup submission:', error);
-      toast.push(
-        <Notification title="Error" type="danger">
-          Failed to save PT Setup. Please try again.
-        </Notification>
-      );
+      // showErrorNotification(error);
       dispatch(resetPTSetupState());
     }
   };
-
-  // const handleConfirm = async () => {
-  //   const validateForm = () => {
-  //     if (!selectedState) {
-  //       toast.push(
-  //         <Notification title="Validation Error" type="danger">
-  //           Please select a state
-  //         </Notification>
-  //       );
-  //       return false;
-  //     }
-
-  //     if (!ptData.ptEcFrequency || !ptData.ptRcFrequency) {
-  //       toast.push(
-  //         <Notification title="Validation Error" type="danger">
-  //           Please select frequencies for both PT EC and PT RC
-  //         </Notification>
-  //       );
-  //       return false;
-  //     }
-
-  //     if (!ptData.ptEcFirstDueDate || !ptData.ptRcFirstDueDate) {
-  //       toast.push(
-  //         <Notification title="Validation Error" type="danger">
-  //           Please select first due dates for both PT EC and PT RC
-  //         </Notification>
-  //       );
-  //       return false;
-  //     }
-
-  //     return true;
-  //   };
-
-  //   if (!validateForm()) return;
-
-  //   try {
-  //     const ptConfigData: PTConfigData = {
-  //       ptec_payment_mode: 'online',
-  //       ptrc_payment_mode: 'online',
-  //       ptec_frequency: ptData.ptEcFrequency as 'monthly' | 'half_yearly' | 'yearly' | 'quarterly',
-  //       ptrc_frequency: ptData.ptRcFrequency as 'monthly' | 'half_yearly' | 'yearly' | 'quarterly',
-  //       ptec_payment_due_date: {
-  //         first_date: ptData.ptEcFirstDueDate || '',
-  //         second_date: ptData.ptEcSecondDueDate || '',
-  //         third_date: ptData.ptEcThirdDueDate || '',
-  //         last_date: ptData.ptEcFourthDueDate || ''
-  //       },
-  //       ptrc_payment_due_date: {
-  //         first_date: ptData.ptRcFirstDueDate || '',
-  //         second_date: ptData.ptRcSecondDueDate || '',
-  //         third_date: ptData.ptRcThirdDueDate || '',
-  //         last_date: ptData.ptRcFourthDueDate || ''
-  //       },
-  //       active: isActive,
-  //       state_id: selectedState?.value
-  //     };
-
-  //     await dispatch(createPTConfig(ptConfigData)).unwrap();
-
-  //     toast.push(
-  //       <Notification title="Success" type="success">
-  //         PT Setup created successfully!
-  //       </Notification>
-  //     );
-
-  //     handleDialogClose();
-  //     dispatch(resetPTSetupState());
-  //     dispatch(fetchPTConfigs({ page: 1, page_size: 10 }));
-
-  //   } catch (error) {
-  //     console.error('Error in PT Setup submission:', error);
-  //     toast.push(
-  //       <Notification title="Error" type="danger">
-  //         Failed to save PT Setup. Please try again.
-  //       </Notification>
-  //     );
-  //     dispatch(resetPTSetupState());
-  //   }
-  // };
 
   useEffect(() => {
     if (success) {
@@ -464,7 +398,7 @@ const PTSetup: React.FC = () => {
         </div>
       </div>
       
-      <PTTable onEdit={handleEdit} />
+      <PTTable onEdit={handleEdit} refreshTrigger={refreshCounter}/>
 
       <Dialog
         isOpen={isDialogOpen}

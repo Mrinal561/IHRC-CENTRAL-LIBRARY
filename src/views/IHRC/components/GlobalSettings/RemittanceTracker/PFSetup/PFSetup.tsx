@@ -1,16 +1,35 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Button, Dialog, Notification, toast } from '@/components/ui';
+import { Button, Dialog } from '@/components/ui';
 import { HiPlusCircle } from 'react-icons/hi';
 import AdaptableCard from '@/components/shared/AdaptableCard';
 import OutlinedSelect from '@/components/ui/Outlined/Outlined';
 import DatePicker from '@/components/ui/DatePicker';
 import PFSetupTable from './components/PFSetupTable';
-import { createPFConfig, updatePFConfig, fetchPFConfigs, PFConfigData } from '@/store/slices/pfConfig/pfConfigSlice';
+import { 
+  createPFConfig, 
+  updatePFConfig, 
+  fetchPFConfigs, 
+  clearCurrentPFConfig 
+} from '@/store/slices/pfConfig/pfConfigSlice';
 import { RootState, AppDispatch } from '@/store';
-import { showErrorNotification } from '@/components/ui/ErrorMessage'
+import { showErrorNotification } from '@/components/ui/ErrorMessage';
 
+// Define types for better type safety
+type PaymentMode = 'online' | 'offline';
+type PFFrequency = 'monthly' | 'yearly' | 'half_yearly' | 'quarterly';
 
+interface SelectOption {
+  value: string;
+  label: string;
+}
+
+interface PaymentDueDates {
+  first_date: string | null;
+  second_date: string | null;
+  third_date: string | null;
+  last_date: string | null;
+}
 
 const paymentModeOptions = [
   { value: 'online', label: 'Online' },
@@ -24,32 +43,26 @@ const frequencyOptions = [
   { value: 'quarterly', label: 'Quarterly' },
 ];
 
-const initialPFData: PFConfigData = {
-  payment_mode: 'online',
-  pf_frequency: 'monthly',
-  pt_payment_due_date: {
-    first_date: '',
-    second_date: '',
-    third_date: '',
-    last_date: '',
-  },
-};
-
-interface SelectOption {
-  value: string;
-  label: string;
-}
-
-const PFSetup = () => {
+const PFSetup: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { pfConfigs, loading, error } = useSelector((state: RootState) => state.pfconfig);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentPFId, setCurrentPFId] = useState<string | null>(null);
-  const [pfData, setPFData] = useState<PFConfigData>(initialPFData);
+  
+  const [frequency, setFrequency] = useState<PFFrequency | ''>('');
   const [selectedPaymentMode, setSelectedPaymentMode] = useState<SelectOption | null>(null);
   const [selectedFrequency, setSelectedFrequency] = useState<SelectOption | null>(null);
+  const [refreshCounter, setRefreshCounter] = useState(0);
+
+  
+  const [paymentDueDates, setPaymentDueDates] = useState<PaymentDueDates>({
+    first_date: null,
+    second_date: null,
+    third_date: null,
+    last_date: null
+  });
 
   const [dateFieldsState, setDateFieldsState] = useState({
     isSecondDateEnabled: false,
@@ -58,191 +71,188 @@ const PFSetup = () => {
   });
 
   useEffect(() => {
-    dispatch(fetchPFConfigs());
+    dispatch(fetchPFConfigs({ page: 1, page_size: 10 }));
   }, [dispatch]);
 
-  // useEffect(() => {
-  //   if (error) {
-  //     toast.push(
-  //       <Notification title="Error" type="danger">
-  //         {error}
-  //       </Notification>
-  //     );
-  //   }
-  // }, [error]);
-
-  const handlePaymentModeChange = (option: SelectOption | null) => {
-    setSelectedPaymentMode(option);
-    if (option) {
-      setPFData(prev => ({
-        ...prev,
-        payment_mode: option.value as 'online' | 'offline'
-      }));
+  const handleFrequencyChange = (selectedOption: SelectOption | null) => {
+    const frequencyValue = selectedOption?.value as PFFrequency;
+    setFrequency(frequencyValue);
+    setSelectedFrequency(selectedOption);
+    
+    // Reset date fields based on frequency
+    switch (frequencyValue) {
+      case 'monthly':
+      case 'yearly':
+        setPaymentDueDates({
+          first_date: null,
+          second_date: null,
+          third_date: null,
+          last_date: null
+        });
+        setDateFieldsState({
+          isSecondDateEnabled: false,
+          isThirdDateEnabled: false,
+          isLastDateEnabled: false
+        });
+        break;
+      case 'half_yearly':
+        setPaymentDueDates(prev => ({
+          ...prev,
+          second_date: null,
+          third_date: null
+        }));
+        setDateFieldsState({
+          isSecondDateEnabled: false,
+          isThirdDateEnabled: false,
+          isLastDateEnabled: true
+        });
+        break;
+      case 'quarterly':
+        setDateFieldsState({
+          isSecondDateEnabled: true,
+          isThirdDateEnabled: true,
+          isLastDateEnabled: true
+        });
+        break;
     }
   };
 
-  const handleFrequencyChange = (option: SelectOption | null) => {
-    setSelectedFrequency(option);
-    if (option) {
-      const frequencyValue = option.value as PFConfigData['pf_frequency'];
-      setPFData(prev => {
-        const updated = { ...prev, pf_frequency: frequencyValue };
-        
-        // Reset date fields based on frequency
-        switch (frequencyValue) {
-          case 'monthly':
-          case 'yearly':
-            updated.pt_payment_due_date.second_date = '';
-            updated.pt_payment_due_date.third_date = '';
-            updated.pt_payment_due_date.last_date = '';
-            setDateFieldsState({
-              isSecondDateEnabled: false,
-              isThirdDateEnabled: false,
-              isLastDateEnabled: false
-            });
-            break;
-          case 'half_yearly':
-            updated.pt_payment_due_date.second_date = '';
-            updated.pt_payment_due_date.third_date = '';
-            setDateFieldsState({
-              isSecondDateEnabled: false,
-              isThirdDateEnabled: false,
-              isLastDateEnabled: true
-            });
-            break;
-          case 'quarterly':
-            setDateFieldsState({
-              isSecondDateEnabled: true,
-              isThirdDateEnabled: true,
-              isLastDateEnabled: true
-            });
-            break;
-        }
-        
-        return updated;
-      });
-    }
-  };
-
-  const handleDateChange = (field: keyof PFConfigData['pt_payment_due_date'], date: Date | null) => {
-    setPFData(prev => ({
+  const handleDateChange = (dateKey: keyof PaymentDueDates, date: Date | null) => {
+    setPaymentDueDates(prev => ({
       ...prev,
-      pt_payment_due_date: {
-        ...prev.pt_payment_due_date,
-        [field]: date ? date.toISOString().split('T')[0] : ''
-      }
+      [dateKey]: date ? date.toISOString().split('T')[0] : null
     }));
   };
 
-  const handleEdit = (pfToEdit) => {
-    setIsEditMode(true);
-    setCurrentPFId(pfToEdit.id);
-    setPFData({
-      payment_mode: pfToEdit.payment_mode,
-      pf_frequency: pfToEdit.pf_frequency,
-      pt_payment_due_date: {
-        first_date: pfToEdit.pt_payment_due_date.first_date,
-        second_date: pfToEdit.pt_payment_due_date.second_date || '',
-        third_date: pfToEdit.pt_payment_due_date.third_date || '',
-        last_date: pfToEdit.pt_payment_due_date.last_date || '',
-      }
-    });
-    setSelectedPaymentMode({ 
-      value: pfToEdit.payment_mode, 
-      label: pfToEdit.payment_mode === 'online' ? 'Online' : 'Offline' 
-    });
-    setSelectedFrequency({ 
-      value: pfToEdit.pf_frequency, 
-      label: frequencyOptions.find(f => f.value === pfToEdit.pf_frequency)?.label || ''
-    });
-    setIsDialogOpen(true);
-  };
-
-  const handleDialogClose = () => {
-    setIsDialogOpen(false);
-    setIsEditMode(false);
-    setCurrentPFId(null);
-    setPFData(initialPFData);
-    setSelectedPaymentMode(null);
-    setSelectedFrequency(null);
-  };
-
-  const handleConfirm = async () => {
-    try {
-      if (isEditMode && currentPFId) {
-        // Update existing PF setup
-        const result = await dispatch(updatePFConfig({ 
-          id: currentPFId, 
-          data: pfData 
-        }))
-        .unwrap()  
-        .catch((error: any) => {
-          if (error.response?.data?.message) {
-              showErrorNotification(error.response.data.message)
-          } else if (error.message) {
-              showErrorNotification(error.message)
-          } else if (Array.isArray(error)) {
-              showErrorNotification(error)
-          } else {
-              showErrorNotification('An unexpected error occurred. Please try again.')
-          }
-          throw error
-      });
-        
-        // toast.push(
-        //   <Notification title="Success" type="success">
-        //     PF Setup updated successfully!
-        //   </Notification>
-        // );
-      } else {
-        // Create new PF setup
-        const result = await dispatch(createPFConfig(pfData))
-        .unwrap()
-        .catch((error: any) => {
-          if (error.response?.data?.message) {
-              showErrorNotification(error.response.data.message)
-          } else if (error.message) {
-              showErrorNotification(error.message)
-          } else if (Array.isArray(error)) {
-              showErrorNotification(error)
-          } else {
-              showErrorNotification('An unexpected error occurred. Please try again.')
-          }
-          throw error
-      });
-        
-        // toast.push(
-        //   <Notification title="Success" type="success">
-        //     PF Setup created successfully!
-        //   </Notification>
-        // );
-        if (result) {
-           await dispatch(fetchPFConfigs());
-          handleDialogClose();
-        }
-      }
-    } catch (error) {
-      console.error(error)    
-    }
-  };
-
-  // Helper function to determine if a due date should be disabled
   const isDueDateDisabled = (dateIndex: number) => {
-    switch (pfData.pf_frequency) {
+    switch (frequency) {
       case 'monthly':
       case 'yearly':
-        // Only first date is allowed
         return dateIndex > 0;
       case 'half_yearly':
-        // First and last dates are allowed
         return dateIndex > 0 && dateIndex < 3;
       case 'quarterly':
-        // All dates are allowed
         return false;
       default:
         return true;
     }
   };
+
+  const handlePaymentModeChange = (option: SelectOption | null) => {
+    setSelectedPaymentMode(option);
+  };
+
+  const handleEdit = (pfToEdit) => {
+    setIsEditMode(true);
+    setIsDialogOpen(true);
+    setCurrentPFId(pfToEdit.id);
+    setFrequency(pfToEdit.frequency);
+    setPaymentDueDates({
+      first_date: pfToEdit.payment_due_date.first_date,
+      second_date: pfToEdit.payment_due_date.second_date,
+      third_date: pfToEdit.payment_due_date.third_date,
+      last_date: pfToEdit.payment_due_date.last_date
+    });
+    setSelectedPaymentMode({ 
+      value: pfToEdit.payment_mode, 
+      label: pfToEdit.payment_mode === 'online' ? 'Online' : 'Offline' 
+    });
+  };
+
+  const handleDialogClose = () => {
+    setIsDialogOpen(false);
+    setIsEditMode(false);
+    resetForm();
+  };
+
+  const resetForm = () => {
+    setFrequency('');
+    setPaymentDueDates({
+      first_date: null,
+      second_date: null,
+      third_date: null,
+      last_date: null
+    });
+    setSelectedPaymentMode(null);
+    setSelectedFrequency(null);
+    dispatch(clearCurrentPFConfig());
+  };
+
+  const handleConfirm = async () => {
+    if (!frequency || !selectedPaymentMode) {
+      showErrorNotification('Please select frequency and payment mode');
+      return;
+    }
+
+    const pfConfigData = {
+      pf_frequency: frequency,
+      payment_mode: selectedPaymentMode.value as PaymentMode,
+      pt_payment_due_date: paymentDueDates
+    };
+
+    try {
+      if (isEditMode && currentPFId) {
+        const result = await dispatch(updatePFConfig({ 
+          id: currentPFId, 
+          data: pfConfigData 
+        }))
+        .unwrap()
+        .catch((error: any) => {
+          console.error('Full error object:', error);
+          console.error('Error response:', error.response);
+          console.error('Error message:', error.message);
+          
+          if (error.response?.data?.message) {
+            showErrorNotification(error.response.data.message)
+          } else if (error.message) {
+            showErrorNotification(error.message)
+          } else {
+            // showErrorNotification('An unexpected error occurred. Please try again.')
+            showErrorNotification(error);
+
+          }
+          throw error;
+        });
+
+        if(result){
+          handleDialogClose();
+          dispatch(fetchPFConfigs({ page: 1, page_size: 10 }));
+          setRefreshCounter(prev => prev + 1); 
+
+        }
+
+      } else {
+        const result = await dispatch(createPFConfig(pfConfigData))
+        .unwrap()
+        .catch((error: any) => {
+          console.error('Full error object:', error);
+          console.error('Error response:', error.response);
+          console.error('Error message:', error.message);
+          
+          if (error.response?.data?.message) {
+            showErrorNotification(error.response.data.message)
+          } else if (error.message) {
+            showErrorNotification(error.message)
+          } else {
+            // showErrorNotification('An unexpected error occurred. Please try again.')
+            showErrorNotification(error);
+
+          }
+          throw error;
+        });
+        if(result) {
+          handleDialogClose();
+          dispatch(fetchPFConfigs({ page: 1, page_size: 10 }));
+          setRefreshCounter(prev => prev + 1); 
+
+        }
+      }
+    } catch (error) {
+      console.error(error);
+      // showErrorNotification(error);
+    }
+  };
+
 
   return (
     <AdaptableCard className="h-full" bodyClass="h-full">
@@ -263,9 +273,11 @@ const PFSetup = () => {
       </div>
       
       <PFSetupTable 
-        data={pfConfigs}
-        loading={loading}
+        // data={pfConfigs}
+        // loading={loading}
         onEdit={handleEdit}
+        refreshTrigger={refreshCounter}
+
       />
 
       <Dialog
@@ -305,7 +317,7 @@ const PFSetup = () => {
               <DatePicker
                 className="w-full"
                 placeholder="Select first due date"
-                value={pfData.pt_payment_due_date.first_date ? new Date(pfData.pt_payment_due_date.first_date) : null}
+                value={paymentDueDates.first_date ? new Date(paymentDueDates.first_date) : null}
                 onChange={(date) => handleDateChange('first_date', date)}
               />
             </div>
@@ -314,7 +326,7 @@ const PFSetup = () => {
               <DatePicker
                 className="w-full"
                 placeholder="Select second due date"
-                value={pfData.pt_payment_due_date.second_date ? new Date(pfData.pt_payment_due_date.second_date) : null}
+                value={paymentDueDates.second_date ? new Date(paymentDueDates.second_date) : null}
                 onChange={(date) => handleDateChange('second_date', date)}
                 disabled={isDueDateDisabled(1)}
               />
@@ -327,7 +339,7 @@ const PFSetup = () => {
               <DatePicker
                 className="w-full"
                 placeholder="Select third due date"
-                value={pfData.pt_payment_due_date.third_date ? new Date(pfData.pt_payment_due_date.third_date) : null}
+                value={paymentDueDates.third_date ? new Date(paymentDueDates.third_date) : null}
                 onChange={(date) => handleDateChange('third_date', date)}
                 disabled={isDueDateDisabled(2)}
               />
@@ -337,7 +349,7 @@ const PFSetup = () => {
               <DatePicker
                 className="w-full"
                 placeholder="Select fourth due date"
-                value={pfData.pt_payment_due_date.last_date ? new Date(pfData.pt_payment_due_date.last_date) : null}
+                value={paymentDueDates.last_date ? new Date(paymentDueDates.last_date) : null}
                 onChange={(date) => handleDateChange('last_date', date)}
                 disabled={isDueDateDisabled(3)}
               />
@@ -355,7 +367,7 @@ const PFSetup = () => {
           <Button 
             variant="solid" 
             onClick={handleConfirm}
-            disabled={loading}
+            loading={loading}
           >
             {isEditMode ? 'Update' : 'Confirm'}
           </Button>

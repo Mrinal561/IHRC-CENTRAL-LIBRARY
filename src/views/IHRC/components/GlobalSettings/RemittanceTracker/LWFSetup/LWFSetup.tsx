@@ -156,106 +156,6 @@ const loadStates = async () => {
   };
 
 
-  // const handleConfirm = async () => {
-
-
-  //   if (!selectedState || !frequency || !paymentDueDates.firstDate) {
-  //     toast.push(
-  //       <Notification title="Error" type="danger">
-  //         Please fill all required fields
-  //       </Notification>
-  //     );
-  //     return;
-  //   }
-
-  //   const lwfConfigData = {
-  //     frequency: frequency as 'monthly' | 'half_yearly' | 'yearly' | 'quarterly',
-  //     payment_due_date: {
-  //       first_date: paymentDueDates.firstDate,
-  //       second_date: paymentDueDates.secondDate,
-  //       third_date: paymentDueDates.thirdDate,
-  //       last_date: paymentDueDates.lastDate
-  //     },
-  //     payment_mode: 'online', // Default value, can be made configurable
-  //     active: isActive,
-  //     state_id: selectedState.value
-  //   };
-
-
-
-  //   try {
-  //     if (isEditMode && currentLWFConfig?.id) {
-  //       const result = await dispatch(updateLWFConfig({ 
-  //         id: currentLWFConfig.id, 
-  //         data: lwfConfigData 
-  //       }))
-  //       .unwrap()
-  //       .catch((error: any) => {
-  //         console.error('Full error object:', error);
-  //         console.error('Error response:', error.response);
-  //         console.error('Error message:', error.message);
-          
-  //         if (error.response?.data?.message) {
-  //           showErrorNotification(error.response.data.message)
-  //         } else if (error.message) {
-  //           showErrorNotification(error.message)
-  //         } else {
-  //           showErrorNotification('An unexpected error occurred. Please try again.')
-  //         }
-  //         throw error;
-  //       });
-        
-  //     } else {
-  //       const result = await dispatch(createLWFConfig(lwfConfigData))
-  //       .unwrap()
-  //       .catch((error: any) => {
-  //         console.error('Full error object:', error);
-  //         console.error('Error response:', error.response);
-  //         console.error('Error message:', error.message);
-          
-  //         if (error.response?.data?.message) {
-  //           showErrorNotification(error.response.data.message)
-  //         } else if (error.message) {
-  //           showErrorNotification(error.message)
-  //         } else {
-  //           showErrorNotification('An unexpected error occurred. Please try again.')
-  //         }
-  //         throw error;
-  //       });
-        
-  //       // toast.push(
-  //       //   <Notification title="Success" type="success">
-  //       //     ESI Configuration created successfully
-  //       //   </Notification>
-  //       // );
-  //       if(result) {
-  //         handleDialogClose();
-  //         dispatch(fetchLWFConfigs({ page: 1, page_size: 10 }));
-  //       }
-  //     }
-      
-  //   } catch (error: any) {
-  //    console.log(error);
-     
-  //   }
-  // };
-
-
-
-  
-  // const handleEdit = (pfToEdit) => {
-  //   setIsEditMode(true);
-  //   setCurrentPFId(pfToEdit.id);
-  //   setPFData({
-  //     name: pfToEdit.name,
-  //     frequency: pfToEdit.frequency,
-  //     firstDueDate: pfToEdit.firstDueDate,
-  //     secondDueDate: pfToEdit.secondDueDate,
-  //     thirdDueDate: pfToEdit.thirdDueDate,
-  //     fourthDueDate: pfToEdit.fourthDueDate,
-  //   });
-  //   setIsDialogOpen(true);
-  // };
 
 
   const handleConfirm = async () => {
@@ -298,13 +198,17 @@ const loadStates = async () => {
           } else if (error.message) {
             showErrorNotification(error.message)
           } else {
-            showErrorNotification('An unexpected error occurred. Please try again.')
+            // showErrorNotification('An unexpected error occurred. Please try again.')
+            showErrorNotification(error);
+
           }
           throw error;
         });
         
         if(result) {
           handleDialogClose();
+          dispatch(fetchLWFConfigs({ page: 1, page_size: 10 }));
+           setRefreshCounter(prev => prev + 1); 
         }
       } else {
         const result = await dispatch(createLWFConfig(lwfConfigData))
@@ -319,7 +223,9 @@ const loadStates = async () => {
           } else if (error.message) {
             showErrorNotification(error.message)
           } else {
-            showErrorNotification('An unexpected error occurred. Please try again.')
+            // showErrorNotification('An unexpected error occurred. Please try again.')
+            showErrorNotification(error);
+
           }
           throw error;
         });
@@ -333,6 +239,8 @@ const loadStates = async () => {
       
     } catch (error: any) {
      console.log(error);
+    //  showErrorNotification(error);
+
     }
   };
 

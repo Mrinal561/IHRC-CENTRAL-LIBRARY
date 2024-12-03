@@ -13,7 +13,7 @@ import { fetchPTConfigs } from '@/store/slices/ptConfig/ptConfigSlice';
 
 
 
-const PTTable = ({ tableLoading, setTableLoading, onEdit }: any) => {
+const PTTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any) => {
   const dispatch = useDispatch<AppDispatch>();
   const [ptTableData, setPTTableData] = useState([]);
   const [isLoading, setIsLoading] = useState(false)
@@ -169,7 +169,7 @@ const PTTable = ({ tableLoading, setTableLoading, onEdit }: any) => {
 
   useEffect(() => {
     fetchPTSetupData(tableData.pageIndex, tableData.pageSize);
-  }, []);
+  }, [refreshTrigger]);
 
   const fetchPTSetupData = async (page: number, size: number) => {
     setIsLoading(true);

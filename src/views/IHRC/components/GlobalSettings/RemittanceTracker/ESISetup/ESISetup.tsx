@@ -195,10 +195,18 @@ const ESISetup = () => {
           } else if (error.message) {
             showErrorNotification(error.message)
           } else {
-            showErrorNotification('An unexpected error occurred. Please try again.')
+            // showErrorNotification('An unexpected error occurred. Please try again.')
+            showErrorNotification(error);
+
           }
           throw error;
         });
+
+        if(result) {
+          handleDialogClose();
+          dispatch(fetchESIConfigs({ page: 1, page_size: 10 }));
+           setRefreshCounter(prev => prev + 1); 
+        }
         
       } else {
         const result = await dispatch(createESIConfig(esiConfigData))
@@ -213,7 +221,9 @@ const ESISetup = () => {
           } else if (error.message) {
             showErrorNotification(error.message)
           } else {
-            showErrorNotification('An unexpected error occurred. Please try again.')
+            // showErrorNotification('An unexpected error occurred. Please try again.')
+            showErrorNotification(error);
+
           }
           throw error;
         });
@@ -232,6 +242,8 @@ const ESISetup = () => {
       
     } catch (error: any) {
      console.log(error);
+    //  showErrorNotification(error);
+
      
     }
   };
