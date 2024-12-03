@@ -216,7 +216,8 @@ const PFSetup = () => {
         //     PF Setup created successfully!
         //   </Notification>
         // );
-        if(result) {
+        if (result) {
+           await dispatch(fetchPFConfigs());
           handleDialogClose();
         }
       }

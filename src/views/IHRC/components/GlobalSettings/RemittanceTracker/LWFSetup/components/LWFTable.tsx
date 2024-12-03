@@ -10,7 +10,7 @@ import { fetchLWFConfigs } from '@/store/slices/lwfConfig/lwfConfigSlice';
 import loadingAnimation from '@/assets/lotties/system-regular-716-spinner-three-dots-loop-scale.json';
 import Lottie from 'lottie-react';
 
-const LWFTable = ({ tableLoading, setTableLoading, onEdit }: any) => {
+const LWFTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any) => {
   const dispatch = useDispatch<AppDispatch>();
   const [isLoading, setIsLoading] = useState(true);
   const [lwfTableData, setLWFTableData] = useState([]);
@@ -27,7 +27,7 @@ const LWFTable = ({ tableLoading, setTableLoading, onEdit }: any) => {
   
   useEffect(() => {
     fetchLWFSetupData(tableData.pageIndex, tableData.pageSize);
-  }, []);
+  }, [refreshTrigger]);
 
   const fetchLWFSetupData = async (page: number, size: number) => {
     setIsLoading(true);

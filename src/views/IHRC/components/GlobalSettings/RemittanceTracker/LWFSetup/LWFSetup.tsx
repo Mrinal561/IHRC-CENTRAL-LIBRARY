@@ -29,7 +29,7 @@ interface SelectOption {
 const LWFSetup = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { lwfConfigs, loading, error, currentLWFConfig } = useSelector((state: RootState) => state.lwfconfig);
-
+    const [refreshCounter, setRefreshCounter] = useState(0);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [states, setStates] = useState<SelectOption[]>([]);
@@ -327,6 +327,7 @@ const loadStates = async () => {
         if(result) {
           handleDialogClose();
           dispatch(fetchLWFConfigs({ page: 1, page_size: 10 }));
+           setRefreshCounter(prev => prev + 1); 
         }
       }
       
@@ -403,6 +404,7 @@ const loadStates = async () => {
       <LWFTable 
         // Add necessary props
         onEdit={handleEdit}
+        refreshTrigger={refreshCounter}
       />
 
       <Dialog

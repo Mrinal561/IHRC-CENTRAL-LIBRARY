@@ -37,6 +37,7 @@ const ESISetup = () => {
   const [selectedState, setSelectedState] = useState<SelectOption | null>(null);
   const [frequency, setFrequency] = useState<string>('');
   const [isActive, setIsActive] = useState(false);
+    const [refreshCounter, setRefreshCounter] = useState(0);
 
   const [paymentDueDates, setPaymentDueDates] = useState({
     firstDate: null,
@@ -225,6 +226,7 @@ const ESISetup = () => {
         if(result) {
           handleDialogClose();
           dispatch(fetchESIConfigs({ page: 1, page_size: 10 }));
+           setRefreshCounter(prev => prev + 1); 
         }
       }
       
@@ -299,6 +301,7 @@ const ESISetup = () => {
       
       <ESITable 
         onEdit={handleEdit}
+        refreshTrigger={refreshCounter}
       />
 
       <Dialog
