@@ -37,6 +37,7 @@ const ESISetup = () => {
   const [selectedState, setSelectedState] = useState<SelectOption | null>(null);
   const [frequency, setFrequency] = useState<string>('');
   const [isActive, setIsActive] = useState(false);
+    const [refreshCounter, setRefreshCounter] = useState(0);
 
   const [paymentDueDates, setPaymentDueDates] = useState({
     firstDate: null,
@@ -194,10 +195,18 @@ const ESISetup = () => {
           } else if (error.message) {
             showErrorNotification(error.message)
           } else {
-            showErrorNotification('An unexpected error occurred. Please try again.')
+            // showErrorNotification('An unexpected error occurred. Please try again.')
+            showErrorNotification(error);
+
           }
           throw error;
         });
+
+        if(result) {
+          handleDialogClose();
+          dispatch(fetchESIConfigs({ page: 1, page_size: 10 }));
+           setRefreshCounter(prev => prev + 1); 
+        }
         
       } else {
         const result = await dispatch(createESIConfig(esiConfigData))
@@ -212,7 +221,9 @@ const ESISetup = () => {
           } else if (error.message) {
             showErrorNotification(error.message)
           } else {
-            showErrorNotification('An unexpected error occurred. Please try again.')
+            // showErrorNotification('An unexpected error occurred. Please try again.')
+            showErrorNotification(error);
+
           }
           throw error;
         });
@@ -225,11 +236,14 @@ const ESISetup = () => {
         if(result) {
           handleDialogClose();
           dispatch(fetchESIConfigs({ page: 1, page_size: 10 }));
+           setRefreshCounter(prev => prev + 1); 
         }
       }
       
     } catch (error: any) {
      console.log(error);
+    //  showErrorNotification(error);
+
      
     }
   };
@@ -292,13 +306,14 @@ const ESISetup = () => {
             icon={<HiPlusCircle />}
             onClick={() => setIsDialogOpen(true)}
           >
-            Add ESI Setup
+            Edit ESI Setup
           </Button>
         </div>
       </div>
       
       <ESITable 
         onEdit={handleEdit}
+        refreshTrigger={refreshCounter}
       />
 
       <Dialog
@@ -306,7 +321,7 @@ const ESISetup = () => {
         onClose={handleDialogClose}
         onRequestClose={handleDialogClose}
       >
-        <h5 className="mb-6">{isEditMode ? 'Edit ESI Setup' : 'Add ESI Setup'}</h5>
+        <h5 className="mb-6">{'Edit ESI Setup'}</h5>
         <div className="flex flex-col gap-6">
           <div className="flex gap-4">
             <div className="w-full">

@@ -10,7 +10,7 @@ import { fetchESIConfigs } from '@/store/slices/esiConfig/esiConfigSlice';
 import loadingAnimation from '@/assets/lotties/system-regular-716-spinner-three-dots-loop-scale.json';
 import Lottie from 'lottie-react';
 
-const ESITable = ({ onEdit }: { onEdit: (config: any) => void }) => {
+const ESITable = ({ onEdit, refreshTrigger }: { onEdit: (config: any) => void, refreshTrigger?: number }) => {
   const dispatch = useDispatch<AppDispatch>();
   const [isLoading, setIsLoading] = useState(true);
   const [esiTableData, setESITableData] = useState([]);
@@ -25,7 +25,7 @@ const ESITable = ({ onEdit }: { onEdit: (config: any) => void }) => {
 
   useEffect(() => {
     fetchESISetupData(tableData.pageIndex, tableData.pageSize);
-  }, []);
+  }, [refreshTrigger]);
 
   const fetchESISetupData = async (page: number, size: number) => {
     setIsLoading(true);
@@ -144,21 +144,21 @@ const ESITable = ({ onEdit }: { onEdit: (config: any) => void }) => {
             </div>
         ),
       },
-      {
-        header: 'Actions',
-        id: 'actions',
-        cell: ({ row }) => (
-          <div className="flex space-x-2">
-            <Tooltip title="Edit" placement="top">
-              <Button
-                size="sm"
-                icon={<MdEdit />}
-                onClick={() => onEdit(row.original)}
-              />
-            </Tooltip>
-          </div>
-        ),
-      },
+      // {
+      //   header: 'Actions',
+      //   id: 'actions',
+      //   cell: ({ row }) => (
+      //     <div className="flex space-x-2">
+      //       <Tooltip title="Edit" placement="top">
+      //         <Button
+      //           size="sm"
+      //           icon={<MdEdit />}
+      //           onClick={() => onEdit(row.original)}
+      //         />
+      //       </Tooltip>
+      //     </div>
+      //   ),
+      // },
     ],
     [onEdit]
   );

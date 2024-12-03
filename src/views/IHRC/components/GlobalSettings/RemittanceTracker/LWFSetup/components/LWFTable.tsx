@@ -10,7 +10,7 @@ import { fetchLWFConfigs } from '@/store/slices/lwfConfig/lwfConfigSlice';
 import loadingAnimation from '@/assets/lotties/system-regular-716-spinner-three-dots-loop-scale.json';
 import Lottie from 'lottie-react';
 
-const LWFTable = ({ tableLoading, setTableLoading, onEdit }: any) => {
+const LWFTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any) => {
   const dispatch = useDispatch<AppDispatch>();
   const [isLoading, setIsLoading] = useState(true);
   const [lwfTableData, setLWFTableData] = useState([]);
@@ -27,7 +27,7 @@ const LWFTable = ({ tableLoading, setTableLoading, onEdit }: any) => {
   
   useEffect(() => {
     fetchLWFSetupData(tableData.pageIndex, tableData.pageSize);
-  }, []);
+  }, [refreshTrigger]);
 
   const fetchLWFSetupData = async (page: number, size: number) => {
     setIsLoading(true);
@@ -132,32 +132,37 @@ const LWFTable = ({ tableLoading, setTableLoading, onEdit }: any) => {
       },
       {
         header: 'Status',
-        accessorKey: 'esi_active',
+        accessorKey: 'lwf_active',
         cell: ({ row }) => (
           <div className="w-24 text-start">
-          <div 
+          {/* <div 
             className={row.original.esi_active ? 'text-green-500 font-semibold' : 'text-red-500 font-semibold'}
             >
             {row.original.esi_active ? 'Active' : 'Inactive'}
+          </div> */}
+           <div 
+            className={row.original.lwf_active ? 'text-green-500 font-semibold' : 'text-red-500 font-semibold'}
+            >
+            {row.original.lwf_active ? 'Active' : 'Inactive'}
           </div>
             </div>
         ),
       },
-      {
-        header: 'Actions',
-        id: 'actions',
-        cell: ({ row }) => (
-          <div className="flex space-x-2">
-            <Tooltip title="Edit" placement="top">
-              <Button
-                size="sm"
-                icon={<MdEdit />}
-                onClick={() => onEdit(row.original)}
-              />
-            </Tooltip>
-          </div>
-        ),
-      },
+      // {
+      //   header: 'Actions',
+      //   id: 'actions',
+      //   cell: ({ row }) => (
+      //     <div className="flex space-x-2">
+      //       <Tooltip title="Edit" placement="top">
+      //         <Button
+      //           size="sm"
+      //           icon={<MdEdit />}
+      //           onClick={() => onEdit(row.original)}
+      //         />
+      //       </Tooltip>
+      //     </div>
+      //   ),
+      // },
     ],
     [onEdit]
   );

@@ -10,39 +10,26 @@ import loadingAnimation from '@/assets/lotties/system-regular-716-spinner-three-
 import Lottie from 'lottie-react';
 import { HiOutlineViewGrid } from 'react-icons/hi'
 
-interface PFSetupTableProps {
-  tableLoading?: boolean;
-  setTableLoading?: (loading: boolean) => void;
-  onEdit?: (row: any) => void;
-}
 
-interface PFConfig {
-  id: number;
-  pf_frequency: string;
-  payment_mode: string;
-  pt_payment_due_date: {
-    first_date?: string;
-    second_date?: string;
-    third_date?: string;
-    last_date?: string;
-  };
-}
 
-const PFSetupTable: React.FC<PFSetupTableProps> = ({ 
+const PFSetupTable = ({ 
   tableLoading = false, 
   setTableLoading, 
-  onEdit 
-}) => {
+  onEdit ,
+  refreshTrigger
+} : any) => {
   const dispatch = useDispatch<AppDispatch>();
-  const [pfTableData, setPFTableData] = useState<PFConfig[]>([]);
+  const [pfTableData, setPFTableData] = useState([]);
+  
   const [isLoading, setIsLoading] = useState(true);
 
-  const formatDate = (date?: string) => {
+  const formatDate = (date: string | null) => {
     if (!date) return '-';
     return format(new Date(date), 'MMM dd, yyyy');
   };
 
-  const getFrequencyLabel = (value: string) => {
+  const getFrequencyLabel = (value: string | null) => {
+    if (!value) return '-';
     const labels: { [key: string]: string } = {
       'yearly': 'Yearly',
       'half_yearly': 'Half Yearly',
@@ -116,7 +103,7 @@ const PFSetupTable: React.FC<PFSetupTableProps> = ({
 
   useEffect(() => {
     fetchPFSetupData(tableData.pageIndex, tableData.pageSize);
-  }, []);
+  }, [refreshTrigger]);
 
 
   const fetchPFSetupData = async (page: number, size: number) => {

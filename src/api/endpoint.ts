@@ -50,12 +50,9 @@ export const endpoints = {
       },
     pt: {
         getAll: () => api('superadmin/state/config'),
-        ptecgetById: (id: string) => api(`superadmin/state/config/ptec/${id}`),
-        pteccreate: () => api('superadmin/state/config/ptrc'),
-        ptecupdate: (id: string) => api(`superadmin/state/config/ptec/${id}`),
-        ptrcgetById: (id: string) => api(`superadmin/state/config/ptrc/${id}`),
-        ptrccreate: () => api('superadmin/state/config/ptrc'),
-        ptrcupdate: (id: string) => api(`superadmin/state/config/ptrc/${id}`),
+        getById: (id: string) => api(`superadmin/state/config/pt/${id}`),
+        create: () => api('superadmin/state/config/pt'),
+        update: (id: string) => api(`superadmin/state/config/pt/${id}`),
     },
     common: {
         getStatesAll: () => api('/states')

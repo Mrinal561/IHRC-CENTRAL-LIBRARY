@@ -69,17 +69,22 @@ export const createPFConfig = createAsyncThunk(
         return data
     }
     catch(error: any){
-        return rejectWithValue(error.response?.data.message)
+        return rejectWithValue(error.response?.data.message || error.message)
     }
   }
 )
 
 export const updatePFConfig = createAsyncThunk(
   'pfConfig/updatePFConfig',
-  async ({ id, data }: { id: string; data: PFConfigData }) => {
+  async ({ id, data }: { id: string; data: PFConfigData }, { rejectWithValue }) => {
+    try {
     const response = await httpClient.put(endpoints.pf.update(id), data)
     return response.data
   }
+  catch (error: any) {
+    return rejectWithValue(error.response?.data.message)
+  }
+}
 )
 
 export const fetchPFConfigById = createAsyncThunk(
