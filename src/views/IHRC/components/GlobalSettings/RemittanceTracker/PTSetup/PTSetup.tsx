@@ -4,13 +4,16 @@ import { HiPlusCircle } from 'react-icons/hi';
 import AdaptableCard from '@/components/shared/AdaptableCard';
 import OutlinedSelect from '@/components/ui/Outlined/Outlined';
 import DatePicker from '@/components/ui/DatePicker';
-import BulkUpload from './components/BulkUpload';
 import httpClient from '@/api/http-client';
 import { endpoints } from '@/api/endpoint';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '@/store';
-import { createPTRCConfig, createPTECConfig, resetPTSetupState } from '@/store/slices/ptConfig/ptConfigSlice';
-import { PTECConfigData, PTRCConfigData } from '@/@types/ptConfig';
+import { RootState, AppDispatch } from '@/store';
+import { 
+  createPTConfig, 
+  fetchPTConfigs, 
+  resetPTSetupState 
+} from '@/store/slices/ptConfig/ptConfigSlice';
+import { PTConfigData } from '@/@types/ptConfig';
 import PTTable from './components/PTTable';
 
 const frequencyOptions = [
@@ -20,7 +23,7 @@ const frequencyOptions = [
   { value: 'quarterly', label: 'Quarterly' },
 ];
 
-const initialPFData = {
+const initialPTData = {
   ptEcFrequency: '',
   ptRcFrequency: '',
   ptEcFirstDueDate: null,
@@ -34,24 +37,35 @@ const initialPFData = {
 };
 
 interface SelectOption {
-  value: string
-  label: string
+  value: string;
+  label: string;
 }
 
-const PTSetup = () => {
-  const dispatch = useDispatch();
+const PTSetup: React.FC = () => {
+  const dispatch = useDispatch<AppDispatch>();
   const { loading, error, success } = useSelector((state: RootState) => state.ptconfig);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [currentPFId, setCurrentPFId] = useState<string | null>(null);
-  const [pfData, setPFData] = useState(initialPFData);
-  const [pfTableData, setPFTableData] = useState([]);
-  const [isLoading, setIsLoading] = useState(false)
+  const [currentPTId, setCurrentPTId] = useState<string | null>(null);
+  const [ptData, setPTData] = useState(initialPTData);
   const [states, setStates] = useState<SelectOption[]>([]);
-  const [selectedStates, setSelectedStates] = useState<SelectOption | null>(null);
+  const [selectedState, setSelectedState] = useState<SelectOption | null>(null);
   const [isActive, setIsActive] = useState(false);
 
+
+  const [ptecpaymentDueDates, setPTECPaymentDueDates] = useState({
+    firstDate: null,
+    secondDate: null,
+    thirdDate: null,
+    lastDate: null
+  });
+  const [ptrcpaymentDueDates, setPTRCPaymentDueDates] = useState({
+    firstDate: null,
+    secondDate: null,
+    thirdDate: null,
+    lastDate: null
+  });
   const [dateFieldsState, setDateFieldsState] = useState({
     ptEc: {
       isSecondDateEnabled: false,
@@ -65,47 +79,43 @@ const PTSetup = () => {
     }
   });
 
-   const loadStates = async () => {
-         setIsLoading(true);
-         const response = await httpClient.get(endpoints.common.getStatesAll()) 
-       try {
-        if (response.data) {
-          const formattedStates = response.data.map((state: any) => ({
-            label: state.name,
-            value: String(state.id)
-          }));
-     
-          console.log('Formatted States:', formattedStates); // Debug log
-          setStates(formattedStates);
-        } else {
-          console.error('Invalid state data structure:', response.data);
-          // showNotification('danger', 'Invalid state data received');
-        }
-      } catch (error) {
-        console.error('Failed to load states:', error);
-        // showNotification('danger', 'Failed to load states');
-      } finally {
-        setIsLoading(false);
+  const loadStates = async () => {
+    try {
+      const response = await httpClient.get(endpoints.common.getStatesAll());
+      if (response.data) {
+        const formattedStates = response.data.map((state: any) => ({
+          label: state.name,
+          value: String(state.id)
+        }));
+        setStates(formattedStates);
       }
-    }; 
-    useEffect(() => {
-      loadStates();
-     }, []);
+    } catch (error) {
+      console.error('Failed to load states:', error);
+      toast.push(
+        <Notification title="Error" type="danger">
+          Failed to load states
+        </Notification>
+      );
+    }
+  };
 
-     const handleStateChange = (option: SelectOption | null) => {
-  setSelectedStates(option);
-};
-    
+  useEffect(() => {
+    loadStates();
+  }, []);
+
+  const handleStateChange = (option: SelectOption | null) => {
+    setSelectedState(option);
+  };
+
   const handleInputChange = (name: string, value: any) => {
     if (name === 'ptEcFrequency' || name === 'ptRcFrequency') {
       const frequencyValue = value && typeof value === 'object' && 'value' in value 
         ? value.value 
         : value;
       
-      setPFData(prev => {
+      setPTData(prev => {
         const updated = { ...prev, [name]: frequencyValue };
         
-        // Reset date fields and update date field states based on frequency
         const updateDateFields = (prefix: 'ptEc' | 'ptRc') => {
           switch (frequencyValue) {
             case 'monthly':
@@ -155,76 +165,50 @@ const PTSetup = () => {
         
         return updated;
       });
-    } else if (name in initialPFData) {
-      setPFData(prev => ({ ...prev, [name]: value }));
+    } else if (name in initialPTData) {
+      setPTData(prev => ({ ...prev, [name]: value }));
     }
   };
 
-  // Helper function to determine if a due date should be disabled
   const isDueDateDisabled = (prefix: 'ptEc' | 'ptRc', dateIndex: number) => {
-    const frequency = prefix === 'ptEc' ? pfData.ptEcFrequency : pfData.ptRcFrequency;
+    const frequency = prefix === 'ptEc' ? ptData.ptEcFrequency : ptData.ptRcFrequency;
     
     switch (frequency) {
       case 'monthly':
       case 'yearly':
-        // Only first date is allowed
         return dateIndex > 0;
       case 'half_yearly':
-        // First and last dates are allowed
         return dateIndex > 0 && dateIndex < 3;
       case 'quarterly':
-        // All dates are allowed
         return false;
       default:
         return true;
     }
   };
 
-  const handleEdit = (pfToEdit) => {
+  const handleEdit = (ptToEdit: any) => {
     setIsEditMode(true);
-    setCurrentPFId(pfToEdit.id);
-    setPFData({
-      ptEcFrequency: pfToEdit.ptEcFrequency,
-      ptRcFrequency: pfToEdit.ptRcFrequency,
-      ptEcFirstDueDate: pfToEdit.ptEcFirstDueDate,
-      ptEcSecondDueDate: pfToEdit.ptEcSecondDueDate,
-      ptEcThirdDueDate: pfToEdit.ptEcThirdDueDate,
-      ptEcFourthDueDate: pfToEdit.ptEcFourthDueDate,
-      ptRcFirstDueDate: pfToEdit.ptRcFirstDueDate,
-      ptRcSecondDueDate: pfToEdit.ptRcSecondDueDate,
-      ptRcThirdDueDate: pfToEdit.ptRcThirdDueDate,
-      ptRcFourthDueDate: pfToEdit.ptRcFourthDueDate
+    setCurrentPTId(ptToEdit.id);
+    setPTData({
+      ptEcFrequency: ptToEdit.ptEcFrequency,
+      ptRcFrequency: ptToEdit.ptRcFrequency,
+      ptEcFirstDueDate: ptToEdit.ptEcFirstDueDate,
+      ptEcSecondDueDate: ptToEdit.ptEcSecondDueDate,
+      ptEcThirdDueDate: ptToEdit.ptEcThirdDueDate,
+      ptEcFourthDueDate: ptToEdit.ptEcFourthDueDate,
+      ptRcFirstDueDate: ptToEdit.ptRcFirstDueDate,
+      ptRcSecondDueDate: ptToEdit.ptRcSecondDueDate,
+      ptRcThirdDueDate: ptToEdit.ptRcThirdDueDate,
+      ptRcFourthDueDate: ptToEdit.ptRcFourthDueDate
     });
     setIsDialogOpen(true);
-  
-    // Update date fields state based on frequencies
-    setDateFieldsState({
-      ptEc: {
-        isSecondDateEnabled: pfToEdit.ptEcFrequency === 'quarterly',
-        isThirdDateEnabled: pfToEdit.ptEcFrequency === 'quarterly',
-        isLastDateEnabled: 
-          pfToEdit.ptEcFrequency === 'quarterly' || 
-          pfToEdit.ptEcFrequency === 'half_yearly'
-      },
-      ptRc: {
-        isSecondDateEnabled: pfToEdit.ptRcFrequency === 'quarterly',
-        isThirdDateEnabled: pfToEdit.ptRcFrequency === 'quarterly',
-        isLastDateEnabled: 
-          pfToEdit.ptRcFrequency === 'quarterly' || 
-          pfToEdit.ptRcFrequency === 'half_yearly'
-      }
-    });
   };
-  
+
   const handleDialogClose = () => {
     setIsDialogOpen(false);
     setIsEditMode(false);
-    setCurrentPFId(null);
-    
-    // Reset to initial state
-    setPFData(initialPFData);
-    
-    // Reset date fields state
+    setCurrentPTId(null);
+    setPTData(initialPTData);
     setDateFieldsState({
       ptEc: {
         isSecondDateEnabled: false,
@@ -238,12 +222,10 @@ const PTSetup = () => {
       }
     });
   };
-  
+
   const handleConfirm = async () => {
-    // Validation checks
     const validateForm = () => {
-      // Check if state is selected
-      if (!selectedStates) {
+      if (!selectedState) {
         toast.push(
           <Notification title="Validation Error" type="danger">
             Please select a state
@@ -252,39 +234,19 @@ const PTSetup = () => {
         return false;
       }
   
-      // Check if frequencies are selected
-      if (!pfData.ptEcFrequency) {
+      if (!ptData.ptEcFrequency || !ptData.ptRcFrequency) {
         toast.push(
           <Notification title="Validation Error" type="danger">
-            Please select PT EC Frequency
+            Please select frequencies for both PT EC and PT RC
           </Notification>
         );
         return false;
       }
   
-      if (!pfData.ptRcFrequency) {
+      if (!ptData.ptEcFirstDueDate || !ptData.ptRcFirstDueDate) {
         toast.push(
           <Notification title="Validation Error" type="danger">
-            Please select PT RC Frequency
-          </Notification>
-        );
-        return false;
-      }
-  
-      // Check if first due dates are selected
-      if (!pfData.ptEcFirstDueDate) {
-        toast.push(
-          <Notification title="Validation Error" type="danger">
-            Please select PT EC First Due Date
-          </Notification>
-        );
-        return false;
-      }
-  
-      if (!pfData.ptRcFirstDueDate) {
-        toast.push(
-          <Notification title="Validation Error" type="danger">
-            Please select PT RC First Due Date
+            Please select first due dates for both PT EC and PT RC
           </Notification>
         );
         return false;
@@ -293,71 +255,176 @@ const PTSetup = () => {
       return true;
     };
   
-    // If validation fails, stop further processing
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
+  
+    const prepareDueDates = (frequency: string, dates: {
+      firstDueDate: any, 
+      secondDueDate: any, 
+      thirdDueDate: any, 
+      fourthDueDate: any
+    }) => {
+      switch (frequency) {
+        case 'monthly':
+          return {
+            first_date: dates.firstDueDate || '',
+            second_date: null,
+            third_date: null,
+            last_date: null
+          };
+        case 'yearly':
+          return {
+            first_date: dates.firstDueDate || '',
+            second_date: null,
+            third_date: null,
+            last_date: null
+          };
+        case 'half_yearly':
+          return {
+            first_date: dates.firstDueDate || '',
+            second_date: null,
+            third_date: null,
+            last_date: dates.fourthDueDate || ''
+          };
+        case 'quarterly':
+          return {
+            first_date: dates.firstDueDate || '',
+            second_date: dates.secondDueDate || '',
+            third_date: dates.thirdDueDate || '',
+            last_date: dates.fourthDueDate || ''
+          };
+        default:
+          return {
+            first_date: '',
+            second_date: null,
+            third_date: null,
+            last_date: null
+          };
+      }
+    };
   
     try {
-      // Prepare PTEC Config Data
-      const ptecConfigData: PTECConfigData = {
-        payment_mode: 'online', // You might want to make this dynamic
-        frequency: pfData.ptEcFrequency as 'monthly' | 'half_yearly' | 'yearly' | 'quarterly',
-        payment_due_date: {
-          first_date: pfData.ptEcFirstDueDate || '',
-          second_date: pfData.ptEcSecondDueDate || '',
-          third_date: pfData.ptEcThirdDueDate || '',
-          last_date: pfData.ptEcFourthDueDate || ''
-        },
-        active: true,
-        state_id: selectedStates?.value
+      const ptConfigData: PTConfigData = {
+        ptec_payment_mode: 'online',
+        ptrc_payment_mode: 'online',
+        ptec_frequency: ptData.ptEcFrequency as 'monthly' | 'half_yearly' | 'yearly' | 'quarterly',
+        ptrc_frequency: ptData.ptRcFrequency as 'monthly' | 'half_yearly' | 'yearly' | 'quarterly',
+        ptec_payment_due_date: prepareDueDates(ptData.ptEcFrequency, {
+          firstDueDate: ptData.ptEcFirstDueDate,
+          secondDueDate: ptData.ptEcSecondDueDate,
+          thirdDueDate: ptData.ptEcThirdDueDate,
+          fourthDueDate: ptData.ptEcFourthDueDate
+        }),
+        ptrc_payment_due_date: prepareDueDates(ptData.ptRcFrequency, {
+          firstDueDate: ptData.ptRcFirstDueDate,
+          secondDueDate: ptData.ptRcSecondDueDate,
+          thirdDueDate: ptData.ptRcThirdDueDate,
+          fourthDueDate: ptData.ptRcFourthDueDate
+        }),
+        active: isActive,
+        state_id: selectedState?.value
       };
-
-      // Prepare PTRC Config Data
-      const ptrcConfigData: PTRCConfigData = {
-        payment_mode: 'online', // You might want to make this dynamic
-        frequency: pfData.ptRcFrequency as 'monthly' | 'half_yearly' | 'yearly' | 'quarterly',
-        payment_due_date: {
-          first_date: pfData.ptRcFirstDueDate || '',
-          second_date: pfData.ptRcSecondDueDate || '',
-          third_date: pfData.ptRcThirdDueDate || '',
-          last_date: pfData.ptRcFourthDueDate || ''
-        },
-        active: true,
-        state_id: selectedStates?.value
-      };
-
-      // Dispatch PTEC and PTRC creation actions
-      const ptecResult = await dispatch(createPTECConfig(ptecConfigData)).unwrap();
-      const ptrcResult = await dispatch(createPTRCConfig(ptrcConfigData)).unwrap();
-
-      // Show success notification
+  
+      await dispatch(createPTConfig(ptConfigData)).unwrap();
+  
       toast.push(
         <Notification title="Success" type="success">
           PT Setup created successfully!
         </Notification>
       );
-
-      // Close dialog and reset form
+  
       handleDialogClose();
-
-      // Reset Redux state
       dispatch(resetPTSetupState());
-
+      dispatch(fetchPTConfigs({ page: 1, page_size: 10 }));
+  
     } catch (error) {
       console.error('Error in PT Setup submission:', error);
-      
       toast.push(
         <Notification title="Error" type="danger">
           Failed to save PT Setup. Please try again.
         </Notification>
       );
-
-      // Reset Redux state
       dispatch(resetPTSetupState());
     }
   };
 
+  // const handleConfirm = async () => {
+  //   const validateForm = () => {
+  //     if (!selectedState) {
+  //       toast.push(
+  //         <Notification title="Validation Error" type="danger">
+  //           Please select a state
+  //         </Notification>
+  //       );
+  //       return false;
+  //     }
+
+  //     if (!ptData.ptEcFrequency || !ptData.ptRcFrequency) {
+  //       toast.push(
+  //         <Notification title="Validation Error" type="danger">
+  //           Please select frequencies for both PT EC and PT RC
+  //         </Notification>
+  //       );
+  //       return false;
+  //     }
+
+  //     if (!ptData.ptEcFirstDueDate || !ptData.ptRcFirstDueDate) {
+  //       toast.push(
+  //         <Notification title="Validation Error" type="danger">
+  //           Please select first due dates for both PT EC and PT RC
+  //         </Notification>
+  //       );
+  //       return false;
+  //     }
+
+  //     return true;
+  //   };
+
+  //   if (!validateForm()) return;
+
+  //   try {
+  //     const ptConfigData: PTConfigData = {
+  //       ptec_payment_mode: 'online',
+  //       ptrc_payment_mode: 'online',
+  //       ptec_frequency: ptData.ptEcFrequency as 'monthly' | 'half_yearly' | 'yearly' | 'quarterly',
+  //       ptrc_frequency: ptData.ptRcFrequency as 'monthly' | 'half_yearly' | 'yearly' | 'quarterly',
+  //       ptec_payment_due_date: {
+  //         first_date: ptData.ptEcFirstDueDate || '',
+  //         second_date: ptData.ptEcSecondDueDate || '',
+  //         third_date: ptData.ptEcThirdDueDate || '',
+  //         last_date: ptData.ptEcFourthDueDate || ''
+  //       },
+  //       ptrc_payment_due_date: {
+  //         first_date: ptData.ptRcFirstDueDate || '',
+  //         second_date: ptData.ptRcSecondDueDate || '',
+  //         third_date: ptData.ptRcThirdDueDate || '',
+  //         last_date: ptData.ptRcFourthDueDate || ''
+  //       },
+  //       active: isActive,
+  //       state_id: selectedState?.value
+  //     };
+
+  //     await dispatch(createPTConfig(ptConfigData)).unwrap();
+
+  //     toast.push(
+  //       <Notification title="Success" type="success">
+  //         PT Setup created successfully!
+  //       </Notification>
+  //     );
+
+  //     handleDialogClose();
+  //     dispatch(resetPTSetupState());
+  //     dispatch(fetchPTConfigs({ page: 1, page_size: 10 }));
+
+  //   } catch (error) {
+  //     console.error('Error in PT Setup submission:', error);
+  //     toast.push(
+  //       <Notification title="Error" type="danger">
+  //         Failed to save PT Setup. Please try again.
+  //       </Notification>
+  //     );
+  //     dispatch(resetPTSetupState());
+  //   }
+  // };
 
   useEffect(() => {
     if (success) {
@@ -386,22 +453,18 @@ const PTSetup = () => {
           <h3 className="text-2xl font-bold">PT Global Setup</h3>
         </div>
         <div className="flex gap-2">
-          {/* <BulkUpload /> */}
           <Button
             variant="solid"
             size="sm"
             icon={<HiPlusCircle />}
             onClick={() => setIsDialogOpen(true)}
           >
-            Add PT Setup
+            Edit PT Setup
           </Button>
         </div>
       </div>
       
-      <PTTable 
-        // Add necessary props
-        onEdit={handleEdit}
-      />
+      <PTTable onEdit={handleEdit} />
 
       <Dialog
         isOpen={isDialogOpen}
@@ -410,7 +473,7 @@ const PTSetup = () => {
         width={1200}
         height={600}
       >
-        <h5 className="mb-6">{isEditMode ? 'Edit PT Setup' : 'Add PT Setup'}</h5>
+        <h5 className="mb-6">{'Edit PT Setup'}</h5>
         <div className="flex flex-col gap-6">
           <div className="flex gap-4">
             <div className="w-full">
@@ -418,7 +481,7 @@ const PTSetup = () => {
               <OutlinedSelect
                 label="Select State"
                 options={states}
-                value={selectedStates}
+                value={selectedState}
                 onChange={handleStateChange}
               />
             </div>
@@ -430,7 +493,7 @@ const PTSetup = () => {
               <OutlinedSelect
                 label="Select PT EC Frequency"
                 options={frequencyOptions}
-                value={frequencyOptions.find(option => option.value === pfData.ptEcFrequency) || null}
+                value={frequencyOptions.find(option => option.value === ptData.ptEcFrequency) || null}
                 onChange={(value) => handleInputChange('ptEcFrequency', value)}
               />
             </div>
@@ -439,7 +502,7 @@ const PTSetup = () => {
               <OutlinedSelect
                 label="Select PT RC Frequency"
                 options={frequencyOptions}
-                value={frequencyOptions.find(option => option.value === pfData.ptRcFrequency) || null}
+                value={frequencyOptions.find(option => option.value === ptData.ptRcFrequency) || null}
                 onChange={(value) => handleInputChange('ptRcFrequency', value)}
               />
             </div>
@@ -455,7 +518,7 @@ const PTSetup = () => {
                 <DatePicker
                   className="w-full"
                   placeholder="Select PT EC first due date"
-                  value={pfData.ptEcFirstDueDate}
+                  value={ptData.ptEcFirstDueDate}
                   onChange={(date) => handleInputChange('ptEcFirstDueDate', date)}
                 />
               </div>
@@ -464,7 +527,7 @@ const PTSetup = () => {
                 <DatePicker
                   className="w-full"
                   placeholder="Select PT EC second due date"
-                  value={pfData.ptEcSecondDueDate}
+                  value={ptData.ptEcSecondDueDate}
                   onChange={(date) => handleInputChange('ptEcSecondDueDate', date)}
                   disabled={isDueDateDisabled('ptEc', 1)}
                 />
@@ -476,7 +539,7 @@ const PTSetup = () => {
                 <DatePicker
                   className="w-full"
                   placeholder="Select PT EC third due date"
-                  value={pfData.ptEcThirdDueDate}
+                  value={ptData.ptEcThirdDueDate}
                   onChange={(date) => handleInputChange('ptEcThirdDueDate', date)}
                   disabled={isDueDateDisabled('ptEc', 2)}
                 />
@@ -486,7 +549,7 @@ const PTSetup = () => {
                 <DatePicker
                   className="w-full"
                   placeholder="Select PT EC fourth due date"
-                  value={pfData.ptEcFourthDueDate}
+                  value={ptData.ptEcFourthDueDate}
                   onChange={(date) => handleInputChange('ptEcFourthDueDate', date)}
                   disabled={isDueDateDisabled('ptEc', 3)}
                 />
@@ -502,7 +565,7 @@ const PTSetup = () => {
                 <DatePicker
                   className="w-full"
                   placeholder="Select PT RC first due date"
-                  value={pfData.ptRcFirstDueDate}
+                  value={ptData.ptRcFirstDueDate}
                   onChange={(date) => handleInputChange('ptRcFirstDueDate', date)}
                 />
               </div>
@@ -511,7 +574,7 @@ const PTSetup = () => {
                 <DatePicker
                   className="w-full"
                   placeholder="Select PT RC second due date"
-                  value={pfData.ptRcSecondDueDate}
+                  value={ptData.ptRcSecondDueDate}
                   onChange={(date) => handleInputChange('ptRcSecondDueDate', date)}
                   disabled={isDueDateDisabled('ptRc', 1)}
                 />
@@ -523,7 +586,7 @@ const PTSetup = () => {
                 <DatePicker
                   className="w-full"
                   placeholder="Select PT RC third due date"
-                  value={pfData.ptRcThirdDueDate}
+                  value={ptData.ptRcThirdDueDate}
                   onChange={(date) => handleInputChange('ptRcThirdDueDate', date)}
                   disabled={isDueDateDisabled('ptRc', 2)}
                 />
@@ -533,7 +596,7 @@ const PTSetup = () => {
                 <DatePicker
                   className="w-full"
                   placeholder="Select PT RC fourth due date"
-                  value={pfData.ptRcFourthDueDate}
+                  value={ptData.ptRcFourthDueDate}
                   onChange={(date) => handleInputChange('ptRcFourthDueDate', date)}
                   disabled={isDueDateDisabled('ptRc', 3)}
                 />

@@ -126,32 +126,35 @@ const PTTable = ({ tableLoading, setTableLoading, onEdit }: any) => {
       },
       {
         header: 'Status',
-        accessorKey: 'esi_active',
-        cell: ({ row }) => (
-          <div className="w-24 text-start">
-          <div 
-            className={row.original.esi_active ? 'text-green-500 font-semibold' : 'text-red-500 font-semibold'}
-            >
-            {row.original.esi_active ? 'Active' : 'Inactive'}
-          </div>
+        accessorKey: 'status',
+        cell: ({ row }) => {
+          const isActive = row.original.ptrc_active && row.original.ptec_active;
+          return (
+            <div className="w-24 text-start">
+              <div 
+                className={isActive ? 'text-green-500 font-semibold' : 'text-red-500 font-semibold'}
+              >
+                {isActive ? 'Active' : 'Inactive'}
+              </div>
             </div>
-        ),
+          );
+        },
       },
-      {
-        header: 'Actions',
-        id: 'actions',
-        cell: ({ row }) => (
-          <div className="flex space-x-2">
-            <Tooltip title="Edit" placement="top">
-              <Button
-                size="sm"
-                icon={<MdEdit />}
-                onClick={() => onEdit(row.original)}
-              />
-            </Tooltip>
-          </div>
-        ),
-      },
+      // {
+      //   header: 'Actions',
+      //   id: 'actions',
+      //   cell: ({ row }) => (
+      //     <div className="flex space-x-2">
+      //       <Tooltip title="Edit" placement="top">
+      //         <Button
+      //           size="sm"
+      //           icon={<MdEdit />}
+      //           onClick={() => onEdit(row.original)}
+      //         />
+      //       </Tooltip>
+      //     </div>
+      //   ),
+      // },
     ],
     [onEdit]
   );
