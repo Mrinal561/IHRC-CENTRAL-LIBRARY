@@ -5,8 +5,16 @@ import { endpoints } from '@/api/endpoint'
 export interface PFConfigData {
   id?: string
   payment_mode: 'online' | 'offline'
-  pf_frequency: 'monthly' | 'half_yearly' | 'yearly' | 'quarterly'
-  pt_payment_due_date: {
+  pfiw_payment_mode: 'online' | 'offline'
+  pf_frequency: 'monthly'
+  pfiw_frequency: 'monthly'
+  pf_payment_due_date: {
+    first_date: string
+    second_date?: string
+    third_date?: string
+    last_date?: string
+  }
+  pfiw_payment_due_date: {
     first_date: string
     second_date?: string
     third_date?: string
@@ -52,7 +60,7 @@ export const fetchPFConfigs = createAsyncThunk(
           };
     }
     catch(error: any) {
-        // return rejectWithValue(error.response?.data.message)
+        return rejectWithValue(error.response?.data.message)
     }
   }
 )
