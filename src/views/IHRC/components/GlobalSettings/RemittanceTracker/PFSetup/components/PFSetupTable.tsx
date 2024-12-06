@@ -57,38 +57,52 @@ const PFSetupTable = ({
       {
         header: 'First Due Date',
         accessorKey: 'first_date',
-        cell: ({ row }) => formatDate(row.original.pt_payment_due_date.first_date),
+        cell: ({ row }) => formatDate(row.original.pf_payment_due_date.first_date),
       },
       {
-        header: 'Second Due Date',
-        accessorKey: 'second_date',
-        cell: ({ row }) => formatDate(row.original.pt_payment_due_date.second_date) || '-',
+        header: 'Mode',
+        accessorKey: 'pfiw_payment_mode',
       },
       {
-        header: 'Third Due Date',
-        accessorKey: 'third_date',
-        cell: ({ row }) => formatDate(row.original.pt_payment_due_date.third_date) || '-',
+        header: 'PFIW Frequency',
+        accessorKey: 'pfiw_frequency',
+        cell: ({ row }) => getFrequencyLabel(row.original.pfiw_frequency),
       },
       {
-        header: 'Last Due Date',
-        accessorKey: 'last_date',
-        cell: ({ row }) => formatDate(row.original.pt_payment_due_date.last_date) || '-',
+        header: 'First Due Date',
+        accessorKey: 'first_date',
+        cell: ({ row }) => formatDate(row.original.pfiw_payment_due_date.first_date),
       },
-      {
-        header: 'Actions',
-        id: 'actions',
-        cell: ({ row }) => (
-          <div className="flex space-x-2">
-            <Tooltip title="Edit" placement="top">
-              <Button
-                size="sm"
-                icon={<MdEdit />}
-                onClick={() => onEdit && onEdit(row.original)}
-              />
-            </Tooltip>
-          </div>
-        ),
-      },
+      // {
+      //   header: 'Second Due Date',
+      //   accessorKey: 'second_date',
+      //   cell: ({ row }) => formatDate(row.original.pt_payment_due_date.second_date) || '-',
+      // },
+      // {
+      //   header: 'Third Due Date',
+      //   accessorKey: 'third_date',
+      //   cell: ({ row }) => formatDate(row.original.pt_payment_due_date.third_date) || '-',
+      // },
+      // {
+      //   header: 'Last Due Date',
+      //   accessorKey: 'last_date',
+      //   cell: ({ row }) => formatDate(row.original.pt_payment_due_date.last_date) || '-',
+      // },
+      // {
+      //   header: 'Actions',
+      //   id: 'actions',
+      //   cell: ({ row }) => (
+      //     <div className="flex space-x-2">
+      //       <Tooltip title="Edit" placement="top">
+      //         <Button
+      //           size="sm"
+      //           icon={<MdEdit />}
+      //           onClick={() => onEdit && onEdit(row.original)}
+      //         />
+      //       </Tooltip>
+      //     </div>
+      //   ),
+      // },
     ],
     [onEdit]
   );

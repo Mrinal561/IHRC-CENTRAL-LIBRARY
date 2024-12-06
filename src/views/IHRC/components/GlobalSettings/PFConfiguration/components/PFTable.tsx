@@ -39,20 +39,20 @@ const PFTable = ({
             },
             {
                 header: 'First Due Date',
-                accessorKey: 'pt_payment_due_date.first_date',
+                accessorKey: 'pf_payment_due_date.first_date',
                 cell: ({ row }) => {
                     const date = row.original.pt_payment_due_date.first_date
                     return date ? dayjs(date).format('DD/MM/YYYY') : '-'
                 },
             },
-            {
-                header: 'Second Due Date',
-                accessorKey: 'pt_payment_due_date.last_date',
-                cell: ({ row }) => {
-                    const date = row.original.pt_payment_due_date.last_date
-                    return date ? dayjs(date).format('DD/MM/YYYY') : '-'
-                },
-            },
+            // {
+            //     header: 'Second Due Date',
+            //     accessorKey: 'pt_payment_due_date.last_date',
+            //     cell: ({ row }) => {
+            //         const date = row.original.pt_payment_due_date.last_date
+            //         return date ? dayjs(date).format('DD/MM/YYYY') : '-'
+            //     },
+            // },
             {
                 header: 'Actions',
                 id: 'actions',
