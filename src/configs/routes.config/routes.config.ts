@@ -92,6 +92,14 @@ export const protectedRoutes = [
         authority: [],
     },
     {
+        key: 'groupMenu.collapse.item6',
+        path: '/role',
+        component: lazy(() =>
+            import('@/views/IHRC/components/GlobalSettings/Compliance/components/Roles')
+        ),
+        authority: [],
+    },
+    {
         key: 'customChecklist.customChecklistForm',
         path: '/add-compliance-form',
         component: lazy(
@@ -110,6 +118,14 @@ export const protectedRoutes = [
                 import(
                     '@/views/IHRC/components/GlobalSettings/Compliance/components/ComplianceEditForm'
                 ),
+        ),
+        authority: [],
+    },
+    {
+        key: 'roles.details',
+        path: `${APP_PREFIX_PATH}/roles`,
+        component: lazy(() =>
+            import('@/views/IHRC/components/GlobalSettings/Compliance/components/Roles')
         ),
         authority: [],
     },
