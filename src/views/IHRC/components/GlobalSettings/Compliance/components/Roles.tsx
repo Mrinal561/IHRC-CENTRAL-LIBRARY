@@ -335,7 +335,7 @@ import OutlinedInput from '@/components/ui/OutlinedInput';
         onClick={handleAddRole}
         disabled={!currentRole.name}
       >
-        Add Role
+       Confirm
       </Button>
     </div>
   </div>
@@ -371,8 +371,7 @@ import OutlinedInput from '@/components/ui/OutlinedInput';
         variant="solid" 
         onClick={handleEditRole}
         disabled={!currentRole.name}
-      >
-        Update Role
+      >Confirm
       </Button>
     </div>
   </div>
