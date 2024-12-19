@@ -57,6 +57,17 @@ export const endpoints = {
     common: {
         getStatesAll: () => api('/states')
     },
+    role:{
+        list:() =>  api('superadmin/role')
+    },
+    module:{
+        list:()=> api('superadmin/modules')
+    },
+    companyAdmin:{
+        create:()=> api('companyadmin/signup'),
+        list:()=> api(`/companyadmin/list`),
+        update:(id:any)=> api(`/companyadmin/${id}`)
+    }
 
     
 
