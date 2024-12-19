@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import AdaptableCard from '@/components/shared/AdaptableCard';
 import { Button, Dialog } from '@/components/ui';
 import Checkbox from '@/components/ui/Checkbox';
@@ -97,6 +97,15 @@ const CompanyAdmin = () => {
     setSelectedModules([]);
   };
 
+  const sortedModules = useMemo(() => {
+    const moduleOrder = ['Audit Checklist', 'Remittance Tracker', 'Register & Return'];
+    return [...modules].sort((a, b) => {
+        const indexA = moduleOrder.indexOf(a.name);
+        const indexB = moduleOrder.indexOf(b.name);
+        return indexA - indexB;
+    });
+}, [modules]);
+
   const handleConfirm = async () => {
     setIsLoading(true);
     try {
@@ -158,9 +167,9 @@ const CompanyAdmin = () => {
         <h5 className="mb-6">Add Company Admin</h5>
         <div className="flex flex-col gap-6">
           <div className="w-full">
-            <label className="text-gray-600 mb-2 block">First Name <span className="text-red-500">*</span></label>
+            <label className="text-gray-600 mb-2 block">Name <span className="text-red-500">*</span></label>
             <OutlinedInput
-              label="First Name"
+              label="Name"
               value={formData.name}
               onChange={(value: string) => handleInputChange('name', value)}
             />
@@ -184,11 +193,16 @@ const CompanyAdmin = () => {
           <div className="w-full">
             <label className="text-gray-600 mb-2 block">Modules</label>
             <div className="border rounded p-4">
-              <Checkbox.Group value={selectedModules} onChange={handleModuleChange}>
-                {modules.map(module => (
-                  <div key={module.id}>
-                    <Checkbox value={module.id}>{module.name}</Checkbox>
-                  </div>
+              <Checkbox.Group value={selectedModules} onChange={handleModuleChange}  className="flex flex-row flex-wrap gap-6">
+                {sortedModules.map(module => (
+                   <div key={module.id}  className="flex-1 min-w-[180px]">
+                   <Checkbox 
+                       value={module.id}
+                       className="inline-flex items-center"
+                   >
+                       <span className="ml-2 whitespace-nowrap">{module.name}</span>
+                   </Checkbox>
+               </div>
                 ))}
               </Checkbox.Group>
             </div>

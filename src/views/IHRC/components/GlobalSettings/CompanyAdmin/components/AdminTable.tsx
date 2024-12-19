@@ -274,7 +274,7 @@ const AdminTable: React.FC<AdminTableProps> = ({
                                 onChange={handleModuleChange}
                                    className="flex flex-row flex-wrap gap-6"
                             >
-                                {sortedModules.map(module => (
+                                {modules.map(module => (
                                     <div key={module.id}  className="flex-1 min-w-[180px]">
                                         <Checkbox 
                                             value={module.id}
