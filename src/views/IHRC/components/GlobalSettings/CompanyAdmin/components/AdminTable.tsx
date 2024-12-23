@@ -137,14 +137,14 @@ const AdminTable: React.FC<AdminTableProps> = ({
         []
     );
 
-    const sortedModules = useMemo(() => {
-        const moduleOrder = ['Audit Checklist', 'Remittance Tracker', 'Register & Return'];
-        return [...modules].sort((a, b) => {
-            const indexA = moduleOrder.indexOf(a.name);
-            const indexB = moduleOrder.indexOf(b.name);
-            return indexA - indexB;
-        });
-    }, [modules]);
+    // const sortedModules = useMemo(() => {
+    //     const moduleOrder = ['Audit Checklist', 'Remittance Tracker', 'Register & Return'];
+    //     return [...modules].sort((a, b) => {
+    //         const indexA = moduleOrder.indexOf(a.name);
+    //         const indexB = moduleOrder.indexOf(b.name);
+    //         return indexA - indexB;
+    //     });
+    // }, [modules]);
 
     const handleEditConfirm = async () => {
         if (itemToEdit?.id) {
