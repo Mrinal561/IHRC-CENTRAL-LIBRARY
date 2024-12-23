@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
-import { Checkbox } from '@/components/ui/checkbox';
+import Checkbox from '@/components/ui/Checkbox/Checkbox';
 import { HiOutlinePlusCircle, HiOutlineMinusCircle } from 'react-icons/hi';
 import  Table  from '@/components/ui/Table/Table';
 import Tr from '@/components/ui/Table/Tr';
