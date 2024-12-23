@@ -45,6 +45,7 @@ const PFSetupTable = ({
       //   header: 'ID',
       //   accessorKey: 'id',
       // },
+      
       {
         header: 'Mode',
         accessorKey: 'payment_mode',
