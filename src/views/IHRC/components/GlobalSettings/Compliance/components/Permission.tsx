@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { Checkbox } from '@/components/ui/checkbox';
 import { HiOutlinePlusCircle, HiOutlineMinusCircle } from 'react-icons/hi';
-import  Table  from '@/components/ui/table/table';
+import  Table  from '@/components/ui/Table/Table';
 import Tr from '@/components/ui/Table/Tr';
 import Th from '@/components/ui/Table/Th';
 import Td from '@/components/ui/Table/Td';
