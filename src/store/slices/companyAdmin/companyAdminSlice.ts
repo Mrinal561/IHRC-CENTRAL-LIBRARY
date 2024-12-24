@@ -321,7 +321,7 @@ const companyAdminSlice = createSlice({
                 state.loading = false
                 state.currentAdmin = action.payload
                 // Optionally update the list with the new admin
-                state.adminsList.push(action.payload)
+                // state.adminsList.push(action.payload)
             })
             .addCase(createCompanyAdmin.rejected, (state, action) => {
                 state.loading = false
