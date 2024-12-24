@@ -349,13 +349,13 @@ const companyAdminSlice = createSlice({
                 state.loading = false
                 state.currentAdmin = action.payload
                 // Update the admin in the list if it exists
-                const index = state.adminsList.findIndex(admin => admin.email === action.payload.email)
-                if (index !== -1) {
-                    state.adminsList[index] = {
-                        ...state.adminsList[index],
-                        moduleAccess: action.payload.moduleAccess
-                    }
-                }
+                // const index = state.adminsList.findIndex(admin => admin.email === action.payload.email)
+                // if (index !== -1) {
+                //     state.adminsList[index] = {
+                //         ...state.adminsList[index],
+                //         moduleAccess: action.payload.moduleAccess
+                //     }
+                // }
             })
             .addCase(updateCompanyAdmin.rejected, (state, action) => {
                 state.loading = false

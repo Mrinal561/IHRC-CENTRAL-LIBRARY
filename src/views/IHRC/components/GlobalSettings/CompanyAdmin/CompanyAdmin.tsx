@@ -53,8 +53,8 @@ const CompanyAdmin = () => {
     try {
       // Fetch admin data using the fetchCompanyAdmins endpoint
       const  data  = await dispatch(fetchCompanyAdmins())
-      setAdminData(data.payload);
-      console.log('Admin Data:', data.payload);
+      setAdminData(data.payload.data);
+      console.log('Admin Data:', data.payload.data);
       await fetchModules();
     } catch (error) {
       console.error('Error fetching admin data:', error);
