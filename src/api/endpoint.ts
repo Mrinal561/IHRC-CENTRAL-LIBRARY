@@ -1,6 +1,7 @@
 const api = (endpoint: string) =>
     `${import.meta.env.VITE_API_GATEWAY}${endpoint}`
 
+
 export const endpoints = {
     auth: {
         login: () => api('superadmin/login'),
