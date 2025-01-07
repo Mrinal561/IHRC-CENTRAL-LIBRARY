@@ -1,7 +1,7 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import AdaptableCard from '@/components/shared/AdaptableCard';
-import { Button, Dialog } from '@/components/ui';
+import { Button, Dialog, toast, Notification } from '@/components/ui';
 import Checkbox from '@/components/ui/Checkbox';
 import { HiPlusCircle } from 'react-icons/hi';
 import httpClient from '@/api/http-client';
@@ -11,6 +11,29 @@ import { useDispatch } from 'react-redux';
 import { showErrorNotification } from '@/components/ui/ErrorMessage';
 import { createCompanyAdmin, fetchCompanyAdmins } from '@/store/slices/companyAdmin/companyAdminSlice';
 import AdminTable from './components/AdminTable';
+import * as yup from 'yup';
+
+const validationSchema = yup.object().shape({
+  name: yup
+    .string()
+    .required('Name is required')
+    .min(3, 'Name must be at least 3 characters'),
+  email: yup
+    .string()
+    .email('Invalid email address')
+    .required('Email is required'),
+    password: yup.string()
+    .required('Password is required')
+    .min(6, 'Password must be at least 6 characters')
+    .matches(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
+      'Must include A-Z, a-z, 0-9, @$!%*?& (Weak Password)'
+  ),
+});
+
+interface ValidationErrors {
+  [key: string]: string;
+}
 
 interface Module {
   id: number;
@@ -19,6 +42,7 @@ interface Module {
 
 const CompanyAdmin = () => {
   const dispatch = useDispatch();
+  const [errors, setErrors] = useState<ValidationErrors>({});
   const [isLoading, setIsLoading] = useState(false);
   const [companyData, setCompanyData] = useState([]);
   const [modules, setModules] = useState<Module[]>([]);
@@ -31,6 +55,11 @@ const CompanyAdmin = () => {
     email: '',
     password: '',
     moduleAccess: [] as number[]
+  });
+  const [pagination, setPagination] = useState({
+    total: 0,
+    pageIndex: 1,
+    pageSize: 10,
   });
 
   const refreshData = () => {
@@ -48,26 +77,44 @@ const CompanyAdmin = () => {
     }
   };
 
-  const fetchAdminData = async (page = 1, pageSize = 10) => {
-    setIsLoading(true);
-    try {
-      // Fetch admin data using the fetchCompanyAdmins endpoint
-      const  data  = await dispatch(fetchCompanyAdmins())
-      setAdminData(data.payload.data);
-      console.log('Admin Data:', data.payload.data);
-      await fetchModules();
-    } catch (error) {
-      console.error('Error fetching admin data:', error);
-      showErrorNotification('Failed to fetch admin data');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const fetchAdminData = useCallback(
+    async (page = 1, pageSize = 10) => {
+      setIsLoading(true);
+      try {
+        const response = await httpClient.get(endpoints.companyAdmin.list(), {
+          params: { page, page_size: pageSize },
+        });
+        setAdminData(response.data.data);
+        setPagination((prev) => ({
+          ...prev,
+          total: response.data.paginate_data.totalResults,
+        }));
+        await fetchModules();
+      } catch (error) {
+        console.error('Error fetching admin data:', error);
+        showErrorNotification('Failed to fetch admin data');
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
 
   useEffect(() => {
-    console.log("Initial Company Admin Rendering");
-    fetchAdminData();
-  }, [key]);
+    fetchAdminData(pagination.pageIndex, pagination.pageSize);
+  }, [fetchAdminData, pagination.pageIndex, pagination.pageSize]);
+
+  const handlePaginationChange = (page: number) => {
+    setPagination((prev) => ({ ...prev, pageIndex: page }));
+  };
+
+  const handlePageSizeChange = (newPageSize: number) => {
+    setPagination((prev) => ({
+      ...prev,
+      pageSize: newPageSize,
+      pageIndex: 1,
+    }));
+  };
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -106,9 +153,36 @@ const CompanyAdmin = () => {
     });
 }, [modules]);
 
+const validateForm = async () => {
+  try {
+    await validationSchema.validate(formData, { abortEarly: false });
+    setErrors({});
+    return true;
+  } catch (yupError) {
+    if (yupError instanceof yup.ValidationError) {
+      const newErrors: ValidationErrors = {};
+      yupError.inner.forEach((error) => {
+        if (error.path) {
+          newErrors[error.path] = error.message;
+        }
+      });
+      setErrors(newErrors);
+    }
+    return false;
+  }
+};
+
   const handleConfirm = async () => {
     setIsLoading(true);
     try {
+      const isValid = await validateForm();
+      if(!isValid){
+        toast.push(
+          <Notification title="Danger" type="danger">
+              Please fix the validation errors
+          </Notification>)
+        return;
+      }
       const result = await dispatch(createCompanyAdmin(formData))
         .unwrap()
         .catch((error: any) => {
@@ -157,6 +231,9 @@ const CompanyAdmin = () => {
       modules={modules}
       isLoading={isLoading}
       onDataChange={fetchAdminData}
+      pagination={pagination}
+      onPaginationChange={handlePaginationChange}
+      onPageSizeChange={handlePageSizeChange}
     />
 
       <Dialog
@@ -173,6 +250,11 @@ const CompanyAdmin = () => {
               value={formData.name}
               onChange={(value: string) => handleInputChange('name', value)}
             />
+              <div className="min-h-[20px]">
+          {errors.name && (
+            <p className="text-red-500 text-xs mt-1">{errors.name}</p>
+          )}
+        </div>
           </div>
           <div className="w-full">
             <label className="text-gray-600 mb-2 block">Email <span className="text-red-500">*</span></label>
@@ -181,6 +263,9 @@ const CompanyAdmin = () => {
               value={formData.email}
               onChange={(value: string) => handleInputChange('email', value)}
             />
+             {errors.email && (
+            <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+          )}
           </div>
           <div className="w-full">
             <label className="text-gray-600 mb-2 block">Password <span className="text-red-500">*</span></label>
@@ -189,10 +274,13 @@ const CompanyAdmin = () => {
               value={formData.password}
               onChange={(value: string) => handleInputChange('password', value)}
             />
+             {errors.password && (
+            <p className="text-red-500 text-xs mt-1">{errors.password}</p>
+          )}
           </div>
           <div className="w-full">
             <label className="text-gray-600 mb-2 block">Modules</label>
-            <div className="border rounded p-4">
+            {/* <div className="border rounded p-4">
               <Checkbox.Group value={selectedModules} onChange={handleModuleChange}  className="flex flex-row flex-wrap gap-6">
                 {sortedModules.map(module => (
                    <div key={module.id}  className="flex-1 min-w-[180px]">
@@ -205,7 +293,25 @@ const CompanyAdmin = () => {
                </div>
                 ))}
               </Checkbox.Group>
-            </div>
+            </div> */}
+            <div className="border rounded p-4">
+  <Checkbox.Group
+    value={selectedModules}
+    onChange={handleModuleChange}
+    className="flex flex-row flex-wrap gap-6"
+  >
+    {sortedModules
+      .filter(module => module.name === 'Remittance Tracker')
+      .map(module => (
+        <div key={module.id} className="flex-1 min-w-[180px]">
+          <Checkbox value={module.id} className="inline-flex items-center">
+            <span className="ml-2 whitespace-nowrap">{module.name}</span>
+          </Checkbox>
+        </div>
+      ))}
+  </Checkbox.Group>
+</div>
+
           </div>
         </div>
 

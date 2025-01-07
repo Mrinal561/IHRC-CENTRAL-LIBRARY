@@ -14,6 +14,51 @@ import { AppDispatch, RootState } from '@/store';
 import httpClient from '@/api/http-client';
 import { endpoints } from '@/api/endpoint';
 import { showErrorNotification } from '@/components/ui/ErrorMessage';
+import * as yup from 'yup';
+
+
+const validationSchema = yup.object().shape({
+  selectedState: yup
+    .object()
+    .nullable()
+    .required('State is required'),
+  frequency: yup
+    .string()
+    .oneOf(['monthly', 'yearly', 'half_yearly', 'quarterly'], 'Invalid frequency')
+    .required('Frequency is required'),
+  paymentDueDates: yup.object().shape({
+    firstDate: yup
+      .date()
+      .required('First due date is required')
+      .nullable(),
+    secondDate: yup
+      .date()
+      .nullable()
+      .when('frequency', {
+        is: 'quarterly',
+        then: yup.date().required('Second due date is required'),
+      }),
+    thirdDate: yup
+      .date()
+      .nullable()
+      .when('frequency', {
+        is: 'quarterly',
+        then: yup.date().required('Third due date is required'),
+      }),
+    lastDate: yup
+      .date()
+      .nullable()
+      .when('frequency', {
+        is: (frequency) => frequency === 'half_yearly' || frequency === 'quarterly',
+        then: yup.date().required('Last due date is required'),
+      }),
+  })
+});
+
+interface ValidationErrors {
+  [key: string]: string;
+}
+
 
 const frequencyOptions = [
   { value: 'monthly', label: 'Monthly' },
@@ -30,7 +75,7 @@ interface SelectOption {
 const ESISetup = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { esiConfigs, loading, error, currentESIConfig } = useSelector((state: RootState) => state.esiconfig);
-
+  const [errors, setErrors] = useState<ValidationErrors>({});
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [states, setStates] = useState<SelectOption[]>([]);
@@ -154,16 +199,36 @@ const ESISetup = () => {
     dispatch(clearCurrentESIConfig());
   };
 
+
+  const validateForm = async () => {
+    try {
+      await validationSchema.validate(formData, { abortEarly: false });
+      setErrors({});
+      return true;
+    } catch (yupError) {
+      if (yupError instanceof yup.ValidationError) {
+        const newErrors: ValidationErrors = {};
+        yupError.inner.forEach((error) => {
+          if (error.path) {
+            newErrors[error.path] = error.message;
+          }
+        });
+        setErrors(newErrors);
+      }
+      return false;
+    }
+  };
+
   const handleConfirm = async () => {
     // Validate form
-    if (!selectedState || !frequency || !paymentDueDates.firstDate) {
-      toast.push(
-        <Notification title="Error" type="danger">
-          Please fill all required fields
-        </Notification>
-      );
-      return;
-    }
+    // if (!selectedState || !frequency || !paymentDueDates.firstDate) {
+    //   toast.push(
+    //     <Notification title="Error" type="danger">
+    //       Please fill all required fields
+    //     </Notification>
+    //   );
+    //   return;
+    // }
 
     const esiConfigData = {
       frequency: frequency as 'monthly' | 'half_yearly' | 'yearly' | 'quarterly',
@@ -179,6 +244,14 @@ const ESISetup = () => {
     };
 
     try {
+      const isValid = await validateForm();
+      if(!isValid){
+        toast.push(
+          <Notification title="Danger" type="danger">
+              Please fix the validation errors
+          </Notification>)
+        return;
+      }
       if (isEditMode && currentESIConfig?.id) {
         const result = await dispatch(updateESIConfig({ 
           id: currentESIConfig.id, 
@@ -300,14 +373,14 @@ const ESISetup = () => {
         </div>
         <div className="flex gap-2">
           {/* <BulkUpload /> */}
-          <Button
+          {/* <Button
             variant="solid"
             size="sm"
             icon={<HiPlusCircle />}
             onClick={() => setIsDialogOpen(true)}
           >
             Edit ESI Setup
-          </Button>
+          </Button> */}
         </div>
       </div>
       
@@ -332,6 +405,7 @@ const ESISetup = () => {
                 value={selectedState}
                 onChange={setSelectedState}
               />
+              
             </div>
           </div>
 
@@ -344,6 +418,11 @@ const ESISetup = () => {
                 value={frequencyOptions.find(option => option.value === frequency) || null}
                 onChange={handleFrequencyChange}
               />
+              <div className="min-h-[20px]">
+          {errors.frequency && (
+            <p className="text-red-500 text-xs mt-1">{errors.frequency}</p>
+          )}
+        </div>
             </div>
           </div>
 
@@ -356,6 +435,11 @@ const ESISetup = () => {
                 value={paymentDueDates.firstDate}
                 onChange={(date) => setPaymentDueDates(prev => ({ ...prev, firstDate: date }))}
               />
+              <div className="min-h-[20px]">
+          {errors.firstDate && (
+            <p className="text-red-500 text-xs mt-1">{errors.firstDate}</p>
+          )}
+        </div>
             </div>
             <div className="w-1/2">
               <label className="text-gray-600 mb-2 block">Second Due Date</label>
@@ -366,6 +450,11 @@ const ESISetup = () => {
                 onChange={(date) => setPaymentDueDates(prev => ({ ...prev, secondDate: date }))}
                 disabled={isDueDateDisabled(1)}
               />
+              <div className="min-h-[20px]">
+          {errors.secondDate && (
+            <p className="text-red-500 text-xs mt-1">{errors.secondDate}</p>
+          )}
+        </div>
             </div>
           </div>
 

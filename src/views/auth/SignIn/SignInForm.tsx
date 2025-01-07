@@ -161,7 +161,7 @@ const SignInForm = (props: SignInFormProps) => {
                     <Form>
                         <FormContainer>
                             <FormItem
-                                label="User Name"
+                                label="Email"
                                 invalid={
                                     (errors.userName &&
                                         touched.userName) as boolean
@@ -172,7 +172,7 @@ const SignInForm = (props: SignInFormProps) => {
                                     type="text"
                                     autoComplete="off"
                                     name="userName"
-                                    placeholder="User Name"
+                                    placeholder="Email"
                                     component={Input}
                                 />
                             </FormItem>
