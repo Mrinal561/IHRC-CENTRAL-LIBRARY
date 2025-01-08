@@ -12,24 +12,29 @@ import { showErrorNotification } from '@/components/ui/ErrorMessage';
 import { createCompanyAdmin, fetchCompanyAdmins } from '@/store/slices/companyAdmin/companyAdminSlice';
 import AdminTable from './components/AdminTable';
 import * as yup from 'yup';
-
+import { createCompanyGroup } from '@/store/slices/companyAdmin/companyGroupSlice';
 const validationSchema = yup.object().shape({
   name: yup
     .string()
     .required('Name is required')
     .min(3, 'Name must be at least 3 characters')
-  .matches(/^\S.*\S$|^\S$/,'The input must not have leading or trailing spaces'),
+    .matches(/^\S.*\S$|^\S$/, 'The input must not have leading or trailing spaces'),
   email: yup
     .string()
     .email('Invalid email address')
     .required('Email is required'),
-    password: yup.string()
+  password: yup
+    .string()
     .required('Password is required')
     .min(6, 'Password must be at least 6 characters')
     .matches(
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
       'Must include A-Z, a-z, 0-9, @$!%*?& (Weak Password)'
-  ),
+    ),
+  moduleAccess: yup
+    .array()
+    .of(yup.number())
+    .min(1, 'At least one module must be selected'),
 });
 
 interface ValidationErrors {
@@ -44,6 +49,8 @@ interface Module {
 const CompanyAdmin = () => {
   const dispatch = useDispatch();
   const [errors, setErrors] = useState<ValidationErrors>({});
+  const [entityName, setEntityName] = useState('');
+  const [entityNameError, setEntityNameError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [companyData, setCompanyData] = useState([]);
   const [modules, setModules] = useState<Module[]>([]);
@@ -63,6 +70,24 @@ const CompanyAdmin = () => {
     pageSize: 10,
   });
 
+  const handleEntityNameChange = (value: string) => {
+    setEntityName(value);
+    setEntityNameError('');
+  };
+
+  const validateEntityName = async () => {
+    try {
+      await validationSchema.validateAt('entityName', { entityName });
+      setEntityNameError('');
+      return true;
+    } catch (error) {
+      if (error instanceof yup.ValidationError) {
+        setEntityNameError(error.message);
+      }
+      return false;
+    }
+  };
+
   const refreshData = () => {
     setKey(prev => prev + 1);
   };
@@ -71,10 +96,9 @@ const CompanyAdmin = () => {
     try {
       const { data } = await httpClient.get(endpoints.module.list());
       setModules(data.data);
-      console.log('Modules data:', data.data);
-      console.log('modules', modules)
     } catch (error) {
       console.error('Error fetching modules:', error);
+      showErrorNotification('Failed to fetch modules');
     }
   };
 
@@ -122,16 +146,24 @@ const CompanyAdmin = () => {
       ...prev,
       [field]: value
     }));
+    // Clear error for the field being changed
+    setErrors(prev => ({
+      ...prev,
+      [field]: ''
+    }));
   };
 
   const handleModuleChange = (options: (string | number)[]) => {
     setSelectedModules(options);
-    // Update formData with the selected module IDs
     setFormData(prev => ({
       ...prev,
       moduleAccess: options.map(option => Number(option))
     }));
-    console.log('Selected modules:', options);
+    // Clear moduleAccess error when selection changes
+    setErrors(prev => ({
+      ...prev,
+      moduleAccess: ''
+    }));
   };
 
   const handleDialogClose = () => {
@@ -142,73 +174,112 @@ const CompanyAdmin = () => {
       password: '',
       moduleAccess: []
     });
+    setEntityName('');
+    setEntityNameError('');
+    setErrors({});
     setSelectedModules([]);
   };
 
   const sortedModules = useMemo(() => {
     const moduleOrder = ['Audit Checklist', 'Remittance Tracker', 'Register & Return'];
     return [...modules].sort((a, b) => {
-        const indexA = moduleOrder.indexOf(a.name);
-        const indexB = moduleOrder.indexOf(b.name);
-        return indexA - indexB;
+      const indexA = moduleOrder.indexOf(a.name);
+      const indexB = moduleOrder.indexOf(b.name);
+      return indexA - indexB;
     });
-}, [modules]);
+  }, [modules]);
 
-const validateForm = async () => {
-  try {
-    await validationSchema.validate(formData, { abortEarly: false });
-    setErrors({});
-    return true;
-  } catch (yupError) {
-    if (yupError instanceof yup.ValidationError) {
-      const newErrors: ValidationErrors = {};
-      yupError.inner.forEach((error) => {
-        if (error.path) {
-          newErrors[error.path] = error.message;
-        }
-      });
-      setErrors(newErrors);
+  const validateForm = async () => {
+    try {
+      const validationObject = {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        moduleAccess: formData.moduleAccess,
+      };
+
+      await validationSchema.validate(validationObject, { abortEarly: false });
+      setErrors({});
+      return true;
+    } catch (yupError) {
+      if (yupError instanceof yup.ValidationError) {
+        const newErrors: ValidationErrors = {};
+        yupError.inner.forEach((error) => {
+          if (error.path) {
+            newErrors[error.path] = error.message;
+          }
+        });
+        setErrors(newErrors);
+      }
+      return false;
     }
-    return false;
-  }
-};
+  };
+
+  const handleError = (error: any) => {
+    if (error.response?.data?.message) {
+      showErrorNotification(error.response.data.message);
+    } else if (error.message) {
+      showErrorNotification(error.message);
+    } else if (Array.isArray(error)) {
+      showErrorNotification(error);
+    } else {
+      showErrorNotification('An unexpected error occurred. Please try again.');
+    }
+  };
 
   const handleConfirm = async () => {
     setIsLoading(true);
     try {
-      const isValid = await validateForm();
-      if(!isValid){
+      const isFormValid = await validateForm();
+      if (!isFormValid) {
         toast.push(
           <Notification title="Danger" type="danger">
-              Please fix the validation errors
-          </Notification>)
+            Please fix the validation errors
+          </Notification>
+        );
         return;
       }
-      const result = await dispatch(createCompanyAdmin(formData))
-        .unwrap()
-        .catch((error: any) => {
-          if (error.response?.data?.message) {
-            showErrorNotification(error.response.data.message);
-          } else if (error.message) {
-            showErrorNotification(error.message);
-          } else if (Array.isArray(error)) {
-            showErrorNotification(error);
-          } else {
-            showErrorNotification('An unexpected error occurred. Please try again.');
-          }
-          throw error;
-        });
+  
+      let adminId;
+      try {
+        const adminResponse = await dispatch(createCompanyAdmin(formData)).unwrap();
+        adminId = adminResponse.id;
+        
+        // Add this log
+        console.log('Admin created with ID:', adminId);
+      } catch (error: any) {
+        handleError(error);
+        return;
+      }
+  
+      // Add this log to check the exact payload
+      const groupPayload = { 
+        name: entityName,
+        created_by: Number(adminId)
+      };
+      console.log('Group creation payload:', groupPayload);
+      // After admin creation
+await new Promise(resolve => setTimeout(resolve, 500)); // 500ms delay
 
-      // If successful, close dialog and refresh data
-      handleDialogClose();
-      refreshData();
-    } catch (error) {
-      console.error('Error creating company admin:', error);
+      try {
+        const groupResponse = await dispatch(createCompanyGroup(groupPayload)).unwrap();
+        console.log('Group creation response:', groupResponse);
+        
+        handleDialogClose();
+        refreshData();
+        toast.push(
+          <Notification title="Success" type="success">
+            Company admin and group created successfully
+          </Notification>
+        );
+      } catch (error: any) {
+        console.error('Group creation error:', error);
+        handleError(error);
+      }
     } finally {
       setIsLoading(false);
     }
-  };
-
+};
   return (
     <AdaptableCard className="h-full" bodyClass="h-full">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6">
@@ -227,15 +298,15 @@ const validateForm = async () => {
         </div>
       </div>
 
-      <AdminTable 
-      adminData={adminData}
-      modules={modules}
-      isLoading={isLoading}
-      onDataChange={fetchAdminData}
-      pagination={pagination}
-      onPaginationChange={handlePaginationChange}
-      onPageSizeChange={handlePageSizeChange}
-    />
+      <AdminTable
+        adminData={adminData}
+        modules={modules}
+        isLoading={isLoading}
+        onDataChange={fetchAdminData}
+        pagination={pagination}
+        onPaginationChange={handlePaginationChange}
+        onPageSizeChange={handlePageSizeChange}
+      />
 
       <Dialog
         isOpen={isDialogOpen}
@@ -244,75 +315,86 @@ const validateForm = async () => {
       >
         <h5 className="mb-6">Add Company Admin</h5>
         <div className="flex flex-col gap-6">
-          <div className="w-full">
-            <label className="text-gray-600 mb-2 block">Name <span className="text-red-500">*</span></label>
-            <OutlinedInput
-              label="Name"
-              value={formData.name}
-              onChange={(value: string) => handleInputChange('name', value)}
-            />
-              <div className="min-h-[20px]">
-          {errors.name && (
-            <p className="text-red-500 text-xs mt-1">{errors.name}</p>
-          )}
-        </div>
+          {/* Company Group Section */}
+          <div className="border-b pb-4">
+            <h6 className="text-gray-800 font-medium mb-4">Company Group</h6>
+            <div className="w-full">
+              <label className="text-gray-600 mb-2 block">Entity Name <span className="text-red-500">*</span></label>
+              <OutlinedInput
+                label="Entity Name"
+                value={entityName}
+                onChange={handleEntityNameChange}
+              />
+              {entityNameError && (
+                <p className="text-red-500 text-xs mt-1">{entityNameError}</p>
+              )}
+            </div>
           </div>
-          <div className="w-full">
-            <label className="text-gray-600 mb-2 block">Email <span className="text-red-500">*</span></label>
-            <OutlinedInput
-              label="Email"
-              value={formData.email}
-              onChange={(value: string) => handleInputChange('email', value)}
-            />
-             {errors.email && (
-            <p className="text-red-500 text-xs mt-1">{errors.email}</p>
-          )}
-          </div>
-          <div className="w-full">
-            <label className="text-gray-600 mb-2 block">Password <span className="text-red-500">*</span></label>
-            <OutlinedInput
-              label="Password"
-              value={formData.password}
-              onChange={(value: string) => handleInputChange('password', value)}
-            />
-             {errors.password && (
-            <p className="text-red-500 text-xs mt-1">{errors.password}</p>
-          )}
-          </div>
-          <div className="w-full">
-            <label className="text-gray-600 mb-2 block">Modules</label>
-            {/* <div className="border rounded p-4">
-              <Checkbox.Group value={selectedModules} onChange={handleModuleChange}  className="flex flex-row flex-wrap gap-6">
-                {sortedModules.map(module => (
-                   <div key={module.id}  className="flex-1 min-w-[180px]">
-                   <Checkbox 
-                       value={module.id}
-                       className="inline-flex items-center"
-                   >
-                       <span className="ml-2 whitespace-nowrap">{module.name}</span>
-                   </Checkbox>
-               </div>
-                ))}
-              </Checkbox.Group>
-            </div> */}
-            <div className="border rounded p-4">
-  <Checkbox.Group
-    value={selectedModules}
-    onChange={handleModuleChange}
-    className="flex flex-row flex-wrap gap-6"
-  >
-    {sortedModules
-      .filter(module => module.name === 'Remittance Tracker')
-      .map(module => (
-        <div key={module.id} className="flex-1 min-w-[180px]">
-          <Checkbox value={module.id} className="inline-flex items-center">
-            <span className="ml-2 whitespace-nowrap">{module.name}</span>
-          </Checkbox>
-        </div>
-      ))}
-  </Checkbox.Group>
-</div>
 
+          {/* User Details Section */}
+          <div className="border-b pb-4">
+            <h6 className="text-gray-800 font-medium mb-4">User Details</h6>
+            <div className="space-y-4">
+              <div className="w-full">
+                <label className="text-gray-600 mb-2 block">Name <span className="text-red-500">*</span></label>
+                <OutlinedInput
+                  label="Full Name"
+                  value={formData.name}
+                  onChange={(value: string) => handleInputChange('name', value)}
+                />
+                {errors.name && (
+                  <p className="text-red-500 text-xs mt-1">{errors.name}</p>
+                )}
+              </div>
+              <div className="w-full">
+                <label className="text-gray-600 mb-2 block">Email <span className="text-red-500">*</span></label>
+                <OutlinedInput
+                  label="Email"
+                  value={formData.email}
+                  onChange={(value: string) => handleInputChange('email', value)}
+                />
+                {errors.email && (
+                  <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+                )}
+              </div>
+              <div className="w-full">
+                <label className="text-gray-600 mb-2 block">Password <span className="text-red-500">*</span></label>
+                <OutlinedInput
+                  label="Password"
+                  // type="password"
+                  value={formData.password}
+                  onChange={(value: string) => handleInputChange('password', value)}
+                />
+                {errors.password && (
+                  <p className="text-red-500 text-xs mt-1">{errors.password}</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Module List Section */}
+          <div>
+            <h6 className="text-gray-800 font-medium mb-4">Module List</h6>
+            <div className="border rounded p-4">
+              <Checkbox.Group
+                value={selectedModules}
+                onChange={handleModuleChange}
+                className="flex flex-row flex-wrap gap-6"
+              >
+                {sortedModules
+                  .filter(module => module.name === 'Remittance Tracker')
+                  .map(module => (
+                    <div key={module.id} className="flex-1 min-w-[180px]">
+                      <Checkbox value={module.id} className="inline-flex items-center">
+                        <span className="ml-2 whitespace-nowrap">{module.name}</span>
+                      </Checkbox>
+                    </div>
+                  ))}
+              </Checkbox.Group>
+              {errors.moduleAccess && (
+                <p className="text-red-500 text-xs mt-2">{errors.moduleAccess}</p>
+              )}
+            </div>
           </div>
         </div>
 
@@ -323,8 +405,8 @@ const validateForm = async () => {
           >
             Cancel
           </Button>
-          <Button 
-            variant="solid" 
+          <Button
+            variant="solid"
             onClick={handleConfirm}
             loading={isLoading}
           >

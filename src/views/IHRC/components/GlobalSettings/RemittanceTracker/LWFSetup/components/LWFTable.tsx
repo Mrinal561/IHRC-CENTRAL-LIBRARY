@@ -15,6 +15,7 @@ import { showErrorNotification } from '@/components/ui/ErrorMessage';
 import OutlinedSelect from '@/components/ui/Outlined';
 import { fetchDetail } from '@/store/slices/common/commonSlice';
 import * as yup from 'yup';
+import dayjs from 'dayjs';
 
 const createLWFValidationSchema = (frequency) => {
     const baseSchema = {
@@ -108,6 +109,21 @@ const LWFTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any
     sort: { order: '', key: '' },
   });
 
+  function formatDayWithSuffix(date) {
+    if (!date) return '';
+    const day = dayjs(date).date(); // Extract the day as a number
+    const suffix = getDaySuffix(day);
+    return `${day}${suffix}`;
+  }
+  
+  // Function to determine the correct suffix
+  function getDaySuffix(day) {
+    if (day % 10 === 1 && day !== 11) return 'st';
+    if (day % 10 === 2 && day !== 12) return 'nd';
+    if (day % 10 === 3 && day !== 13) return 'rd';
+    return 'th';
+  }
+
   useEffect(() => {
     loadStates();
   }, []);
@@ -186,6 +202,45 @@ const LWFTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any
         return false;
     }
 };
+
+const handleDateChange = (dateType, date) => {
+  setPaymentDueDates(prev => {
+      const newDates = { ...prev }
+      
+      // Set the changed date
+      newDates[dateType] = date
+
+      // Check and reset disabled dates to null based on frequency
+      if (frequency === 'monthly' || frequency === 'yearly') {
+          newDates.secondDate = null
+          newDates.thirdDate = null
+          newDates.lastDate = null
+      } else if (frequency === 'half_yearly') {
+          newDates.secondDate = null
+          newDates.thirdDate = null
+      }
+
+      return newDates
+  })
+}
+
+// Update useEffect to reset dates when frequency changes
+useEffect(() => {
+  if (frequency === 'monthly' || frequency === 'yearly') {
+      setPaymentDueDates(prev => ({
+          ...prev,
+          secondDate: null,
+          thirdDate: null,
+          lastDate: null
+      }))
+  } else if (frequency === 'half_yearly') {
+      setPaymentDueDates(prev => ({
+          ...prev,
+          secondDate: null,
+          thirdDate: null
+      }))
+  }
+}, [frequency])
 
 const handleConfirm = async () => {
   if (!selectedState || !frequency) {
@@ -302,7 +357,7 @@ const handleConfirm = async () => {
         enableSorting:false,
         cell: ({ row }) => 
           <div className="w-40 text-start">
-        {formatDate(row.original.lwf_payment_due_date?.first_date)}
+        {formatDayWithSuffix(row.original.lwf_payment_due_date?.first_date)}
       </div>
       },
       {
@@ -311,7 +366,7 @@ const handleConfirm = async () => {
         enableSorting:false,
         cell: ({ row }) => 
           <div className="w-40 text-start">
-        {formatDate(row.original.lwf_payment_due_date?.second_date)}
+        {formatDayWithSuffix(row.original.lwf_payment_due_date?.second_date)}
       </div>
       },
       {
@@ -320,7 +375,7 @@ const handleConfirm = async () => {
         enableSorting:false,
         cell: ({ row }) => 
           <div className="w-40 text-start">
-        {formatDate(row.original.lwf_payment_due_date?.third_date)}
+        {formatDayWithSuffix(row.original.lwf_payment_due_date?.third_date)}
       </div>
       },
       {
@@ -329,7 +384,7 @@ const handleConfirm = async () => {
         enableSorting:false,
         cell: ({ row }) => 
           <div className="w-40 text-start">
-        {formatDate(row.original.lwf_payment_due_date?.last_date)}
+        {formatDayWithSuffix(row.original.lwf_payment_due_date?.last_date)}
       </div>
       },
       {
@@ -471,7 +526,18 @@ const handleConfirm = async () => {
                 className="w-full"
                 placeholder="Select first due date"
                 value={paymentDueDates.firstDate}
-                onChange={(date) => setPaymentDueDates(prev => ({ ...prev, firstDate: date }))}
+                onChange={(date) => handleDateChange('firstDate', date)}
+              inputFormat="DD"
+              defaultView="date"
+              enableHeaderLabel={false}
+              dateViewCount={1}
+              labelFormat={{
+                  month: ' ',  // Using space instead of empty string
+                  year: ' '    // Using space instead of empty string
+              }}
+              monthLabelFormat=" "
+              yearLabelFormat=" "
+              hideWeekdays={false}             
               />
               {validationErrors.firstDate && (
     <div className="text-red-500 text-sm mt-1">
@@ -485,8 +551,19 @@ const handleConfirm = async () => {
                 className="w-full"
                 placeholder="Select second due date"
                 value={paymentDueDates.secondDate}
-                onChange={(date) => setPaymentDueDates(prev => ({ ...prev, secondDate: date }))}
+                onChange={(date) => handleDateChange('secondDate', date)}
                 disabled={isDueDateDisabled(1)}
+                inputFormat="DD"
+                defaultView="date"
+                enableHeaderLabel={false}
+                dateViewCount={1}
+                labelFormat={{
+                    month: ' ',  // Using space instead of empty string
+                    year: ' '    // Using space instead of empty string
+                }}
+                monthLabelFormat=" "
+                yearLabelFormat=" "
+                hideWeekdays={false}             
               />
               {validationErrors.secondDate && (
     <div className="text-red-500 text-sm mt-1">
@@ -503,8 +580,19 @@ const handleConfirm = async () => {
                 className="w-full"
                 placeholder="Select third due date"
                 value={paymentDueDates.thirdDate}
-                onChange={(date) => setPaymentDueDates(prev => ({ ...prev, thirdDate: date }))}
+                onChange={(date) => handleDateChange('thirdDate', date)}
                 disabled={isDueDateDisabled(2)}
+                inputFormat="DD"
+                defaultView="date"
+                enableHeaderLabel={false}
+                dateViewCount={1}
+                labelFormat={{
+                    month: ' ',  // Using space instead of empty string
+                    year: ' '    // Using space instead of empty string
+                }}
+                monthLabelFormat=" "
+                yearLabelFormat=" "
+                hideWeekdays={false}             
               />
               {validationErrors.thirdDate && (
     <div className="text-red-500 text-sm mt-1">
@@ -518,8 +606,19 @@ const handleConfirm = async () => {
                 className="w-full"
                 placeholder="Select last due date"
                 value={paymentDueDates.lastDate}
-                onChange={(date) => setPaymentDueDates(prev => ({ ...prev, lastDate: date }))}
+                onChange={(date) => handleDateChange('lastDate', date)}
                 disabled={isDueDateDisabled(3)}
+                inputFormat="DD"
+                defaultView="date"
+                enableHeaderLabel={false}
+                dateViewCount={1}
+                labelFormat={{
+                    month: ' ',  // Using space instead of empty string
+                    year: ' '    // Using space instead of empty string
+                }}
+                monthLabelFormat=" "
+                yearLabelFormat=" "
+                hideWeekdays={false}             
               />
               {validationErrors.lastDate && (
     <div className="text-red-500 text-sm mt-1">

@@ -17,6 +17,7 @@ import OutlinedSelect from '@/components/ui/Outlined';
 import { updateLWFConfig } from '@/store/slices/lwfConfig/lwfConfigSlice';
 import { fetchDetail } from '@/store/slices/common/commonSlice';
 import * as yup from 'yup';
+import dayjs from 'dayjs';
 
 // First, add these validation schemas
 const createPTValidationSchema = (frequency) => {
@@ -118,6 +119,21 @@ const [ptRcValidationErrors, setPtRcValidationErrors] = useState({
     thirdDate: null,
     lastDate: null
   });
+
+  function formatDayWithSuffix(date) {
+    if (!date) return '';
+    const day = dayjs(date).date(); // Extract the day as a number
+    const suffix = getDaySuffix(day);
+    return `${day}${suffix}`;
+  }
+  
+  // Function to determine the correct suffix
+  function getDaySuffix(day) {
+    if (day % 10 === 1 && day !== 11) return 'st';
+    if (day % 10 === 2 && day !== 12) return 'nd';
+    if (day % 10 === 3 && day !== 13) return 'rd';
+    return 'th';
+  }
 
   useEffect(() => {
     loadStates();
@@ -229,6 +245,74 @@ useEffect(() => {
   validatePTRCDates();
 }, [ptRcDates, ptRcFrequency]);
 
+// Generic function to handle date changes
+const handleDateChangeForFrequency = (dateType, date, frequency, setDates) => {
+  setDates(prev => {
+      const newDates = { ...prev };
+
+      // Set the changed date
+      newDates[dateType] = date;
+
+      // Reset disabled dates to null based on frequency
+      if (frequency === 'monthly' || frequency === 'yearly') {
+          newDates.secondDate = null;
+          newDates.thirdDate = null;
+          newDates.lastDate = null;
+      } else if (frequency === 'half_yearly') {
+          newDates.secondDate = null;
+          newDates.thirdDate = null;
+      }
+
+      return newDates;
+  });
+};
+
+// For ptEcFrequency
+const handleDateChangePtEc = (dateType, date) => {
+  handleDateChangeForFrequency(dateType, date, ptEcFrequency, setPtEcDates);
+};
+
+// For ptRcFrequency
+const handleDateChangePtRc = (dateType, date) => {
+  handleDateChangeForFrequency(dateType, date, ptRcFrequency, setPtRcDates);
+};
+
+// Update useEffect to reset dates when frequency changes
+useEffect(() => {
+  if (ptEcFrequency === 'monthly' || ptEcFrequency === 'yearly') {
+      setPtEcDates(prev => ({
+          ...prev,
+          secondDate: null,
+          thirdDate: null,
+          lastDate: null,
+      }));
+  } else if (ptEcFrequency === 'half_yearly') {
+      setPtEcDates(prev => ({
+          ...prev,
+          secondDate: null,
+          thirdDate: null,
+      }));
+  }
+}, [ptEcFrequency]);
+
+useEffect(() => {
+  if (ptRcFrequency === 'monthly' || ptRcFrequency === 'yearly') {
+      setPtRcDates(prev => ({
+          ...prev,
+          secondDate: null,
+          thirdDate: null,
+          lastDate: null,
+      }));
+  } else if (ptRcFrequency === 'half_yearly') {
+      setPtRcDates(prev => ({
+          ...prev,
+          secondDate: null,
+          thirdDate: null,
+      }));
+  }
+}, [ptRcFrequency]);
+
+
 
   const handleConfirm = async () => {
     if (!selectedState || !ptEcFrequency || !ptRcFrequency) {
@@ -316,7 +400,7 @@ useEffect(() => {
         enableSorting:false,
         cell: ({ row }) => 
           <div className="w-44 text-start">
-        {formatDate(row.original.ptrc_payment_due_date.first_date)}
+        {formatDayWithSuffix(row.original.ptrc_payment_due_date.first_date)}
   </div>
       },
       {
@@ -325,7 +409,7 @@ useEffect(() => {
         enableSorting:false,
         cell: ({ row }) => 
           <div className="w-44 text-start">
-        {formatDate(row.original.ptrc_payment_due_date.second_date)}
+        {formatDayWithSuffix(row.original.ptrc_payment_due_date.second_date)}
   </div>
       },
       {
@@ -334,7 +418,7 @@ useEffect(() => {
         enableSorting:false,
         cell: ({ row }) => 
           <div className="w-44 text-start">
-        {formatDate(row.original.ptrc_payment_due_date.third_date)}
+        {formatDayWithSuffix(row.original.ptrc_payment_due_date.third_date)}
   </div>
       },
       {
@@ -343,7 +427,7 @@ useEffect(() => {
         enableSorting:false,
         cell: ({ row }) => 
           <div className="w-44 text-start">
-        {formatDate(row.original.ptrc_payment_due_date.last_date)}
+        {formatDayWithSuffix(row.original.ptrc_payment_due_date.last_date)}
   </div>
       },
       {
@@ -360,7 +444,7 @@ useEffect(() => {
         enableSorting:false,
         cell: ({ row }) => 
           <div className="w-44 text-start">
-            {formatDate(row.original.ptec_payment_due_date.first_date)}
+            {formatDayWithSuffix(row.original.ptec_payment_due_date.first_date)}
       </div>
       },
       {
@@ -369,7 +453,7 @@ useEffect(() => {
         enableSorting:false,
         cell: ({ row }) => 
           <div className="w-44 text-start">
-            {formatDate(row.original.ptec_payment_due_date.second_date)}
+            {formatDayWithSuffix(row.original.ptec_payment_due_date.second_date)}
       </div>
       },
       {
@@ -378,7 +462,7 @@ useEffect(() => {
         enableSorting:false,
         cell: ({ row }) => 
           <div className="w-44 text-start">
-        {formatDate(row.original.ptec_payment_due_date?.third)}
+        {formatDayWithSuffix(row.original.ptec_payment_due_date?.third_date)}
       </div>
       },
       {
@@ -387,7 +471,7 @@ useEffect(() => {
         enableSorting:false,
         cell: ({ row }) => 
           <div className="w-44 text-start">
-        {formatDate(row.original.ptec_payment_due_date?.last_date)}
+        {formatDayWithSuffix(row.original.ptec_payment_due_date?.last_date)}
       </div>
       },
       {
@@ -597,7 +681,18 @@ useEffect(() => {
                   className="w-full"
                   placeholder="Select first due date"
                   value={ptEcDates.firstDate}
-                  onChange={(date) => setPtEcDates(prev => ({ ...prev, firstDate: date }))}
+                  onChange={(date) => handleDateChangePtEc('firstDate', date)}
+                  inputFormat="DD"
+                  defaultView="date"
+                  enableHeaderLabel={false}
+                  dateViewCount={1}
+                  labelFormat={{
+                      month: ' ',  // Using space instead of empty string
+                      year: ' '    // Using space instead of empty string
+                  }}
+                  monthLabelFormat=" "
+                  yearLabelFormat=" "
+                  hideWeekdays={false}             
                 />
                 {ptEcValidationErrors.firstDate && (
     <div className="text-red-500 text-sm mt-1">
@@ -613,8 +708,20 @@ useEffect(() => {
                   className="w-full"
                   placeholder="Select second due date"
                   value={ptEcDates.secondDate}
-                  onChange={(date) => setPtEcDates(prev => ({ ...prev, secondDate: date }))}
+                  onChange={(date) => handleDateChangePtEc('secondDate', date)}
+
                   disabled={isDueDateDisabled(ptEcFrequency, 1)}
+                  inputFormat="DD"
+                  defaultView="date"
+                  enableHeaderLabel={false}
+                  dateViewCount={1}
+                  labelFormat={{
+                      month: ' ',  // Using space instead of empty string
+                      year: ' '    // Using space instead of empty string
+                  }}
+                  monthLabelFormat=" "
+                  yearLabelFormat=" "
+                  hideWeekdays={false}             
                 />
                 {ptEcValidationErrors.secondDate && (
     <div className="text-red-500 text-sm mt-1">
@@ -632,8 +739,19 @@ useEffect(() => {
                   className="w-full"
                   placeholder="Select third due date"
                   value={ptEcDates.thirdDate}
-                  onChange={(date) => setPtEcDates(prev => ({ ...prev, thirdDate: date }))}
+                  onChange={(date) => handleDateChangePtEc('thirdDate', date)}
                   disabled={isDueDateDisabled(ptEcFrequency, 2)}
+                  inputFormat="DD"
+                  defaultView="date"
+                  enableHeaderLabel={false}
+                  dateViewCount={1}
+                  labelFormat={{
+                      month: ' ',  // Using space instead of empty string
+                      year: ' '    // Using space instead of empty string
+                  }}
+                  monthLabelFormat=" "
+                  yearLabelFormat=" "
+                  hideWeekdays={false}             
                 />
                 {ptEcValidationErrors.thirdDate && (
     <div className="text-red-500 text-sm mt-1">
@@ -650,8 +768,19 @@ useEffect(() => {
                   className="w-full"
                   placeholder="Select fourth due date"
                   value={ptEcDates.lastDate}
-                  onChange={(date) => setPtEcDates(prev => ({ ...prev, lastDate: date }))}
+                  onChange={(date) => handleDateChangePtEc('lastDate', date)}
                   disabled={isDueDateDisabled(ptEcFrequency, 3)}
+                  inputFormat="DD"
+                  defaultView="date"
+                  enableHeaderLabel={false}
+                  dateViewCount={1}
+                  labelFormat={{
+                      month: ' ',  // Using space instead of empty string
+                      year: ' '    // Using space instead of empty string
+                  }}
+                  monthLabelFormat=" "
+                  yearLabelFormat=" "
+                  hideWeekdays={false}             
                 />
                 {ptEcValidationErrors.lastDate && (
     <div className="text-red-500 text-sm mt-1">
@@ -671,7 +800,18 @@ useEffect(() => {
                   className="w-full"
                   placeholder="Select first due date"
                   value={ptRcDates.firstDate}
-                  onChange={(date) => setPtRcDates(prev => ({ ...prev, firstDate: date }))}
+                  onChange={(date) => handleDateChangePtRc('firstDate', date)}
+                  inputFormat="DD"
+                  defaultView="date"
+                  enableHeaderLabel={false}
+                  dateViewCount={1}
+                  labelFormat={{
+                      month: ' ',  // Using space instead of empty string
+                      year: ' '    // Using space instead of empty string
+                  }}
+                  monthLabelFormat=" "
+                  yearLabelFormat=" "
+                  hideWeekdays={false}             
                 />
                  {ptRcValidationErrors.firstDate && (
     <div className="text-red-500 text-sm mt-1">
@@ -687,8 +827,19 @@ useEffect(() => {
                   className="w-full"
                   placeholder="Select second due date"
                   value={ptRcDates.secondDate}
-                  onChange={(date) => setPtRcDates(prev => ({ ...prev, secondDate: date }))}
+                  onChange={(date) => handleDateChangePtRc('secondDate', date)}
                   disabled={isDueDateDisabled(ptRcFrequency, 1)}
+                  inputFormat="DD"
+                  defaultView="date"
+                  enableHeaderLabel={false}
+                  dateViewCount={1}
+                  labelFormat={{
+                      month: ' ',  // Using space instead of empty string
+                      year: ' '    // Using space instead of empty string
+                  }}
+                  monthLabelFormat=" "
+                  yearLabelFormat=" "
+                  hideWeekdays={false}             
                 />
                  {ptRcValidationErrors.secondDate && (
     <div className="text-red-500 text-sm mt-1">
@@ -706,8 +857,19 @@ useEffect(() => {
                   className="w-full"
                   placeholder="Select third due date"
                   value={ptRcDates.thirdDate}
-                  onChange={(date) => setPtRcDates(prev => ({ ...prev, thirdDate: date }))}
+                  onChange={(date) => handleDateChangePtRc('thirdDate', date)}
                   disabled={isDueDateDisabled(ptRcFrequency, 2)}
+                  inputFormat="DD"
+                  defaultView="date"
+                  enableHeaderLabel={false}
+                  dateViewCount={1}
+                  labelFormat={{
+                      month: ' ',  // Using space instead of empty string
+                      year: ' '    // Using space instead of empty string
+                  }}
+                  monthLabelFormat=" "
+                  yearLabelFormat=" "
+                  hideWeekdays={false}             
                 />
                  {ptRcValidationErrors.thirdDate && (
     <div className="text-red-500 text-sm mt-1">
@@ -724,8 +886,19 @@ useEffect(() => {
                   className="w-full"
                   placeholder="Select fourth due date"
                   value={ptRcDates.lastDate}
-                  onChange={(date) => setPtRcDates(prev => ({ ...prev, lastDate: date }))}
+                  onChange={(date) => handleDateChangePtRc('lastDate', date)}
                   disabled={isDueDateDisabled(ptRcFrequency, 3)}
+                  inputFormat="DD"
+                  defaultView="date"
+                  enableHeaderLabel={false}
+                  dateViewCount={1}
+                  labelFormat={{
+                      month: ' ',  // Using space instead of empty string
+                      year: ' '    // Using space instead of empty string
+                  }}
+                  monthLabelFormat=" "
+                  yearLabelFormat=" "
+                  hideWeekdays={false}             
                 />
                  {ptRcValidationErrors.lastDate && (
     <div className="text-red-500 text-sm mt-1">
