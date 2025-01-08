@@ -126,6 +126,9 @@ const ESITable = ({ refreshTrigger }) => {
         query: '',
         sort: { order: '', key: '' },
     })
+    useEffect(() => {
+        validateDates()
+    }, [paymentDueDates])
 
     useEffect(() => {
         fetchESISetupData(tableData.pageIndex, tableData.pageSize)
@@ -170,46 +173,6 @@ const ESITable = ({ refreshTrigger }) => {
             setESITableData([])
         } finally {
             setIsLoading(false)
-        }
-    }
-    const handleFrequencyChange = (selectedFrequency) => {
-        const frequencyValue = selectedFrequency?.value || ''
-        setFrequency(frequencyValue)
-
-        switch (frequencyValue) {
-            case 'monthly':
-            case 'yearly':
-                setPaymentDueDates({
-                    firstDate: null,
-                    secondDate: null,
-                    thirdDate: null,
-                    lastDate: null,
-                })
-                setDateFieldsState({
-                    isSecondDateEnabled: false,
-                    isThirdDateEnabled: false,
-                    isLastDateEnabled: false,
-                })
-                break
-            case 'half_yearly':
-                setPaymentDueDates((prev) => ({
-                    ...prev,
-                    secondDate: null,
-                    thirdDate: null,
-                }))
-                setDateFieldsState({
-                    isSecondDateEnabled: false,
-                    isThirdDateEnabled: false,
-                    isLastDateEnabled: true,
-                })
-                break
-            case 'quarterly':
-                setDateFieldsState({
-                    isSecondDateEnabled: true,
-                    isThirdDateEnabled: true,
-                    isLastDateEnabled: true,
-                })
-                break
         }
     }
 
@@ -604,12 +567,12 @@ const ESITable = ({ refreshTrigger }) => {
                                         className="w-full"
                                         placeholder="Select last due date"
                                         value={paymentDueDates.lastDate}
-                                        onChange={(date) =>
+                                        onChange={(date) => {
                                             setPaymentDueDates((prev) => ({
                                                 ...prev,
                                                 lastDate: date,
                                             }))
-                                        }
+                                        }}
                                         disabled={isDueDateDisabled(3)}
                                     />
                                     {validationErrors.lastDate && (
