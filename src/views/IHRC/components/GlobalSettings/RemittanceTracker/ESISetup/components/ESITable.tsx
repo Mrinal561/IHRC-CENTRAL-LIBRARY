@@ -38,6 +38,7 @@ const createESIValidationSchema = (frequency) => {
     }
 
     if (frequency === 'quarterly') {
+        console.log('que')
         return yup.object().shape({
             ...baseSchema,
             secondDate: yup
@@ -564,6 +565,11 @@ const ESITable = ({ refreshTrigger }) => {
                                         }}
                                         disabled={isDueDateDisabled(1)}
                                     />
+                                    {validationErrors.secondDate && (
+                                        <div className="text-red-500 text-sm mt-1">
+                                            {validationErrors.secondDate}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -584,6 +590,11 @@ const ESITable = ({ refreshTrigger }) => {
                                         }
                                         disabled={isDueDateDisabled(2)}
                                     />
+                                    {validationErrors.thirdDate && (
+                                        <div className="text-red-500 text-sm mt-1">
+                                            {validationErrors.thirdDate}
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="w-1/2">
                                     <label className="text-gray-600 mb-2 block">
@@ -601,6 +612,11 @@ const ESITable = ({ refreshTrigger }) => {
                                         }
                                         disabled={isDueDateDisabled(3)}
                                     />
+                                    {validationErrors.lastDate && (
+                                        <div className="text-red-500 text-sm mt-1">
+                                            {validationErrors.lastDate}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
