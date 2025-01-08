@@ -410,165 +410,6 @@ const PTTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any)
         selectable={true}
       />
     )}
-   {/* <Dialog
-        isOpen={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
-        width={1200}
-      >
-        <h5 className="mb-6">Edit PT Setup</h5>
-        <div className="flex flex-col gap-6">
-          <div className="flex gap-4">
-            <div className="w-full">
-              <label className="text-gray-600 mb-2 block">State</label>
-              <OutlinedSelect
-                label="Select State"
-                options={states}
-                value={selectedState}
-                onChange={setSelectedState}
-              />
-            </div>
-          </div>
-
-          <div className="flex gap-4">
-            <div className="w-1/2">
-              <label className="text-gray-600 mb-2 block">PT EC Frequency</label>
-              <OutlinedSelect
-                label="Select PT EC Frequency"
-                options={frequencyOptions}
-                value={frequencyOptions.find(option => option.value === ptEcFrequency)}
-                onChange={(selected) => setPtEcFrequency(selected?.value)}
-              />
-            </div>
-            <div className="w-1/2">
-              <label className="text-gray-600 mb-2 block">PT RC Frequency</label>
-              <OutlinedSelect
-                label="Select PT RC Frequency"
-                options={frequencyOptions}
-                value={frequencyOptions.find(option => option.value === ptRcFrequency)}
-                onChange={(selected) => setPtRcFrequency(selected?.value)}
-              />
-            </div>
-          </div>
-
-          <div className="flex gap-4">
-            <div className="w-1/2">
-              <h4 className="text-lg font-semibold mb-4">PT EC Due Dates</h4>
-              <div className="space-y-4">
-                <div>
-                  <label className="text-gray-600 mb-2 block">First Due Date <span className="text-red-500">*</span></label>
-                  <DatePicker
-                    className="w-full"
-                    placeholder="Select first due date"
-                    value={ptEcDates.firstDate}
-                    onChange={(date) => setPtEcDates(prev => ({ ...prev, firstDate: date }))}
-                  />
-                </div>
-                <div>
-                  <label className="text-gray-600 mb-2 block">Second Due Date</label>
-                  <DatePicker
-                    className="w-full"
-                    placeholder="Select second due date"
-                    value={ptEcDates.secondDate}
-                    onChange={(date) => setPtEcDates(prev => ({ ...prev, secondDate: date }))}
-                    disabled={isDueDateDisabled(ptEcFrequency, 1)}
-                  />
-                </div>
-                <div>
-                  <label className="text-gray-600 mb-2 block">Third Due Date</label>
-                  <DatePicker
-                    className="w-full"
-                    placeholder="Select third due date"
-                    value={ptEcDates.thirdDate}
-                    onChange={(date) => setPtEcDates(prev => ({ ...prev, thirdDate: date }))}
-                    disabled={isDueDateDisabled(ptEcFrequency, 2)}
-                  />
-                </div>
-                <div>
-                  <label className="text-gray-600 mb-2 block">Last Due Date</label>
-                  <DatePicker
-                    className="w-full"
-                    placeholder="Select last due date"
-                    value={ptEcDates.lastDate}
-                    onChange={(date) => setPtEcDates(prev => ({ ...prev, lastDate: date }))}
-                    disabled={isDueDateDisabled(ptEcFrequency, 3)}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="w-1/2">
-              <h4 className="text-lg font-semibold mb-4">PT RC Due Dates</h4>
-              <div className="space-y-4">
-                <div>
-                  <label className="text-gray-600 mb-2 block">First Due Date <span className="text-red-500">*</span></label>
-                  <DatePicker
-                    className="w-full"
-                    placeholder="Select first due date"
-                    value={ptRcDates.firstDate}
-                    onChange={(date) => setPtRcDates(prev => ({ ...prev, firstDate: date }))}
-                  />
-                </div>
-                <div>
-                  <label className="text-gray-600 mb-2 block">Second Due Date</label>
-                  <DatePicker
-                    className="w-full"
-                    placeholder="Select second due date"
-                    value={ptRcDates.secondDate}
-                    onChange={(date) => setPtRcDates(prev => ({ ...prev, secondDate: date }))}
-                    disabled={isDueDateDisabled(ptRcFrequency, 1)}
-                  />
-                </div>
-                <div>
-                  <label className="text-gray-600 mb-2 block">Third Due Date</label>
-                  <DatePicker
-                    className="w-full"
-                    placeholder="Select third due date"
-                    value={ptRcDates.thirdDate}
-                    onChange={(date) => setPtRcDates(prev => ({ ...prev, thirdDate: date }))}
-                    disabled={isDueDateDisabled(ptRcFrequency, 2)}
-                  />
-                </div>
-                <div>
-                  <label className="text-gray-600 mb-2 block">Last Due Date</label>
-                  <DatePicker
-                    className="w-full"
-                    placeholder="Select last due date"
-                    value={ptRcDates.lastDate}
-                    onChange={(date) => setPtRcDates(prev => ({ ...prev, lastDate: date }))}
-                    disabled={isDueDateDisabled(ptRcFrequency, 3)}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Checkbox
-              checked={isActive}
-              onChange={(checked) => setIsActive(checked)}
-            />
-            <label className="text-gray-600">
-              Is PT applicable for Selected State
-            </label>
-          </div>
-        </div>
-
-        <div className="flex justify-end gap-2 mt-6">
-          <Button
-            variant="plain"
-            onClick={() => setIsDialogOpen(false)}
-          >
-            Cancel
-          </Button>
-          <Button 
-            variant="solid" 
-            onClick={handleConfirm}
-          >
-            Update
-          </Button>
-        </div>
-      </Dialog> */}
-    
     <Dialog
       isOpen={isDialogOpen}
       onClose={() => setIsDialogOpen(false)}
@@ -623,7 +464,9 @@ const PTTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any)
                 />
               </div>
               <div className="w-1/2">
-                <label className="text-gray-600 mb-2 block">Second Due Date</label>
+              <label className="text-gray-600 mb-2 block">
+          Second Due Date {ptEcFrequency === 'quarterly' && <span className="text-red-500">*</span>}
+        </label>
                 <DatePicker
                   className="w-full"
                   placeholder="Select second due date"
@@ -635,7 +478,9 @@ const PTTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any)
             </div>
             <div className="flex gap-4 mt-4">
               <div className="w-1/2">
-                <label className="text-gray-600 mb-2 block">Third Due Date</label>
+              <label className="text-gray-600 mb-2 block">
+          Third Due Date {ptEcFrequency === 'quarterly' && <span className="text-red-500">*</span>}
+        </label>
                 <DatePicker
                   className="w-full"
                   placeholder="Select third due date"
@@ -645,7 +490,10 @@ const PTTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any)
                 />
               </div>
               <div className="w-1/2">
-                <label className="text-gray-600 mb-2 block">Fourth Due Date</label>
+              <label className="text-gray-600 mb-2 block">
+          Fourth Due Date {(ptEcFrequency === 'quarterly' || ptEcFrequency === 'half_yearly') && 
+            <span className="text-red-500">*</span>}
+        </label>
                 <DatePicker
                   className="w-full"
                   placeholder="Select fourth due date"
@@ -670,7 +518,9 @@ const PTTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any)
                 />
               </div>
               <div className="w-1/2">
-                <label className="text-gray-600 mb-2 block">Second Due Date</label>
+              <label className="text-gray-600 mb-2 block">
+          Second Due Date {ptRcFrequency === 'quarterly' && <span className="text-red-500">*</span>}
+        </label>
                 <DatePicker
                   className="w-full"
                   placeholder="Select second due date"
@@ -682,7 +532,9 @@ const PTTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any)
             </div>
             <div className="flex gap-4 mt-4">
               <div className="w-1/2">
-                <label className="text-gray-600 mb-2 block">Third Due Date</label>
+              <label className="text-gray-600 mb-2 block">
+          Third Due Date {ptRcFrequency === 'quarterly' && <span className="text-red-500">*</span>}
+        </label>
                 <DatePicker
                   className="w-full"
                   placeholder="Select third due date"
@@ -692,7 +544,10 @@ const PTTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any)
                 />
               </div>
               <div className="w-1/2">
-                <label className="text-gray-600 mb-2 block">Fourth Due Date</label>
+              <label className="text-gray-600 mb-2 block">
+          Fourth Due Date {(ptRcFrequency === 'quarterly' || ptRcFrequency === 'half_yearly') && 
+            <span className="text-red-500">*</span>}
+        </label>
                 <DatePicker
                   className="w-full"
                   placeholder="Select fourth due date"

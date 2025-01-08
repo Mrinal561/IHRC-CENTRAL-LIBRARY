@@ -376,7 +376,7 @@ const LWFTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any
               />
             </div>
             <div className="w-1/2">
-              <label className="text-gray-600 mb-2 block">Second Due Date</label>
+              <label className="text-gray-600 mb-2 block">Second Due Date  {frequency === 'quarterly' && <span className="text-red-500">*</span>}</label>
               <DatePicker
                 className="w-full"
                 placeholder="Select second due date"
@@ -389,7 +389,7 @@ const LWFTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any
 
           <div className="flex gap-4">
             <div className="w-1/2">
-              <label className="text-gray-600 mb-2 block">Third Due Date</label>
+              <label className="text-gray-600 mb-2 block">Third Due Date  {frequency === 'quarterly' && <span className="text-red-500">*</span>}</label>
               <DatePicker
                 className="w-full"
                 placeholder="Select third due date"
@@ -399,7 +399,7 @@ const LWFTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any
               />
             </div>
             <div className="w-1/2">
-              <label className="text-gray-600 mb-2 block">Last Due Date</label>
+              <label className="text-gray-600 mb-2 block">Last Due Date {(frequency === 'quarterly' || frequency === 'half_yearly') && <span className="text-red-500">*</span>}</label>
               <DatePicker
                 className="w-full"
                 placeholder="Select last due date"

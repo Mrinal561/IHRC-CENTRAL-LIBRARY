@@ -17,60 +17,8 @@ import OutlinedSelect from '@/components/ui/Outlined/Outlined';
 import { fetchDetail } from '@/store/slices/common/commonSlice';
 import * as yup from 'yup';
 
-const createESIValidationSchema = (frequency) => {
-  const baseSchema = {
-    firstDate: yup.date()
-      .required('First due date is required')
-      .nullable()
-      .typeError('First due date must be a valid date'),
-  };
 
-  if (frequency === 'quarterly') {
-    return yup.object().shape({
-      ...baseSchema,
-      secondDate: yup.date()
-        .required('Second due date is required')
-        .nullable()
-        .min(
-          yup.ref('firstDate'),
-          'Second due date must be after first due date'
-        )
-        .typeError('Second due date must be a valid date'),
-      thirdDate: yup.date()
-        .required('Third due date is required')
-        .nullable()
-        .min(
-          yup.ref('secondDate'),
-          'Third due date must be after second due date'
-        )
-        .typeError('Third due date must be a valid date'),
-      lastDate: yup.date()
-        .required('Last due date is required')
-        .nullable()
-        .min(
-          yup.ref('thirdDate'),
-          'Last due date must be after third due date'
-        )
-        .typeError('Last due date must be a valid date'),
-    });
-  }
 
-  if (frequency === 'half_yearly') {
-    return yup.object().shape({
-      ...baseSchema,
-      lastDate: yup.date()
-        .required('Last due date is required')
-        .nullable()
-        .min(
-          yup.ref('firstDate'),
-          'Last due date must be after first due date'
-        )
-        .typeError('Last due date must be a valid date'),
-    });
-  }
-
-  return yup.object().shape(baseSchema);
-};
 const frequencyOptions = [
   { value: 'monthly', label: 'Monthly' },
   { value: 'yearly', label: 'Yearly' },
@@ -291,11 +239,13 @@ console.log(validationErrors)
       {
         header: 'State Name',
         accessorKey: 'name',
+        enableSorting: false,
         cell: ({row}) => <div className="w-72 text-start">{row.original.name}</div>
       },
       {
         header: 'ESI Frequency',
         accessorKey: 'esi_frequency',
+        enableSorting: false,
         cell: ({row}) => (
           <div className="w-40 text-start">
             {row.original.esi_frequency ? row.original.esi_frequency.replace('_', ' ').charAt(0).toUpperCase() + row.original.esi_frequency.slice(1) : '-'}
@@ -305,6 +255,7 @@ console.log(validationErrors)
       {
         header: 'First Due Date',
         accessorKey: 'first_date',
+        enableSorting: false,
         cell: ({row}) => (
           <div className="w-40 text-start">
             {row.original.esi_payment_due_date?.first_date ? format(new Date(row.original.esi_payment_due_date.first_date), 'MMM dd, yyyy') : '-'}
@@ -314,6 +265,7 @@ console.log(validationErrors)
       {
         header: 'Second Due Date',
         accessorKey: 'second_date',
+        enableSorting: false,
         cell: ({row}) => (
           <div className="w-40 text-start">
             {row.original.esi_payment_due_date?.second_date ? format(new Date(row.original.esi_payment_due_date.second_date), 'MMM dd, yyyy') : '-'}
@@ -323,6 +275,7 @@ console.log(validationErrors)
       {
         header: 'Third Due Date',
         accessorKey: 'third_date',
+        enableSorting: false,
         cell: ({row}) => (
           <div className="w-40 text-start">
             {row.original.esi_payment_due_date?.third_date ? format(new Date(row.original.esi_payment_due_date.third_date), 'MMM dd, yyyy') : '-'}
@@ -332,6 +285,7 @@ console.log(validationErrors)
       {
         header: 'Last Due Date',
         accessorKey: 'last_date',
+        enableSorting: false,
         cell: ({row}) => (
           <div className="w-40 text-start">
             {row.original.esi_payment_due_date?.last_date ? format(new Date(row.original.esi_payment_due_date.last_date), 'MMM dd, yyyy') : '-'}
@@ -341,6 +295,7 @@ console.log(validationErrors)
       {
         header: 'Status',
         accessorKey: 'esi_active',
+        enableSorting: false,
         cell: ({row}) => (
           <div className="w-24 text-start">
             <div className={row.original.esi_active ? 'text-green-500 font-semibold' : 'text-red-500 font-semibold'}>
@@ -352,6 +307,7 @@ console.log(validationErrors)
       {
         header: 'Actions',
         id: 'actions',
+        enableSorting: false,
         cell: ({row}) => (
           <div className="flex space-x-2">
             <Tooltip title="Edit" placement="top">
@@ -431,58 +387,73 @@ console.log(validationErrors)
               </div>
 
               <div className="flex gap-4">
-              <div className="w-1/2">
-                <label className="text-gray-600 mb-2 block">First Due Date <span className="text-red-500">*</span></label>
-                <DatePicker
-                  className="w-full"
-                  placeholder="Select first due date"
-                  value={paymentDueDates.firstDate}
-                  onChange={(date) => {
-                    setPaymentDueDates(prev => ({ ...prev, firstDate: date }));
-                    // setValidationErrors(prev => ({ ...prev, firstDate: undefined }));
-                  }}
-                /> 
-                 {validationErrors.firstDate && (
-          <div className="text-red-500 text-sm mt-1">{validationErrors.firstDate}</div>
-        )}
-              </div>
-              <div className="w-1/2">
-                <label className="text-gray-600 mb-2 block">Second Due Date</label>
-                <DatePicker
-                  className="w-full"
-                  placeholder="Select second due date"
-                  value={paymentDueDates.secondDate}
-                  onChange={(date) => {
-                    setPaymentDueDates(prev => ({ ...prev, secondDate: date }));
-                    // setValidationErrors(prev => ({ ...prev, firstDate: undefined }));
-                  }}
-                  disabled={isDueDateDisabled(1)}
-                />
-              </div>
-      </div>
+  <div className="w-1/2">
+    <label className="text-gray-600 mb-2 block">
+      First Due Date <span className="text-red-500">*</span>
+    </label>
+    <DatePicker
+      className="w-full"
+      placeholder="Select first due date"
+      value={paymentDueDates.firstDate}
+      onChange={(date) => {
+        setPaymentDueDates(prev => ({ ...prev, firstDate: date }));
+      }}
+    />
+    {validationErrors.firstDate && (
+      <div className="text-red-500 text-sm mt-1">{validationErrors.firstDate}</div>
+    )}
+  </div>
+  <div className="w-1/2">
+    <label className="text-gray-600 mb-2 block">
+      Second Due Date {frequency === 'quarterly' && <span className="text-red-500">*</span>}
+    </label>
+    <DatePicker
+      className="w-full"
+      placeholder="Select second due date"
+      value={paymentDueDates.secondDate}
+      onChange={(date) => {
+        setPaymentDueDates(prev => ({ ...prev, secondDate: date }));
+      }}
+      disabled={isDueDateDisabled(1)}
+    />
+    {validationErrors.secondDate && (
+      <div className="text-red-500 text-sm mt-1">{validationErrors.secondDate}</div>
+    )}
+  </div>
+</div>
 
-      <div className="flex gap-4">
-        <div className="w-1/2">
-          <label className="text-gray-600 mb-2 block">Third Due Date</label>
-          <DatePicker
-            className="w-full"
-            placeholder="Select third due date"
-            value={paymentDueDates.thirdDate}
-            onChange={(date) => setPaymentDueDates(prev => ({ ...prev, thirdDate: date }))}
-            disabled={isDueDateDisabled(2)}
-          />
-        </div>
-        <div className="w-1/2">
-          <label className="text-gray-600 mb-2 block">Last Due Date</label>
-          <DatePicker
-            className="w-full"
-            placeholder="Select last due date"
-            value={paymentDueDates.lastDate}
-            onChange={(date) => setPaymentDueDates(prev => ({ ...prev, lastDate: date }))}
-            disabled={isDueDateDisabled(3)}
-          />
-        </div>
-      </div>
+<div className="flex gap-4">
+  <div className="w-1/2">
+    <label className="text-gray-600 mb-2 block">
+      Third Due Date {frequency === 'quarterly' && <span className="text-red-500">*</span>}
+    </label>
+    <DatePicker
+      className="w-full"
+      placeholder="Select third due date"
+      value={paymentDueDates.thirdDate}
+      onChange={(date) => setPaymentDueDates(prev => ({ ...prev, thirdDate: date }))}
+      disabled={isDueDateDisabled(2)}
+    />
+    {validationErrors.thirdDate && (
+      <div className="text-red-500 text-sm mt-1">{validationErrors.thirdDate}</div>
+    )}
+  </div>
+  <div className="w-1/2">
+    <label className="text-gray-600 mb-2 block">
+      Last Due Date {(frequency === 'quarterly' || frequency === 'half_yearly') && <span className="text-red-500">*</span>}
+    </label>
+    <DatePicker
+      className="w-full"
+      placeholder="Select last due date"
+      value={paymentDueDates.lastDate}
+      onChange={(date) => setPaymentDueDates(prev => ({ ...prev, lastDate: date }))}
+      disabled={isDueDateDisabled(3)}
+    />
+    {validationErrors.lastDate && (
+      <div className="text-red-500 text-sm mt-1">{validationErrors.lastDate}</div>
+    )}
+  </div>
+</div>
 
               <div className="flex items-center gap-2">
                 <Checkbox
