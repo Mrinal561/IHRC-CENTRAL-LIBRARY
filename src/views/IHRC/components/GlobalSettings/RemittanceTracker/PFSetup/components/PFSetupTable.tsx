@@ -1,27 +1,279 @@
+// import React, { useEffect, useMemo, useState } from 'react';
+// import DataTable from '@/components/shared/DataTable';
+// import { format } from 'date-fns';
+// import { Button, Tooltip } from '@/components/ui';
+// import { MdEdit } from 'react-icons/md';
+// import { AppDispatch } from '@/store'
+// import { useDispatch } from 'react-redux';
+// import { fetchPFConfigs } from '@/store/slices/pfConfig/pfConfigSlice';
+// import loadingAnimation from '@/assets/lotties/system-regular-716-spinner-three-dots-loop-scale.json'
+// import Lottie from 'lottie-react';
+// import { HiOutlineViewGrid } from 'react-icons/hi'
+
+
+
+// const PFSetupTable = ({ 
+//   tableLoading = false, 
+//   setTableLoading, 
+//   onEdit ,
+//   refreshTrigger
+// } : any) => {
+//   const dispatch = useDispatch<AppDispatch>();
+//   const [pfTableData, setPFTableData] = useState([]);
+  
+//   const [isLoading, setIsLoading] = useState(true);
+
+//   const formatDate = (date: string | null) => {
+//     if (!date) return '-';
+//     return format(new Date(date), 'MMM dd, yyyy');
+//   };
+
+//   const getFrequencyLabel = (value: string | null) => {
+//     if (!value) return '-';
+//     const labels: { [key: string]: string } = {
+//       'yearly': 'Yearly',
+//       'half_yearly': 'Half Yearly',
+//       'monthly': 'Monthly',
+//       'quarterly': 'Quarterly'
+//     };
+//     return labels[value] || value;
+//   };
+
+//   const columns = useMemo(
+//     () => [
+//       // {
+//       //   header: 'ID',
+//       //   accessorKey: 'id',
+//       // },
+      
+//       {
+//         header: 'Mode',
+//         accessorKey: 'payment_mode',
+//       },
+//       {
+//         header: 'PF Frequency',
+//         accessorKey: 'pf_frequency',
+//         cell: ({ row }) => getFrequencyLabel(row.original.pf_frequency),
+//       },
+//       {
+//         header: 'First Due Date',
+//         accessorKey: 'first_date',
+//         cell: ({ row }) => formatDate(row.original.pf_payment_due_date.first_date),
+//       },
+//       {
+//         header: 'Mode',
+//         accessorKey: 'pfiw_payment_mode',
+//       },
+//       {
+//         header: 'PFIW Frequency',
+//         accessorKey: 'pfiw_frequency',
+//         cell: ({ row }) => getFrequencyLabel(row.original.pfiw_frequency),
+//       },
+//       {
+//         header: 'First Due Date',
+//         accessorKey: 'first_date',
+//         cell: ({ row }) => formatDate(row.original.pfiw_payment_due_date.first_date),
+//       },
+//       // {
+//       //   header: 'Second Due Date',
+//       //   accessorKey: 'second_date',
+//       //   cell: ({ row }) => formatDate(row.original.pt_payment_due_date.second_date) || '-',
+//       // },
+//       // {
+//       //   header: 'Third Due Date',
+//       //   accessorKey: 'third_date',
+//       //   cell: ({ row }) => formatDate(row.original.pt_payment_due_date.third_date) || '-',
+//       // },
+//       // {
+//       //   header: 'Last Due Date',
+//       //   accessorKey: 'last_date',
+//       //   cell: ({ row }) => formatDate(row.original.pt_payment_due_date.last_date) || '-',
+//       // },
+//       // {
+//       //   header: 'Actions',
+//       //   id: 'actions',
+//       //   cell: ({ row }) => (
+//       //     <div className="flex space-x-2">
+//       //       <Tooltip title="Edit" placement="top">
+//       //         <Button
+//       //           size="sm"
+//       //           icon={<MdEdit />}
+//       //           onClick={() => onEdit && onEdit(row.original)}
+//       //         />
+//       //       </Tooltip>
+//       //     </div>
+//       //   ),
+//       // },
+//     ],
+//     [onEdit]
+//   );
+
+//   const [tableData, setTableData] = useState({
+//     total: 0,
+//     pageIndex: 1,
+//     pageSize: 10,
+//     query: '',
+//     sort: { order: '', key: '' },
+//   });
+
+//   useEffect(() => {
+//     fetchPFSetupData(tableData.pageIndex, tableData.pageSize);
+//   }, [refreshTrigger]);
+
+
+//   const fetchPFSetupData = async (page: number, size: number) => {
+//     setIsLoading(true);
+//     try {
+//       const { payload } = await dispatch(
+//         fetchPFConfigs({ page, page_size: size })
+//       );
+      
+//       if (payload?.data && payload?.paginateData) {
+//         setPFTableData(payload?.data);
+//       setTableData((prev) => ({
+//         ...prev,
+//         total: payload.paginateData.totalResult,
+//         totalPages: payload.paginateData.totalPages,
+//         pageIndex: page, 
+//         pageSize: size
+//       }));
+//       }
+//     } catch (error) {
+//       console.error('Failed to fetch PF setups', error);
+//       setIsLoading(false);
+//     }
+//     finally{
+//       setIsLoading(false);
+//     }
+//   };
+
+//   const onPaginationChange = (page: number) => {
+//     setTableData(prev => ({ ...prev, pageIndex: page }));
+//     fetchPFSetupData(page, tableData.pageSize);
+//   };
+
+//   const onSelectChange = (value: number) => {
+//     setTableData((prev) => ({
+//       ...prev,
+//       pageSize: Number(value),
+//       pageIndex: 1,
+//     }));
+//     fetchPFSetupData(1, value);
+//   };
+
+//   if (isLoading) {
+//     return (
+//       <div className="flex flex-col items-center justify-center h-96 text-gray-500 rounded-xl">
+//         <div className="w-28 h-28">
+//           <Lottie 
+//             animationData={loadingAnimation} 
+//             loop 
+//             className="w-24 h-24"
+//           />
+//         </div>
+//         <p className="text-lg font-semibold">
+//           Loading Data...
+//         </p>
+//       </div>
+//     );
+//   }
+
+//   return (
+//     <div className="relative">
+//       {pfTableData.length === 0 ? (
+//         <div className="flex flex-col items-center justify-center h-96 text-gray-500 border rounded-xl">
+//           <HiOutlineViewGrid className="w-12 h-12 mb-4 text-gray-300" />
+//           <p className="text-center">
+//             No Data Available
+//           </p>
+//         </div>
+//       ) : (
+//         <DataTable
+//           columns={columns}
+//           data={pfTableData}
+//           loading={isLoading}
+//           stickyHeader={true}
+//           stickyFirstColumn={true}
+//           stickyLastColumn={true}
+//           pagingData={{
+//             total: tableData.total,
+//             pageIndex: tableData.pageIndex,
+//             pageSize: tableData.pageSize,
+//           }}
+//           onPaginationChange={onPaginationChange}
+//           onSelectChange={onSelectChange}
+//           selectable={true}
+//         />
+//       )}
+//     </div>
+//   );
+// };
+
+// export default PFSetupTable;
+
 import React, { useEffect, useMemo, useState } from 'react';
+import { useDispatch } from 'react-redux';
 import DataTable from '@/components/shared/DataTable';
 import { format } from 'date-fns';
-import { Button, Tooltip } from '@/components/ui';
+import { Button, Dialog, Tooltip } from '@/components/ui';
 import { MdEdit } from 'react-icons/md';
-import { AppDispatch } from '@/store'
-import { useDispatch } from 'react-redux';
-import { fetchPFConfigs } from '@/store/slices/pfConfig/pfConfigSlice';
-import loadingAnimation from '@/assets/lotties/system-regular-716-spinner-three-dots-loop-scale.json'
+import { HiOutlineViewGrid } from 'react-icons/hi';
+import { AppDispatch } from '@/store';
+import { fetchPFConfigById, fetchPFConfigs, updatePFConfig } from '@/store/slices/pfConfig/pfConfigSlice';
+import loadingAnimation from '@/assets/lotties/system-regular-716-spinner-three-dots-loop-scale.json';
 import Lottie from 'lottie-react';
-import { HiOutlineViewGrid } from 'react-icons/hi'
+import OutlinedSelect from '@/components/ui/Outlined/Outlined';
+import DatePicker from '@/components/ui/DatePicker';
+import { showErrorNotification } from '@/components/ui/ErrorMessage';
 
+type PaymentMode = 'online' | 'offline';
+type PFFrequency = 'monthly';
 
+interface SelectOption {
+  value: string;
+  label: string;
+}
 
-const PFSetupTable = ({ 
-  tableLoading = false, 
-  setTableLoading, 
-  onEdit ,
-  refreshTrigger
-} : any) => {
+interface PaymentDueDates {
+  first_date: string | null;
+  second_date: string | null;
+  third_date: string | null;
+  last_date: string | null;
+}
+
+const paymentModeOptions = [
+  { value: 'online', label: 'Online' },
+  { value: 'offline', label: 'Offline' },
+];
+
+const frequencyOptions = [
+  { value: 'monthly', label: 'Monthly' },
+];
+
+const PFSetupTable = ({ refreshTrigger } : any) => {
   const dispatch = useDispatch<AppDispatch>();
   const [pfTableData, setPFTableData] = useState([]);
-  
   const [isLoading, setIsLoading] = useState(true);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [currentPFId, setCurrentPFId] = useState<string | null>(null);
+  
+  // Form states
+  const [selectedPFPaymentMode, setSelectedPFPaymentMode] = useState<SelectOption | null>(null);
+  const [selectedPFIWPaymentMode, setSelectedPFIWPaymentMode] = useState<SelectOption | null>(null);
+  const [selectedPFFrequency, setSelectedPFFrequency] = useState<SelectOption | null>(null);
+  const [selectedPFIWFrequency, setSelectedPFIWFrequency] = useState<SelectOption | null>(null);
+  const [pfPaymentDueDates, setPFPaymentDueDates] = useState<PaymentDueDates>({
+    first_date: null,
+    second_date: null,
+    third_date: null,
+    last_date: null
+  });
+  const [pfiWPaymentDueDates, setPFIWPaymentDueDates] = useState<PaymentDueDates>({
+    first_date: null,
+    second_date: null,
+    third_date: null,
+    last_date: null
+  });
 
   const formatDate = (date: string | null) => {
     if (!date) return '-';
@@ -41,11 +293,6 @@ const PFSetupTable = ({
 
   const columns = useMemo(
     () => [
-      // {
-      //   header: 'ID',
-      //   accessorKey: 'id',
-      // },
-      
       {
         header: 'Mode',
         accessorKey: 'payment_mode',
@@ -74,38 +321,23 @@ const PFSetupTable = ({
         accessorKey: 'first_date',
         cell: ({ row }) => formatDate(row.original.pfiw_payment_due_date.first_date),
       },
-      // {
-      //   header: 'Second Due Date',
-      //   accessorKey: 'second_date',
-      //   cell: ({ row }) => formatDate(row.original.pt_payment_due_date.second_date) || '-',
-      // },
-      // {
-      //   header: 'Third Due Date',
-      //   accessorKey: 'third_date',
-      //   cell: ({ row }) => formatDate(row.original.pt_payment_due_date.third_date) || '-',
-      // },
-      // {
-      //   header: 'Last Due Date',
-      //   accessorKey: 'last_date',
-      //   cell: ({ row }) => formatDate(row.original.pt_payment_due_date.last_date) || '-',
-      // },
-      // {
-      //   header: 'Actions',
-      //   id: 'actions',
-      //   cell: ({ row }) => (
-      //     <div className="flex space-x-2">
-      //       <Tooltip title="Edit" placement="top">
-      //         <Button
-      //           size="sm"
-      //           icon={<MdEdit />}
-      //           onClick={() => onEdit && onEdit(row.original)}
-      //         />
-      //       </Tooltip>
-      //     </div>
-      //   ),
-      // },
+      {
+        header: 'Actions',
+        id: 'actions',
+        cell: ({ row }) => (
+          <div className="flex space-x-2">
+            <Tooltip title="Edit" placement="top">
+              <Button
+                size="sm"
+                icon={<MdEdit />}
+                onClick={() => handleEdit(row.original)}
+              />
+            </Tooltip>
+          </div>
+        ),
+      },
     ],
-    [onEdit]
+    []
   );
 
   const [tableData, setTableData] = useState({
@@ -120,7 +352,6 @@ const PFSetupTable = ({
     fetchPFSetupData(tableData.pageIndex, tableData.pageSize);
   }, [refreshTrigger]);
 
-
   const fetchPFSetupData = async (page: number, size: number) => {
     setIsLoading(true);
     try {
@@ -130,20 +361,195 @@ const PFSetupTable = ({
       
       if (payload?.data && payload?.paginateData) {
         setPFTableData(payload?.data);
-      setTableData((prev) => ({
-        ...prev,
-        total: payload.paginateData.totalResult,
-        totalPages: payload.paginateData.totalPages,
-        pageIndex: page, 
-        pageSize: size
-      }));
+        setTableData((prev) => ({
+          ...prev,
+          total: payload.paginateData.totalResult,
+          totalPages: payload.paginateData.totalPages,
+          pageIndex: page, 
+          pageSize: size
+        }));
       }
     } catch (error) {
       console.error('Failed to fetch PF setups', error);
+    }
+    finally {
       setIsLoading(false);
     }
-    finally{
-      setIsLoading(false);
+  };
+
+  // const handleEdit = (pfToEdit: any) => {
+  //   setIsDialogOpen(true);
+  //   setCurrentPFId(pfToEdit.id);
+
+  //   // Set PF Payment Mode
+  //   setSelectedPFPaymentMode({ 
+  //     value: pfToEdit.payment_mode, 
+  //     label: pfToEdit.payment_mode === 'online' ? 'Online' : 'Offline' 
+  //   });
+
+  //   // Set PFIW Payment Mode
+  //   setSelectedPFIWPaymentMode({ 
+  //     value: pfToEdit.pfiw_payment_mode, 
+  //     label: pfToEdit.pfiw_payment_mode === 'online' ? 'Online' : 'Offline' 
+  //   });
+
+  //   // Set PF Frequency
+  //   setSelectedPFFrequency({ 
+  //     value: pfToEdit.pf_frequency, 
+  //     label: pfToEdit.pf_frequency.charAt(0).toUpperCase() + pfToEdit.pf_frequency.slice(1)
+  //   });
+
+  //   // Set PFIW Frequency
+  //   setSelectedPFIWFrequency({ 
+  //     value: pfToEdit.pfiw_frequency, 
+  //     label: pfToEdit.pfiw_frequency.charAt(0).toUpperCase() + pfToEdit.pfiw_frequency.slice(1)
+  //   });
+
+  //   // Set Payment Due Dates
+  //   setPFPaymentDueDates({
+  //     first_date: pfToEdit.pf_payment_due_date.first_date,
+  //     second_date: pfToEdit.pf_payment_due_date.second_date,
+  //     third_date: pfToEdit.pf_payment_due_date.third_date,
+  //     last_date: pfToEdit.pf_payment_due_date.last_date
+  //   });
+
+  //   setPFIWPaymentDueDates({
+  //     first_date: pfToEdit.pfiw_payment_due_date.first_date,
+  //     second_date: pfToEdit.pfiw_payment_due_date.second_date,
+  //     third_date: pfToEdit.pfiw_payment_due_date.third_date,
+  //     last_date: pfToEdit.pfiw_payment_due_date.last_date
+  //   });
+  // };
+
+
+  const handleEdit = async (pfToEdit: any) => {
+    setIsDialogOpen(true);
+    setCurrentPFId(pfToEdit.id);
+    
+    try {
+      // Fetch detailed PF config data and destructure the payload directly
+      const response = await dispatch(fetchPFConfigById(pfToEdit.id)).unwrap();
+      const pfConfig = response; // Now working with direct object
+      
+      console.log("Fetched PF Config:", pfConfig); // Add this to debug
+  
+      if (pfConfig) {
+        // Set PF Payment Mode
+        setSelectedPFPaymentMode({ 
+          value: pfConfig.payment_mode, 
+          label: pfConfig.payment_mode === 'online' ? 'Online' : 'Offline' 
+        });
+  
+        // Set PFIW Payment Mode
+        setSelectedPFIWPaymentMode({ 
+          value: pfConfig.pfiw_payment_mode, 
+          label: pfConfig.pfiw_payment_mode === 'online' ? 'Online' : 'Offline' 
+        });
+  
+        // Set PF Frequency
+        setSelectedPFFrequency({ 
+          value: pfConfig.pf_frequency, 
+          label: pfConfig.pf_frequency.charAt(0).toUpperCase() + pfConfig.pf_frequency.slice(1)
+        });
+  
+        // Set PFIW Frequency
+        setSelectedPFIWFrequency({ 
+          value: pfConfig.pfiw_frequency, 
+          label: pfConfig.pfiw_frequency.charAt(0).toUpperCase() + pfConfig.pfiw_frequency.slice(1)
+        });
+  
+        // Set Payment Due Dates - Add console.log to debug
+        console.log("PF Due Dates:", pfConfig.pf_payment_due_date);
+        setPFPaymentDueDates({
+          first_date: pfConfig.pf_payment_due_date.first_date || null,
+          second_date: pfConfig.pf_payment_due_date.second_date || null,
+          third_date: pfConfig.pf_payment_due_date.third_date || null,
+          last_date: pfConfig.pf_payment_due_date.last_date || null
+        });
+  
+        console.log("PFIW Due Dates:", pfConfig.pfiw_payment_due_date);
+        setPFIWPaymentDueDates({
+          first_date: pfConfig.pfiw_payment_due_date.first_date || null,
+          second_date: pfConfig.pfiw_payment_due_date.second_date || null,
+          third_date: pfConfig.pfiw_payment_due_date.third_date || null,
+          last_date: pfConfig.pfiw_payment_due_date.last_date || null
+        });
+      }
+    } catch (error: any) {
+      console.error('Failed to fetch PF config details:', error);
+      if (error.response?.data?.message) {
+        showErrorNotification(error.response.data.message);
+      } else if (error.message) {
+        showErrorNotification(error.message);
+      } else {
+        showErrorNotification('Failed to fetch PF config details');
+      }
+      setIsDialogOpen(false);
+    }
+  };
+  const handleDialogClose = () => {
+    setIsDialogOpen(false);
+    resetForm();
+  };
+
+  const resetForm = () => {
+    setSelectedPFPaymentMode(null);
+    setSelectedPFIWPaymentMode(null);
+    setSelectedPFFrequency(null);
+    setSelectedPFIWFrequency(null);
+    setPFPaymentDueDates({
+      first_date: null,
+      second_date: null,
+      third_date: null,
+      last_date: null
+    });
+    setPFIWPaymentDueDates({
+      first_date: null,
+      second_date: null,
+      third_date: null,
+      last_date: null
+    });
+    setCurrentPFId(null);
+  };
+
+  const handleConfirm = async () => {
+    if (!selectedPFPaymentMode || !selectedPFIWPaymentMode || 
+        !selectedPFFrequency || !selectedPFIWFrequency || 
+        !pfPaymentDueDates.first_date || !pfiWPaymentDueDates.first_date) {
+      showErrorNotification('Please fill in all required fields');
+      return;
+    }
+
+    const pfConfigData = {
+      payment_mode: selectedPFPaymentMode.value as PaymentMode,
+      pfiw_payment_mode: selectedPFIWPaymentMode.value as PaymentMode,
+      pf_frequency: selectedPFFrequency.value as PFFrequency,
+      pfiw_frequency: selectedPFIWFrequency.value as PFFrequency,
+      pf_payment_due_date: pfPaymentDueDates,
+      pfiw_payment_due_date: pfiWPaymentDueDates
+    };
+
+    try {
+      if (currentPFId) {
+        const result = await dispatch(updatePFConfig({ 
+          id: currentPFId, 
+          data: pfConfigData 
+        })).unwrap();
+
+        if (result) {
+          handleDialogClose();
+          fetchPFSetupData(tableData.pageIndex, tableData.pageSize);
+        }
+      }
+    } catch (error: any) {
+      console.error(error);
+      if (error.response?.data?.message) {
+        showErrorNotification(error.response.data.message);
+      } else if (error.message) {
+        showErrorNotification(error.message);
+      } else {
+        showErrorNotification(error);
+      }
     }
   };
 
@@ -171,9 +577,7 @@ const PFSetupTable = ({
             className="w-24 h-24"
           />
         </div>
-        <p className="text-lg font-semibold">
-          Loading Data...
-        </p>
+        <p className="text-lg font-semibold">Loading Data...</p>
       </div>
     );
   }
@@ -183,30 +587,124 @@ const PFSetupTable = ({
       {pfTableData.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-96 text-gray-500 border rounded-xl">
           <HiOutlineViewGrid className="w-12 h-12 mb-4 text-gray-300" />
-          <p className="text-center">
-            No Data Available
-          </p>
+          <p className="text-center">No Data Available</p>
         </div>
       ) : (
-        <DataTable
-          columns={columns}
-          data={pfTableData}
-          loading={isLoading}
-          stickyHeader={true}
-          stickyFirstColumn={true}
-          stickyLastColumn={true}
-          pagingData={{
-            total: tableData.total,
-            pageIndex: tableData.pageIndex,
-            pageSize: tableData.pageSize,
-          }}
-          onPaginationChange={onPaginationChange}
-          onSelectChange={onSelectChange}
-          selectable={true}
-        />
+        <>
+          <DataTable
+            columns={columns}
+            data={pfTableData}
+            loading={isLoading}
+            stickyHeader={true}
+            stickyFirstColumn={true}
+            stickyLastColumn={true}
+            pagingData={{
+              total: tableData.total,
+              pageIndex: tableData.pageIndex,
+              pageSize: tableData.pageSize,
+            }}
+            onPaginationChange={onPaginationChange}
+            onSelectChange={onSelectChange}
+            selectable={true}
+          />
+
+          <Dialog
+            isOpen={isDialogOpen}
+            onClose={handleDialogClose}
+            onRequestClose={handleDialogClose}
+          >
+            <h5 className="mb-6">Edit PF Setup</h5>
+            <div className="flex flex-col gap-6">
+              <div className="flex gap-4">
+                <div className="w-full">
+                  <label className="text-gray-600 mb-2 block">PF Payment Mode</label>
+                  <OutlinedSelect
+                    label="Select PF Payment Mode"
+                    options={paymentModeOptions}
+                    value={selectedPFPaymentMode}
+                    onChange={setSelectedPFPaymentMode}
+                  />
+                </div>
+                <div className="w-full">
+                  <label className="text-gray-600 mb-2 block">PFIW Payment Mode</label>
+                  <OutlinedSelect
+                    label="Select PFIW Payment Mode"
+                    options={paymentModeOptions}
+                    value={selectedPFIWPaymentMode}
+                    onChange={setSelectedPFIWPaymentMode}
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <div className="w-full">
+                  <label className="text-gray-600 mb-2 block">PF Frequency</label>
+                  <OutlinedSelect
+                    label="Select PF Frequency"
+                    options={frequencyOptions}
+                    value={selectedPFFrequency}
+                    onChange={setSelectedPFFrequency}
+                  />
+                </div>
+                <div className="w-full">
+                  <label className="text-gray-600 mb-2 block">PFIW Frequency</label>
+                  <OutlinedSelect
+                    label="Select PFIW Frequency"
+                    options={frequencyOptions}
+                    value={selectedPFIWFrequency}
+                    onChange={setSelectedPFIWFrequency}
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <div className="w-full">
+                  <label className="text-gray-600 mb-2 block">PF Due Date <span className="text-red-500">*</span></label>
+                  <DatePicker
+                    className="w-full"
+                    placeholder="Select PF first due date"
+                    value={pfPaymentDueDates.first_date ? new Date(pfPaymentDueDates.first_date) : null}
+                    onChange={(date) => setPFPaymentDueDates(prev => ({
+                      ...prev,
+                      first_date: date ? date.toISOString() : null
+                    }))}
+                  />
+                </div>
+                <div className="w-full">
+                  <label className="text-gray-600 mb-2 block">PFIW Due Date <span className="text-red-500">*</span></label>
+                  <DatePicker
+                    className="w-full"
+                    placeholder="Select PFIW first due date"
+                    value={pfiWPaymentDueDates.first_date ? new Date(pfiWPaymentDueDates.first_date) : null}
+                    onChange={(date) => setPFIWPaymentDueDates(prev => ({
+                      ...prev,
+                      first_date: date ? date.toISOString() : null
+                    }))}
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 mt-6">
+                <Button
+                  variant="plain"
+                  onClick={handleDialogClose}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="solid"
+                  onClick={handleConfirm}
+                >
+                  Confirm
+                </Button>
+              </div>
+            </div>
+          </Dialog>
+        </>
       )}
     </div>
   );
 };
 
 export default PFSetupTable;
+                      

@@ -387,14 +387,14 @@ const PTSetup: React.FC = () => {
           <h3 className="text-2xl font-bold">PT Global Setup</h3>
         </div>
         <div className="flex gap-2">
-          <Button
+          {/* <Button
             variant="solid"
             size="sm"
             icon={<HiPlusCircle />}
             onClick={() => setIsDialogOpen(true)}
           >
             Edit PT Setup
-          </Button>
+          </Button> */}
         </div>
       </div>
       

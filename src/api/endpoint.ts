@@ -56,7 +56,8 @@ export const endpoints = {
         update: (id: string) => api(`superadmin/state/config/pt/${id}`),
     },
     common: {
-        getStatesAll: () => api('/states')
+        getStatesAll: () => api('/states'),
+        detail:(id:any)=> api(`superadmin/state/config/${id}`)
     },
     role:{
         list:() =>  api('superadmin/role')

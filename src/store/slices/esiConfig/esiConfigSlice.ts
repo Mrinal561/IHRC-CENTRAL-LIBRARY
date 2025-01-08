@@ -80,7 +80,7 @@ export const createESIConfig = createAsyncThunk(
     'esiConfig/updateESIConfig',
     async ({ id, data }: { id: string; data: ESIConfigData }, { rejectWithValue }) => {
       try {
-        const response = await httpClient.put(endpoints.esi.update(id), data)
+        const response = await httpClient.post(endpoints.esi.update(id), data)
         return response.data
       }
       catch (error: any) {
