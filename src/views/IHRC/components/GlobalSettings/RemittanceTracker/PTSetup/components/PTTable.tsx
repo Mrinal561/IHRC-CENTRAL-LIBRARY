@@ -16,6 +16,64 @@ import { endpoints } from '@/api/endpoint';
 import OutlinedSelect from '@/components/ui/Outlined';
 import { updateLWFConfig } from '@/store/slices/lwfConfig/lwfConfigSlice';
 import { fetchDetail } from '@/store/slices/common/commonSlice';
+import * as yup from 'yup';
+
+// First, add these validation schemas
+const createPTValidationSchema = (frequency) => {
+    const baseSchema = {
+        firstDate: yup
+            .date()
+            .required('First due date is required')
+            .typeError('First due date must be a valid date'),
+    }
+
+    if (frequency === 'quarterly') {
+        return yup.object().shape({
+            ...baseSchema,
+            secondDate: yup
+                .date()
+                .required('Second due date is required')
+                .min(
+                    yup.ref('firstDate'),
+                    'Second due date must be after first due date',
+                )
+                .typeError('Second due date must be a valid date'),
+            thirdDate: yup
+                .date()
+                .required('Third due date is required')
+                .min(
+                    yup.ref('secondDate'),
+                    'Third due date must be after second due date',
+                )
+                .typeError('Third due date must be a valid date'),
+            lastDate: yup
+                .date()
+                .required('Last due date is required')
+                .min(
+                    yup.ref('thirdDate'),
+                    'Last due date must be after third due date',
+                )
+                .typeError('Last due date must be a valid date'),
+        })
+    }
+
+    if (frequency === 'half_yearly') {
+        return yup.object().shape({
+            ...baseSchema,
+            lastDate: yup
+                .date()
+                .required('Last due date is required')
+                .min(
+                    yup.ref('firstDate'),
+                    'Last due date must be after first due date',
+                )
+                .typeError('Last due date must be a valid date'),
+        })
+    }
+
+    return yup.object().shape(baseSchema)
+}
+
 
 const frequencyOptions = [
   { value: 'monthly', label: 'Monthly' },
@@ -26,6 +84,19 @@ const frequencyOptions = [
 
 const PTTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any) => {
   const dispatch = useDispatch<AppDispatch>();
+  const [ptEcValidationErrors, setPtEcValidationErrors] = useState({
+    firstDate: undefined,
+    secondDate: undefined,
+    thirdDate: undefined,
+    lastDate: undefined
+});
+
+const [ptRcValidationErrors, setPtRcValidationErrors] = useState({
+    firstDate: undefined,
+    secondDate: undefined,
+    thirdDate: undefined,
+    lastDate: undefined
+});
   const [ptTableData, setPTTableData] = useState([]);
   const [isLoading, setIsLoading] = useState(false)
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -112,11 +183,65 @@ const PTTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any)
     }
   };
 
+  const validatePTECDates = async () => {
+    try {
+        const validationSchema = createPTValidationSchema(ptEcFrequency);
+        await validationSchema.validate(ptEcDates, { abortEarly: false });
+        setPtEcValidationErrors({});
+        return true;
+    } catch (error) {
+        if (error instanceof yup.ValidationError) {
+            const newErrors = {};
+            error.inner.forEach((err) => {
+                newErrors[err.path] = err.message;
+            });
+            setPtEcValidationErrors(newErrors);
+            return false;
+        }
+        return false;
+    }
+};
+
+const validatePTRCDates = async () => {
+    try {
+        const validationSchema = createPTValidationSchema(ptRcFrequency);
+        await validationSchema.validate(ptRcDates, { abortEarly: false });
+        setPtRcValidationErrors({});
+        return true;
+    } catch (error) {
+        if (error instanceof yup.ValidationError) {
+            const newErrors = {};
+            error.inner.forEach((err) => {
+                newErrors[err.path] = err.message;
+            });
+            setPtRcValidationErrors(newErrors);
+            return false;
+        }
+        return false;
+    }
+};
+
+useEffect(() => {
+  validatePTECDates();
+}, [ptEcDates, ptEcFrequency]);
+
+useEffect(() => {
+  validatePTRCDates();
+}, [ptRcDates, ptRcFrequency]);
+
+
   const handleConfirm = async () => {
-    if (!selectedState || !ptEcFrequency || !ptRcFrequency || !ptEcDates.firstDate || !ptRcDates.firstDate) {
+    if (!selectedState || !ptEcFrequency || !ptRcFrequency) {
       showErrorNotification('Please fill all required fields');
       return;
-    }
+  }
+
+  const isEcValid = await validatePTECDates();
+  const isRcValid = await validatePTRCDates();
+
+  if (!isEcValid || !isRcValid) {
+      return;
+  }
 
     const ptConfigData = {
       ptec_frequency: ptEcFrequency,
@@ -170,6 +295,7 @@ const PTTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any)
       {
         header: 'State',
         accessorKey: 'name',
+        enableSorting:false,
         cell: ({row}) => 
           <div className="w-72 text-start">
         {row.original.name}
@@ -178,6 +304,7 @@ const PTTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any)
       {
         header: 'PT RC Frequency',
         accessorKey: 'ptrc_frequency',
+        enableSorting:false,
         cell: ({ row }) => 
           <div className="w-44 text-start">
         {getFrequencyLabel(row.original.ptrc_frequency)}
@@ -186,6 +313,7 @@ const PTTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any)
       {
         header: 'PTRC First Due Date',
         accessorKey: 'first_date',
+        enableSorting:false,
         cell: ({ row }) => 
           <div className="w-44 text-start">
         {formatDate(row.original.ptrc_payment_due_date.first_date)}
@@ -194,6 +322,7 @@ const PTTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any)
       {
         header: 'PTRC Second Due Date',
         accessorKey: 'second_date',
+        enableSorting:false,
         cell: ({ row }) => 
           <div className="w-44 text-start">
         {formatDate(row.original.ptrc_payment_due_date.second_date)}
@@ -202,6 +331,7 @@ const PTTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any)
       {
         header: 'PTRC Third Due Date',
         accessorKey: 'third_date',
+        enableSorting:false,
         cell: ({ row }) => 
           <div className="w-44 text-start">
         {formatDate(row.original.ptrc_payment_due_date.third_date)}
@@ -210,6 +340,7 @@ const PTTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any)
       {
         header: 'PTRC Last Due Date',
         accessorKey: 'last_date',
+        enableSorting:false,
         cell: ({ row }) => 
           <div className="w-44 text-start">
         {formatDate(row.original.ptrc_payment_due_date.last_date)}
@@ -218,6 +349,7 @@ const PTTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any)
       {
         header: 'PT EC Frequency',
         accessorKey: 'ptec_frequency',
+        enableSorting:false,
         cell: ({ row }) => 
           <div className="w-44 text-start">
         {getFrequencyLabel(row.original.ptec_frequency)}
@@ -225,6 +357,7 @@ const PTTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any)
       {
         header: 'PTEC First Due Date',
         accessorKey: 'first_date',
+        enableSorting:false,
         cell: ({ row }) => 
           <div className="w-44 text-start">
             {formatDate(row.original.ptec_payment_due_date.first_date)}
@@ -233,6 +366,7 @@ const PTTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any)
       {
         header: 'PTEC Second Due Date',
         accessorKey: 'second_date',
+        enableSorting:false,
         cell: ({ row }) => 
           <div className="w-44 text-start">
             {formatDate(row.original.ptec_payment_due_date.second_date)}
@@ -241,6 +375,7 @@ const PTTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any)
       {
         header: 'PTEC Third Due Date',
         accessorKey: 'third_date',
+        enableSorting:false,
         cell: ({ row }) => 
           <div className="w-44 text-start">
         {formatDate(row.original.ptec_payment_due_date?.third)}
@@ -249,6 +384,7 @@ const PTTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any)
       {
         header: 'PTEC Fourth Due Date',
         accessorKey: 'last_date',
+        enableSorting:false,
         cell: ({ row }) => 
           <div className="w-44 text-start">
         {formatDate(row.original.ptec_payment_due_date?.last_date)}
@@ -257,6 +393,7 @@ const PTTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any)
       {
         header: 'Status',
         accessorKey: 'status',
+        enableSorting:false,
         cell: ({ row }) => {
           const isActive = row.original.ptrc_active && row.original.ptec_active;
           return (
@@ -462,6 +599,11 @@ const PTTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any)
                   value={ptEcDates.firstDate}
                   onChange={(date) => setPtEcDates(prev => ({ ...prev, firstDate: date }))}
                 />
+                {ptEcValidationErrors.firstDate && (
+    <div className="text-red-500 text-sm mt-1">
+        {ptEcValidationErrors.firstDate}
+    </div>
+)}
               </div>
               <div className="w-1/2">
               <label className="text-gray-600 mb-2 block">
@@ -474,6 +616,11 @@ const PTTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any)
                   onChange={(date) => setPtEcDates(prev => ({ ...prev, secondDate: date }))}
                   disabled={isDueDateDisabled(ptEcFrequency, 1)}
                 />
+                {ptEcValidationErrors.secondDate && (
+    <div className="text-red-500 text-sm mt-1">
+        {ptEcValidationErrors.secondDate}
+    </div>
+)}
               </div>
             </div>
             <div className="flex gap-4 mt-4">
@@ -488,6 +635,11 @@ const PTTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any)
                   onChange={(date) => setPtEcDates(prev => ({ ...prev, thirdDate: date }))}
                   disabled={isDueDateDisabled(ptEcFrequency, 2)}
                 />
+                {ptEcValidationErrors.thirdDate && (
+    <div className="text-red-500 text-sm mt-1">
+        {ptEcValidationErrors.thirdDate}
+    </div>
+)}
               </div>
               <div className="w-1/2">
               <label className="text-gray-600 mb-2 block">
@@ -501,6 +653,11 @@ const PTTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any)
                   onChange={(date) => setPtEcDates(prev => ({ ...prev, lastDate: date }))}
                   disabled={isDueDateDisabled(ptEcFrequency, 3)}
                 />
+                {ptEcValidationErrors.lastDate && (
+    <div className="text-red-500 text-sm mt-1">
+        {ptEcValidationErrors.lastDate}
+    </div>
+)}
               </div>
             </div>
           </div>
@@ -516,6 +673,11 @@ const PTTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any)
                   value={ptRcDates.firstDate}
                   onChange={(date) => setPtRcDates(prev => ({ ...prev, firstDate: date }))}
                 />
+                 {ptRcValidationErrors.firstDate && (
+    <div className="text-red-500 text-sm mt-1">
+        {ptRcValidationErrors.firstDate}
+    </div>
+)}
               </div>
               <div className="w-1/2">
               <label className="text-gray-600 mb-2 block">
@@ -528,6 +690,11 @@ const PTTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any)
                   onChange={(date) => setPtRcDates(prev => ({ ...prev, secondDate: date }))}
                   disabled={isDueDateDisabled(ptRcFrequency, 1)}
                 />
+                 {ptRcValidationErrors.secondDate && (
+    <div className="text-red-500 text-sm mt-1">
+        {ptRcValidationErrors.secondDate}
+    </div>
+)}
               </div>
             </div>
             <div className="flex gap-4 mt-4">
@@ -542,9 +709,14 @@ const PTTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any)
                   onChange={(date) => setPtRcDates(prev => ({ ...prev, thirdDate: date }))}
                   disabled={isDueDateDisabled(ptRcFrequency, 2)}
                 />
+                 {ptRcValidationErrors.thirdDate && (
+    <div className="text-red-500 text-sm mt-1">
+        {ptRcValidationErrors.thirdDate}
+    </div>
+)}
               </div>
               <div className="w-1/2">
-              <label className="text-gray-600 mb-2 block">
+                <label className="text-gray-600 mb-2 block">
           Fourth Due Date {(ptRcFrequency === 'quarterly' || ptRcFrequency === 'half_yearly') && 
             <span className="text-red-500">*</span>}
         </label>
@@ -555,6 +727,11 @@ const PTTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any)
                   onChange={(date) => setPtRcDates(prev => ({ ...prev, lastDate: date }))}
                   disabled={isDueDateDisabled(ptRcFrequency, 3)}
                 />
+                 {ptRcValidationErrors.lastDate && (
+    <div className="text-red-500 text-sm mt-1">
+        {ptRcValidationErrors.lastDate}
+    </div>
+)}
               </div>
             </div>
           </div>

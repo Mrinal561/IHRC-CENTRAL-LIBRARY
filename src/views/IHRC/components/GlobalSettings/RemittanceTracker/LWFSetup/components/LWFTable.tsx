@@ -14,7 +14,62 @@ import { endpoints } from '@/api/endpoint';
 import { showErrorNotification } from '@/components/ui/ErrorMessage';
 import OutlinedSelect from '@/components/ui/Outlined';
 import { fetchDetail } from '@/store/slices/common/commonSlice';
+import * as yup from 'yup';
 
+const createLWFValidationSchema = (frequency) => {
+    const baseSchema = {
+        firstDate: yup
+            .date()
+            .required('First due date is required')
+            .typeError('First due date must be a valid date'),
+    }
+
+    if (frequency === 'quarterly') {
+        return yup.object().shape({
+            ...baseSchema,
+            secondDate: yup
+                .date()
+                .required('Second due date is required')
+                .min(
+                    yup.ref('firstDate'),
+                    'Second due date must be after first due date',
+                )
+                .typeError('Second due date must be a valid date'),
+            thirdDate: yup
+                .date()
+                .required('Third due date is required')
+                .min(
+                    yup.ref('secondDate'),
+                    'Third due date must be after second due date',
+                )
+                .typeError('Third due date must be a valid date'),
+            lastDate: yup
+                .date()
+                .required('Last due date is required')
+                .min(
+                    yup.ref('thirdDate'),
+                    'Last due date must be after third due date',
+                )
+                .typeError('Last due date must be a valid date'),
+        })
+    }
+
+    if (frequency === 'half_yearly') {
+        return yup.object().shape({
+            ...baseSchema,
+            lastDate: yup
+                .date()
+                .required('Last due date is required')
+                .min(
+                    yup.ref('firstDate'),
+                    'Last due date must be after first due date',
+                )
+                .typeError('Last due date must be a valid date'),
+        })
+    }
+
+    return yup.object().shape(baseSchema)
+}
 
 const frequencyOptions = [
   { value: 'monthly', label: 'Monthly' },
@@ -32,6 +87,12 @@ const LWFTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any
   const [selectedState, setSelectedState] = useState(null);
   const [frequency, setFrequency] = useState('');
   const [isActive, setIsActive] = useState(false);
+  const [validationErrors, setValidationErrors] = useState({
+    firstDate: undefined,
+    secondDate: undefined,
+    thirdDate: undefined,
+    lastDate: undefined
+});
   const [selectedStateId, setSelectedStateId] = useState(null);
   const [paymentDueDates, setPaymentDueDates] = useState({
     firstDate: null,
@@ -51,6 +112,10 @@ const LWFTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any
     loadStates();
   }, []);
 
+  useEffect(() => {
+    validateDates();
+}, [paymentDueDates]);
+
   const loadStates = async () => {
     try {
       const response = await httpClient.get(endpoints.common.getStatesAll());
@@ -64,6 +129,7 @@ const LWFTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any
       console.error('Failed to load states:', error);
     }
   };
+
 
   const handleEdit = async (config) => {
     try {
@@ -102,33 +168,58 @@ const LWFTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any
     }
   };
 
-  const handleConfirm = async () => {
-    if (!selectedState || !frequency || !paymentDueDates.firstDate) {
+  const validateDates = async () => {
+    try {
+        const validationSchema = createLWFValidationSchema(frequency);
+        await validationSchema.validate(paymentDueDates, { abortEarly: false });
+        setValidationErrors({});
+        return true;
+    } catch (error) {
+        if (error instanceof yup.ValidationError) {
+            const newErrors = {};
+            error.inner.forEach((err) => {
+                newErrors[err.path] = err.message;
+            });
+            setValidationErrors(newErrors);
+            return false;
+        }
+        return false;
+    }
+};
+
+const handleConfirm = async () => {
+  if (!selectedState || !frequency) {
       showErrorNotification('Please fill all required fields');
       return;
-    }
+  }
 
-    const lwfConfigData = {
+  const isValid = await validateDates();
+  if (!isValid) {
+      return;
+  }
+
+  const lwfConfigData = {
       frequency,
       payment_due_date: {
-        first_date: paymentDueDates.firstDate,
-        second_date: paymentDueDates.secondDate,
-        third_date: paymentDueDates.thirdDate,
-        last_date: paymentDueDates.lastDate
+          first_date: paymentDueDates.firstDate,
+          second_date: paymentDueDates.secondDate,
+          third_date: paymentDueDates.thirdDate,
+          last_date: paymentDueDates.lastDate
       },
       payment_mode: 'online',
       active: isActive,
       state_id: selectedState.value
-    };
+  };
 
-    try {
+  try {
       await dispatch(updateLWFConfig({ id: selectedState.value, data: lwfConfigData }));
       setIsDialogOpen(false);
       fetchLWFSetupData(tableData.pageIndex, tableData.pageSize);
-    } catch (error) {
+      setValidationErrors({});
+  } catch (error) {
       showErrorNotification(error.message);
-    }
-  };
+  }
+};
   
   useEffect(() => {
     fetchLWFSetupData(tableData.pageIndex, tableData.pageSize);
@@ -190,6 +281,7 @@ const LWFTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any
       {
         header: 'State Name',
         accessorKey: 'name',
+        enableSorting:false,
         cell: ({row}) => 
           <div className="w-72 text-start">
         {row.original.name}
@@ -198,6 +290,7 @@ const LWFTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any
       {
         header: 'LWF Frequency',
         accessorKey: 'lwf_frequency',
+        enableSorting:false,
         cell: ({ row }) => 
           <div className="w-40 text-start">
             {getFrequencyLabel(row.original.lwf_frequency)}
@@ -206,6 +299,7 @@ const LWFTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any
       {
         header: 'First Due Date',
         accessorKey: 'first_date',
+        enableSorting:false,
         cell: ({ row }) => 
           <div className="w-40 text-start">
         {formatDate(row.original.lwf_payment_due_date?.first_date)}
@@ -214,6 +308,7 @@ const LWFTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any
       {
         header: 'Second Due Date',
         accessorKey: 'second_date',
+        enableSorting:false,
         cell: ({ row }) => 
           <div className="w-40 text-start">
         {formatDate(row.original.lwf_payment_due_date?.second_date)}
@@ -222,6 +317,7 @@ const LWFTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any
       {
         header: 'Third Due Date',
         accessorKey: 'third_date',
+        enableSorting:false,
         cell: ({ row }) => 
           <div className="w-40 text-start">
         {formatDate(row.original.lwf_payment_due_date?.third_date)}
@@ -230,6 +326,7 @@ const LWFTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any
       {
         header: 'Last Due Date',
         accessorKey: 'last_date',
+        enableSorting:false,
         cell: ({ row }) => 
           <div className="w-40 text-start">
         {formatDate(row.original.lwf_payment_due_date?.last_date)}
@@ -238,6 +335,7 @@ const LWFTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any
       {
         header: 'Status',
         accessorKey: 'lwf_active',
+        enableSorting:false,
         cell: ({ row }) => (
           <div className="w-24 text-start">
           {/* <div 
@@ -256,6 +354,7 @@ const LWFTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any
       {
         header: 'Actions',
         id: 'actions',
+        enableSorting:false,
         cell: ({row}) => (
           <div className="flex space-x-2">
             <Tooltip title="Edit" placement="top">
@@ -374,6 +473,11 @@ const LWFTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any
                 value={paymentDueDates.firstDate}
                 onChange={(date) => setPaymentDueDates(prev => ({ ...prev, firstDate: date }))}
               />
+              {validationErrors.firstDate && (
+    <div className="text-red-500 text-sm mt-1">
+        {validationErrors.firstDate}
+    </div>
+)}
             </div>
             <div className="w-1/2">
               <label className="text-gray-600 mb-2 block">Second Due Date  {frequency === 'quarterly' && <span className="text-red-500">*</span>}</label>
@@ -384,6 +488,11 @@ const LWFTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any
                 onChange={(date) => setPaymentDueDates(prev => ({ ...prev, secondDate: date }))}
                 disabled={isDueDateDisabled(1)}
               />
+              {validationErrors.secondDate && (
+    <div className="text-red-500 text-sm mt-1">
+        {validationErrors.secondDate}
+    </div>
+)}
             </div>
           </div>
 
@@ -397,6 +506,11 @@ const LWFTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any
                 onChange={(date) => setPaymentDueDates(prev => ({ ...prev, thirdDate: date }))}
                 disabled={isDueDateDisabled(2)}
               />
+              {validationErrors.thirdDate && (
+    <div className="text-red-500 text-sm mt-1">
+        {validationErrors.thirdDate}
+    </div>
+)}
             </div>
             <div className="w-1/2">
               <label className="text-gray-600 mb-2 block">Last Due Date {(frequency === 'quarterly' || frequency === 'half_yearly') && <span className="text-red-500">*</span>}</label>
@@ -407,6 +521,11 @@ const LWFTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any
                 onChange={(date) => setPaymentDueDates(prev => ({ ...prev, lastDate: date }))}
                 disabled={isDueDateDisabled(3)}
               />
+              {validationErrors.lastDate && (
+    <div className="text-red-500 text-sm mt-1">
+        {validationErrors.lastDate}
+    </div>
+)}
             </div>
           </div>
 
