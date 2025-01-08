@@ -17,7 +17,8 @@ const validationSchema = yup.object().shape({
   name: yup
     .string()
     .required('Name is required')
-    .min(3, 'Name must be at least 3 characters'),
+    .min(3, 'Name must be at least 3 characters')
+  .matches(/^\S.*\S$|^\S$/,'The input must not have leading or trailing spaces'),
   email: yup
     .string()
     .email('Invalid email address')
