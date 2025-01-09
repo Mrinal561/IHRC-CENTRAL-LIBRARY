@@ -20,11 +20,11 @@ const validationSchema = yup.object().shape({
   .required('Entity name is required')
   .min(3, 'Entity name must be at least 3 characters')
   .matches(/^\S.*\S$|^\S$/, 'The input must not have leading or trailing spaces'),
-  name: yup
-    .string()
-    .required('Name is required')
-    .min(3, 'Name must be at least 3 characters')
-    .matches(/^\S.*\S$|^\S$/, 'The input must not have leading or trailing spaces'),
+  // name: yup
+  //   .string()
+  //   // .required('Name is required')
+  //   .min(3, 'Name must be at least 3 characters')
+  //   .matches(/^\S.*\S$|^\S$/, 'The input must not have leading or trailing spaces'),
   email: yup
     .string()
     .email('Invalid email address')
@@ -389,9 +389,9 @@ const CompanyAdmin = () => {
                 value={formData.name}
                 onChange={(value: string) => handleInputChange('name', value)}
               />
-              {errors.name && (
+              {/* {errors.name && (
                 <p className="text-red-500 text-xs mt-1">{errors.name}</p>
-              )}
+              )} */}
             </div>
             <div className="flex-1">
               <label className="text-gray-600 mb-2 block">Email <span className="text-red-500">*</span></label>
