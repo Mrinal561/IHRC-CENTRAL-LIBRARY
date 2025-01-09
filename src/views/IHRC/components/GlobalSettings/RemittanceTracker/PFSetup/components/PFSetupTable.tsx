@@ -627,6 +627,7 @@ import OutlinedSelect from '@/components/ui/Outlined/Outlined';
 import DatePicker from '@/components/ui/DatePicker';
 import { showErrorNotification } from '@/components/ui/ErrorMessage';
 import * as yup from 'yup';
+import SimpleDatePicker from '@/components/ui/OutlinedInput/SimpleDatePicker';
 
 // First, add the validation schema for PF setup
 const createPFValidationSchema = (frequency: string) => {
@@ -945,8 +946,8 @@ useEffect(() => {
             errorMessage={pfValidationErrors.first_date}
           >
             <label className="text-gray-600 mb-2 block">PF Monthly Due Date<span className="text-red-500">*</span></label>
-            <DatePicker
-              className="w-full"
+            {/* <DatePicker
+              className="w-full [&_.rdp-head]:hidden [&_.rdp-nav]:hidden"
               placeholder="Select PF first due date"
               value={pfPaymentDueDates.first_date ? new Date(pfPaymentDueDates.first_date) : null}
               onChange={(date) => setPFPaymentDueDates(prev => ({
@@ -964,7 +965,17 @@ useEffect(() => {
               }}
               monthLabelFormat=" "
               yearLabelFormat=" "
-              hideWeekdays={false}
+              hideWeekdays={true}
+            /> */}
+            <SimpleDatePicker
+              className="w-full"
+              placeholder="Select PF first due date"
+              value={pfPaymentDueDates.first_date ? new Date(pfPaymentDueDates.first_date) : null}
+              onChange={(date) => setPFPaymentDueDates(prev => ({
+                ...prev,
+                first_date: date ? date.toISOString() : null
+              }))}
+              disabled={!isEditMode}
             />
           </FormItem>
 
@@ -974,7 +985,7 @@ useEffect(() => {
             errorMessage={pfiwValidationErrors.first_date}
           >
             <label className="text-gray-600 mb-2 block">PFIW Monthly Due Date<span className="text-red-500">*</span></label>
-            <DatePicker
+            {/* <DatePicker
               className="w-full"
               placeholder="Select PFIW first due date"
               value={pfiWPaymentDueDates.first_date ? new Date(pfiWPaymentDueDates.first_date) : null}
@@ -993,7 +1004,17 @@ useEffect(() => {
               }}
               monthLabelFormat=" "
               yearLabelFormat=" "
-              hideWeekdays={false}
+              hideWeekdays={true}
+            /> */}
+            <SimpleDatePicker
+              className="w-full"
+              placeholder="Select PFIW first due date"
+              value={pfiWPaymentDueDates.first_date ? new Date(pfiWPaymentDueDates.first_date) : null}
+              onChange={(date) => setPFIWPaymentDueDates(prev => ({
+                ...prev,
+                first_date: date ? date.toISOString() : null
+              }))}
+              disabled={!isEditMode}
             />
           </FormItem>
         </div>

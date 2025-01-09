@@ -18,6 +18,7 @@ import { updateLWFConfig } from '@/store/slices/lwfConfig/lwfConfigSlice';
 import { fetchDetail } from '@/store/slices/common/commonSlice';
 import * as yup from 'yup';
 import dayjs from 'dayjs';
+import SimpleDatePicker from '@/components/ui/OutlinedInput/SimpleDatePicker';
 
 // First, add these validation schemas
 const createPTValidationSchema = (frequency) => {
@@ -677,22 +678,11 @@ useEffect(() => {
             <div className="flex gap-4">
               <div className="w-1/2">
                 <label className="text-gray-600 mb-2 block">First Due Date <span className="text-red-500">*</span></label>
-                <DatePicker
+                <SimpleDatePicker
                   className="w-full"
                   placeholder="Select first due date"
                   value={ptEcDates.firstDate}
-                  onChange={(date) => handleDateChangePtEc('firstDate', date)}
-                  inputFormat="DD"
-                  defaultView="date"
-                  enableHeaderLabel={false}
-                  dateViewCount={1}
-                  labelFormat={{
-                      month: ' ',  // Using space instead of empty string
-                      year: ' '    // Using space instead of empty string
-                  }}
-                  monthLabelFormat=" "
-                  yearLabelFormat=" "
-                  hideWeekdays={false}             
+                  onChange={(date) => handleDateChangePtEc('firstDate', date)}        
                 />
                 {ptEcValidationErrors.firstDate && (
     <div className="text-red-500 text-sm mt-1">
@@ -704,24 +694,13 @@ useEffect(() => {
               <label className="text-gray-600 mb-2 block">
           Second Due Date {ptEcFrequency === 'quarterly' && <span className="text-red-500">*</span>}
         </label>
-                <DatePicker
+                <SimpleDatePicker
                   className="w-full"
                   placeholder="Select second due date"
                   value={ptEcDates.secondDate}
                   onChange={(date) => handleDateChangePtEc('secondDate', date)}
 
-                  disabled={isDueDateDisabled(ptEcFrequency, 1)}
-                  inputFormat="DD"
-                  defaultView="date"
-                  enableHeaderLabel={false}
-                  dateViewCount={1}
-                  labelFormat={{
-                      month: ' ',  // Using space instead of empty string
-                      year: ' '    // Using space instead of empty string
-                  }}
-                  monthLabelFormat=" "
-                  yearLabelFormat=" "
-                  hideWeekdays={false}             
+                  disabled={isDueDateDisabled(ptEcFrequency, 1)}           
                 />
                 {ptEcValidationErrors.secondDate && (
     <div className="text-red-500 text-sm mt-1">
@@ -735,23 +714,12 @@ useEffect(() => {
               <label className="text-gray-600 mb-2 block">
           Third Due Date {ptEcFrequency === 'quarterly' && <span className="text-red-500">*</span>}
         </label>
-                <DatePicker
+                <SimpleDatePicker
                   className="w-full"
                   placeholder="Select third due date"
                   value={ptEcDates.thirdDate}
                   onChange={(date) => handleDateChangePtEc('thirdDate', date)}
-                  disabled={isDueDateDisabled(ptEcFrequency, 2)}
-                  inputFormat="DD"
-                  defaultView="date"
-                  enableHeaderLabel={false}
-                  dateViewCount={1}
-                  labelFormat={{
-                      month: ' ',  // Using space instead of empty string
-                      year: ' '    // Using space instead of empty string
-                  }}
-                  monthLabelFormat=" "
-                  yearLabelFormat=" "
-                  hideWeekdays={false}             
+                  disabled={isDueDateDisabled(ptEcFrequency, 2)}        
                 />
                 {ptEcValidationErrors.thirdDate && (
     <div className="text-red-500 text-sm mt-1">
@@ -764,23 +732,12 @@ useEffect(() => {
           Fourth Due Date {(ptEcFrequency === 'quarterly' || ptEcFrequency === 'half_yearly') && 
             <span className="text-red-500">*</span>}
         </label>
-                <DatePicker
+                <SimpleDatePicker
                   className="w-full"
                   placeholder="Select fourth due date"
                   value={ptEcDates.lastDate}
                   onChange={(date) => handleDateChangePtEc('lastDate', date)}
-                  disabled={isDueDateDisabled(ptEcFrequency, 3)}
-                  inputFormat="DD"
-                  defaultView="date"
-                  enableHeaderLabel={false}
-                  dateViewCount={1}
-                  labelFormat={{
-                      month: ' ',  // Using space instead of empty string
-                      year: ' '    // Using space instead of empty string
-                  }}
-                  monthLabelFormat=" "
-                  yearLabelFormat=" "
-                  hideWeekdays={false}             
+                  disabled={isDueDateDisabled(ptEcFrequency, 3)}    
                 />
                 {ptEcValidationErrors.lastDate && (
     <div className="text-red-500 text-sm mt-1">
@@ -796,22 +753,11 @@ useEffect(() => {
             <div className="flex gap-4">
               <div className="w-1/2">
                 <label className="text-gray-600 mb-2 block">First Due Date <span className="text-red-500">*</span></label>
-                <DatePicker
+                <SimpleDatePicker
                   className="w-full"
                   placeholder="Select first due date"
                   value={ptRcDates.firstDate}
-                  onChange={(date) => handleDateChangePtRc('firstDate', date)}
-                  inputFormat="DD"
-                  defaultView="date"
-                  enableHeaderLabel={false}
-                  dateViewCount={1}
-                  labelFormat={{
-                      month: ' ',  // Using space instead of empty string
-                      year: ' '    // Using space instead of empty string
-                  }}
-                  monthLabelFormat=" "
-                  yearLabelFormat=" "
-                  hideWeekdays={false}             
+                  onChange={(date) => handleDateChangePtRc('firstDate', date)}    
                 />
                  {ptRcValidationErrors.firstDate && (
     <div className="text-red-500 text-sm mt-1">
@@ -823,23 +769,12 @@ useEffect(() => {
               <label className="text-gray-600 mb-2 block">
           Second Due Date {ptRcFrequency === 'quarterly' && <span className="text-red-500">*</span>}
         </label>
-                <DatePicker
+                <SimpleDatePicker
                   className="w-full"
                   placeholder="Select second due date"
                   value={ptRcDates.secondDate}
                   onChange={(date) => handleDateChangePtRc('secondDate', date)}
-                  disabled={isDueDateDisabled(ptRcFrequency, 1)}
-                  inputFormat="DD"
-                  defaultView="date"
-                  enableHeaderLabel={false}
-                  dateViewCount={1}
-                  labelFormat={{
-                      month: ' ',  // Using space instead of empty string
-                      year: ' '    // Using space instead of empty string
-                  }}
-                  monthLabelFormat=" "
-                  yearLabelFormat=" "
-                  hideWeekdays={false}             
+                  disabled={isDueDateDisabled(ptRcFrequency, 1)}    
                 />
                  {ptRcValidationErrors.secondDate && (
     <div className="text-red-500 text-sm mt-1">
@@ -853,23 +788,12 @@ useEffect(() => {
               <label className="text-gray-600 mb-2 block">
           Third Due Date {ptRcFrequency === 'quarterly' && <span className="text-red-500">*</span>}
         </label>
-                <DatePicker
+                <SimpleDatePicker
                   className="w-full"
                   placeholder="Select third due date"
                   value={ptRcDates.thirdDate}
                   onChange={(date) => handleDateChangePtRc('thirdDate', date)}
-                  disabled={isDueDateDisabled(ptRcFrequency, 2)}
-                  inputFormat="DD"
-                  defaultView="date"
-                  enableHeaderLabel={false}
-                  dateViewCount={1}
-                  labelFormat={{
-                      month: ' ',  // Using space instead of empty string
-                      year: ' '    // Using space instead of empty string
-                  }}
-                  monthLabelFormat=" "
-                  yearLabelFormat=" "
-                  hideWeekdays={false}             
+                  disabled={isDueDateDisabled(ptRcFrequency, 2)}     
                 />
                  {ptRcValidationErrors.thirdDate && (
     <div className="text-red-500 text-sm mt-1">
@@ -882,23 +806,12 @@ useEffect(() => {
           Fourth Due Date {(ptRcFrequency === 'quarterly' || ptRcFrequency === 'half_yearly') && 
             <span className="text-red-500">*</span>}
         </label>
-                <DatePicker
+                <SimpleDatePicker
                   className="w-full"
                   placeholder="Select fourth due date"
                   value={ptRcDates.lastDate}
                   onChange={(date) => handleDateChangePtRc('lastDate', date)}
-                  disabled={isDueDateDisabled(ptRcFrequency, 3)}
-                  inputFormat="DD"
-                  defaultView="date"
-                  enableHeaderLabel={false}
-                  dateViewCount={1}
-                  labelFormat={{
-                      month: ' ',  // Using space instead of empty string
-                      year: ' '    // Using space instead of empty string
-                  }}
-                  monthLabelFormat=" "
-                  yearLabelFormat=" "
-                  hideWeekdays={false}             
+                  disabled={isDueDateDisabled(ptRcFrequency, 3)}       
                 />
                  {ptRcValidationErrors.lastDate && (
     <div className="text-red-500 text-sm mt-1">

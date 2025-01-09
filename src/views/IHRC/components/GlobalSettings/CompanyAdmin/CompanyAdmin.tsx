@@ -383,7 +383,7 @@ const CompanyAdmin = () => {
           {/* Name and Email row */}
           <div className="flex gap-4">
             <div className="flex-1">
-              <label className="text-gray-600 mb-2 block">Name <span className="text-red-500">*</span></label>
+              <label className="text-gray-600 mb-2 block">Name </label>
               <OutlinedInput
                 label="Full Name"
                 value={formData.name}
