@@ -14,7 +14,63 @@ import { endpoints } from '@/api/endpoint';
 import { showErrorNotification } from '@/components/ui/ErrorMessage';
 import OutlinedSelect from '@/components/ui/Outlined';
 import { fetchDetail } from '@/store/slices/common/commonSlice';
+import * as yup from 'yup';
+import dayjs from 'dayjs';
 
+const createLWFValidationSchema = (frequency) => {
+    const baseSchema = {
+        firstDate: yup
+            .date()
+            .required('First due date is required')
+            .typeError('First due date must be a valid date'),
+    }
+
+    if (frequency === 'quarterly') {
+        return yup.object().shape({
+            ...baseSchema,
+            secondDate: yup
+                .date()
+                .required('Second due date is required')
+                .min(
+                    yup.ref('firstDate'),
+                    'Second due date must be after first due date',
+                )
+                .typeError('Second due date must be a valid date'),
+            thirdDate: yup
+                .date()
+                .required('Third due date is required')
+                .min(
+                    yup.ref('secondDate'),
+                    'Third due date must be after second due date',
+                )
+                .typeError('Third due date must be a valid date'),
+            lastDate: yup
+                .date()
+                .required('Last due date is required')
+                .min(
+                    yup.ref('thirdDate'),
+                    'Last due date must be after third due date',
+                )
+                .typeError('Last due date must be a valid date'),
+        })
+    }
+
+    if (frequency === 'half_yearly') {
+        return yup.object().shape({
+            ...baseSchema,
+            lastDate: yup
+                .date()
+                .required('Last due date is required')
+                .min(
+                    yup.ref('firstDate'),
+                    'Last due date must be after first due date',
+                )
+                .typeError('Last due date must be a valid date'),
+        })
+    }
+
+    return yup.object().shape(baseSchema)
+}
 
 const frequencyOptions = [
   { value: 'monthly', label: 'Monthly' },
@@ -32,6 +88,12 @@ const LWFTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any
   const [selectedState, setSelectedState] = useState(null);
   const [frequency, setFrequency] = useState('');
   const [isActive, setIsActive] = useState(false);
+  const [validationErrors, setValidationErrors] = useState({
+    firstDate: undefined,
+    secondDate: undefined,
+    thirdDate: undefined,
+    lastDate: undefined
+});
   const [selectedStateId, setSelectedStateId] = useState(null);
   const [paymentDueDates, setPaymentDueDates] = useState({
     firstDate: null,
@@ -47,9 +109,28 @@ const LWFTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any
     sort: { order: '', key: '' },
   });
 
+  function formatDayWithSuffix(date) {
+    if (!date) return '';
+    const day = dayjs(date).date(); // Extract the day as a number
+    const suffix = getDaySuffix(day);
+    return `${day}${suffix}`;
+  }
+  
+  // Function to determine the correct suffix
+  function getDaySuffix(day) {
+    if (day % 10 === 1 && day !== 11) return 'st';
+    if (day % 10 === 2 && day !== 12) return 'nd';
+    if (day % 10 === 3 && day !== 13) return 'rd';
+    return 'th';
+  }
+
   useEffect(() => {
     loadStates();
   }, []);
+
+  useEffect(() => {
+    validateDates();
+}, [paymentDueDates]);
 
   const loadStates = async () => {
     try {
@@ -64,6 +145,7 @@ const LWFTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any
       console.error('Failed to load states:', error);
     }
   };
+
 
   const handleEdit = async (config) => {
     try {
@@ -102,33 +184,97 @@ const LWFTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any
     }
   };
 
-  const handleConfirm = async () => {
-    if (!selectedState || !frequency || !paymentDueDates.firstDate) {
+  const validateDates = async () => {
+    try {
+        const validationSchema = createLWFValidationSchema(frequency);
+        await validationSchema.validate(paymentDueDates, { abortEarly: false });
+        setValidationErrors({});
+        return true;
+    } catch (error) {
+        if (error instanceof yup.ValidationError) {
+            const newErrors = {};
+            error.inner.forEach((err) => {
+                newErrors[err.path] = err.message;
+            });
+            setValidationErrors(newErrors);
+            return false;
+        }
+        return false;
+    }
+};
+
+const handleDateChange = (dateType, date) => {
+  setPaymentDueDates(prev => {
+      const newDates = { ...prev }
+      
+      // Set the changed date
+      newDates[dateType] = date
+
+      // Check and reset disabled dates to null based on frequency
+      if (frequency === 'monthly' || frequency === 'yearly') {
+          newDates.secondDate = null
+          newDates.thirdDate = null
+          newDates.lastDate = null
+      } else if (frequency === 'half_yearly') {
+          newDates.secondDate = null
+          newDates.thirdDate = null
+      }
+
+      return newDates
+  })
+}
+
+// Update useEffect to reset dates when frequency changes
+useEffect(() => {
+  if (frequency === 'monthly' || frequency === 'yearly') {
+      setPaymentDueDates(prev => ({
+          ...prev,
+          secondDate: null,
+          thirdDate: null,
+          lastDate: null
+      }))
+  } else if (frequency === 'half_yearly') {
+      setPaymentDueDates(prev => ({
+          ...prev,
+          secondDate: null,
+          thirdDate: null
+      }))
+  }
+}, [frequency])
+
+const handleConfirm = async () => {
+  if (!selectedState || !frequency) {
       showErrorNotification('Please fill all required fields');
       return;
-    }
+  }
 
-    const lwfConfigData = {
+  const isValid = await validateDates();
+  if (!isValid) {
+      return;
+  }
+
+  const lwfConfigData = {
       frequency,
       payment_due_date: {
-        first_date: paymentDueDates.firstDate,
-        second_date: paymentDueDates.secondDate,
-        third_date: paymentDueDates.thirdDate,
-        last_date: paymentDueDates.lastDate
+          first_date: paymentDueDates.firstDate,
+          second_date: paymentDueDates.secondDate,
+          third_date: paymentDueDates.thirdDate,
+          last_date: paymentDueDates.lastDate
       },
       payment_mode: 'online',
       active: isActive,
       state_id: selectedState.value
-    };
+  };
 
-    try {
+  try {
       await dispatch(updateLWFConfig({ id: selectedState.value, data: lwfConfigData }));
       setIsDialogOpen(false);
       fetchLWFSetupData(tableData.pageIndex, tableData.pageSize);
-    } catch (error) {
+      setValidationErrors({});
+  } catch (error) {
       showErrorNotification(error.message);
-    }
-  };
+  }
+};
   
   useEffect(() => {
     fetchLWFSetupData(tableData.pageIndex, tableData.pageSize);
@@ -190,6 +336,7 @@ const LWFTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any
       {
         header: 'State Name',
         accessorKey: 'name',
+        enableSorting:false,
         cell: ({row}) => 
           <div className="w-72 text-start">
         {row.original.name}
@@ -198,6 +345,7 @@ const LWFTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any
       {
         header: 'LWF Frequency',
         accessorKey: 'lwf_frequency',
+        enableSorting:false,
         cell: ({ row }) => 
           <div className="w-40 text-start">
             {getFrequencyLabel(row.original.lwf_frequency)}
@@ -206,38 +354,43 @@ const LWFTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any
       {
         header: 'First Due Date',
         accessorKey: 'first_date',
+        enableSorting:false,
         cell: ({ row }) => 
           <div className="w-40 text-start">
-        {formatDate(row.original.lwf_payment_due_date?.first_date)}
+        {formatDayWithSuffix(row.original.lwf_payment_due_date?.first_date)}
       </div>
       },
       {
         header: 'Second Due Date',
         accessorKey: 'second_date',
+        enableSorting:false,
         cell: ({ row }) => 
           <div className="w-40 text-start">
-        {formatDate(row.original.lwf_payment_due_date?.second_date)}
+        {formatDayWithSuffix(row.original.lwf_payment_due_date?.second_date)}
       </div>
       },
       {
         header: 'Third Due Date',
         accessorKey: 'third_date',
+        enableSorting:false,
         cell: ({ row }) => 
           <div className="w-40 text-start">
-        {formatDate(row.original.lwf_payment_due_date?.third_date)}
+        {formatDayWithSuffix(row.original.lwf_payment_due_date?.third_date)}
       </div>
       },
       {
         header: 'Last Due Date',
         accessorKey: 'last_date',
+        enableSorting:false,
         cell: ({ row }) => 
           <div className="w-40 text-start">
-        {formatDate(row.original.lwf_payment_due_date?.last_date)}
+        {formatDayWithSuffix(row.original.lwf_payment_due_date?.last_date)}
       </div>
       },
       {
         header: 'Status',
         accessorKey: 'lwf_active',
+        enableSorting:false,
         cell: ({ row }) => (
           <div className="w-24 text-start">
           {/* <div 
@@ -256,6 +409,7 @@ const LWFTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any
       {
         header: 'Actions',
         id: 'actions',
+        enableSorting:false,
         cell: ({row}) => (
           <div className="flex space-x-2">
             <Tooltip title="Edit" placement="top">
@@ -372,41 +526,105 @@ const LWFTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any
                 className="w-full"
                 placeholder="Select first due date"
                 value={paymentDueDates.firstDate}
-                onChange={(date) => setPaymentDueDates(prev => ({ ...prev, firstDate: date }))}
+                onChange={(date) => handleDateChange('firstDate', date)}
+              inputFormat="DD"
+              defaultView="date"
+              enableHeaderLabel={false}
+              dateViewCount={1}
+              labelFormat={{
+                  month: ' ',  // Using space instead of empty string
+                  year: ' '    // Using space instead of empty string
+              }}
+              monthLabelFormat=" "
+              yearLabelFormat=" "
+              hideWeekdays={false}             
               />
+              {validationErrors.firstDate && (
+    <div className="text-red-500 text-sm mt-1">
+        {validationErrors.firstDate}
+    </div>
+)}
             </div>
             <div className="w-1/2">
-              <label className="text-gray-600 mb-2 block">Second Due Date</label>
+              <label className="text-gray-600 mb-2 block">Second Due Date  {frequency === 'quarterly' && <span className="text-red-500">*</span>}</label>
               <DatePicker
                 className="w-full"
                 placeholder="Select second due date"
                 value={paymentDueDates.secondDate}
-                onChange={(date) => setPaymentDueDates(prev => ({ ...prev, secondDate: date }))}
+                onChange={(date) => handleDateChange('secondDate', date)}
                 disabled={isDueDateDisabled(1)}
+                inputFormat="DD"
+                defaultView="date"
+                enableHeaderLabel={false}
+                dateViewCount={1}
+                labelFormat={{
+                    month: ' ',  // Using space instead of empty string
+                    year: ' '    // Using space instead of empty string
+                }}
+                monthLabelFormat=" "
+                yearLabelFormat=" "
+                hideWeekdays={false}             
               />
+              {validationErrors.secondDate && (
+    <div className="text-red-500 text-sm mt-1">
+        {validationErrors.secondDate}
+    </div>
+)}
             </div>
           </div>
 
           <div className="flex gap-4">
             <div className="w-1/2">
-              <label className="text-gray-600 mb-2 block">Third Due Date</label>
+              <label className="text-gray-600 mb-2 block">Third Due Date  {frequency === 'quarterly' && <span className="text-red-500">*</span>}</label>
               <DatePicker
                 className="w-full"
                 placeholder="Select third due date"
                 value={paymentDueDates.thirdDate}
-                onChange={(date) => setPaymentDueDates(prev => ({ ...prev, thirdDate: date }))}
+                onChange={(date) => handleDateChange('thirdDate', date)}
                 disabled={isDueDateDisabled(2)}
+                inputFormat="DD"
+                defaultView="date"
+                enableHeaderLabel={false}
+                dateViewCount={1}
+                labelFormat={{
+                    month: ' ',  // Using space instead of empty string
+                    year: ' '    // Using space instead of empty string
+                }}
+                monthLabelFormat=" "
+                yearLabelFormat=" "
+                hideWeekdays={false}             
               />
+              {validationErrors.thirdDate && (
+    <div className="text-red-500 text-sm mt-1">
+        {validationErrors.thirdDate}
+    </div>
+)}
             </div>
             <div className="w-1/2">
-              <label className="text-gray-600 mb-2 block">Last Due Date</label>
+              <label className="text-gray-600 mb-2 block">Last Due Date {(frequency === 'quarterly' || frequency === 'half_yearly') && <span className="text-red-500">*</span>}</label>
               <DatePicker
                 className="w-full"
                 placeholder="Select last due date"
                 value={paymentDueDates.lastDate}
-                onChange={(date) => setPaymentDueDates(prev => ({ ...prev, lastDate: date }))}
+                onChange={(date) => handleDateChange('lastDate', date)}
                 disabled={isDueDateDisabled(3)}
+                inputFormat="DD"
+                defaultView="date"
+                enableHeaderLabel={false}
+                dateViewCount={1}
+                labelFormat={{
+                    month: ' ',  // Using space instead of empty string
+                    year: ' '    // Using space instead of empty string
+                }}
+                monthLabelFormat=" "
+                yearLabelFormat=" "
+                hideWeekdays={false}             
               />
+              {validationErrors.lastDate && (
+    <div className="text-red-500 text-sm mt-1">
+        {validationErrors.lastDate}
+    </div>
+)}
             </div>
           </div>
 

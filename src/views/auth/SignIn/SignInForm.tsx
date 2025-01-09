@@ -114,6 +114,7 @@ const SignInForm = (props: SignInFormProps) => {
 
             setLoading(false)
         } catch (error) {
+            // console.log(error)
             const err = error as AxiosError
             if (err.response?.status == 401) {
                 toast.push(
@@ -127,7 +128,7 @@ const SignInForm = (props: SignInFormProps) => {
             } else {
                 toast.push(
                     <Notification title="error" type="danger">
-                        Something went wrong! Please Try again.{' '}
+                       Invalid email or password{' '}
                     </Notification>,
                     {
                         placement: 'top-end',

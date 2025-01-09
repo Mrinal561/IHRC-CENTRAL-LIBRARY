@@ -73,6 +73,42 @@ const PTDialog = ({ isOpen, onClose, states, selectedData, onConfirm }) => {
 
     onConfirm(formData);
   };
+  const getRequiredDateFields = (frequency) => {
+    switch (frequency) {
+      case 'monthly':
+      case 'yearly':
+        return {
+          first: true,
+          second: false,
+          third: false,
+          fourth: false
+        };
+      case 'half_yearly':
+        return {
+          first: true,
+          second: false,
+          third: false,
+          fourth: true
+        };
+      case 'quarterly':
+        return {
+          first: true,
+          second: true,
+          third: true,
+          fourth: true
+        };
+      default:
+        return {
+          first: false,
+          second: false,
+          third: false,
+          fourth: false
+        };
+    }
+  };
+
+  const ptEcRequiredFields = getRequiredDateFields(ptData.ptEcFrequency);
+  const ptRcRequiredFields = getRequiredDateFields(ptData.ptRcFrequency);
 
   return (
     <Dialog isOpen={isOpen} onClose={onClose} width={1200} height={600}>
@@ -122,7 +158,7 @@ const PTDialog = ({ isOpen, onClose, states, selectedData, onConfirm }) => {
                 />
               </div>
               <div>
-                <label className="text-gray-600 mb-2 block">Second Due Date</label>
+                <label className="text-gray-600 mb-2 block">Second Due Date<span className="text-red-500">*</span></label>
                 <DatePicker
                   className="w-full"
                   value={ptData.ptEcSecondDueDate}
@@ -131,7 +167,7 @@ const PTDialog = ({ isOpen, onClose, states, selectedData, onConfirm }) => {
                 />
               </div>
               <div>
-                <label className="text-gray-600 mb-2 block">Third Due Date</label>
+                <label className="text-gray-600 mb-2 block">Third Due Date<span className="text-red-500">*</span></label>
                 <DatePicker
                   className="w-full"
                   value={ptData.ptEcThirdDueDate}
@@ -140,7 +176,7 @@ const PTDialog = ({ isOpen, onClose, states, selectedData, onConfirm }) => {
                 />
               </div>
               <div>
-                <label className="text-gray-600 mb-2 block">Fourth Due Date</label>
+                <label className="text-gray-600 mb-2 block">Fourth Due Date<span className="text-red-500">*</span></label>
                 <DatePicker
                   className="w-full"
                   value={ptData.ptEcFourthDueDate}

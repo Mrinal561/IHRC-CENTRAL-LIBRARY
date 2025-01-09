@@ -16,6 +16,65 @@ import { endpoints } from '@/api/endpoint';
 import OutlinedSelect from '@/components/ui/Outlined';
 import { updateLWFConfig } from '@/store/slices/lwfConfig/lwfConfigSlice';
 import { fetchDetail } from '@/store/slices/common/commonSlice';
+import * as yup from 'yup';
+import dayjs from 'dayjs';
+
+// First, add these validation schemas
+const createPTValidationSchema = (frequency) => {
+    const baseSchema = {
+        firstDate: yup
+            .date()
+            .required('First due date is required')
+            .typeError('First due date must be a valid date'),
+    }
+
+    if (frequency === 'quarterly') {
+        return yup.object().shape({
+            ...baseSchema,
+            secondDate: yup
+                .date()
+                .required('Second due date is required')
+                .min(
+                    yup.ref('firstDate'),
+                    'Second due date must be after first due date',
+                )
+                .typeError('Second due date must be a valid date'),
+            thirdDate: yup
+                .date()
+                .required('Third due date is required')
+                .min(
+                    yup.ref('secondDate'),
+                    'Third due date must be after second due date',
+                )
+                .typeError('Third due date must be a valid date'),
+            lastDate: yup
+                .date()
+                .required('Last due date is required')
+                .min(
+                    yup.ref('thirdDate'),
+                    'Last due date must be after third due date',
+                )
+                .typeError('Last due date must be a valid date'),
+        })
+    }
+
+    if (frequency === 'half_yearly') {
+        return yup.object().shape({
+            ...baseSchema,
+            lastDate: yup
+                .date()
+                .required('Last due date is required')
+                .min(
+                    yup.ref('firstDate'),
+                    'Last due date must be after first due date',
+                )
+                .typeError('Last due date must be a valid date'),
+        })
+    }
+
+    return yup.object().shape(baseSchema)
+}
+
 
 const frequencyOptions = [
   { value: 'monthly', label: 'Monthly' },
@@ -26,6 +85,19 @@ const frequencyOptions = [
 
 const PTTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any) => {
   const dispatch = useDispatch<AppDispatch>();
+  const [ptEcValidationErrors, setPtEcValidationErrors] = useState({
+    firstDate: undefined,
+    secondDate: undefined,
+    thirdDate: undefined,
+    lastDate: undefined
+});
+
+const [ptRcValidationErrors, setPtRcValidationErrors] = useState({
+    firstDate: undefined,
+    secondDate: undefined,
+    thirdDate: undefined,
+    lastDate: undefined
+});
   const [ptTableData, setPTTableData] = useState([]);
   const [isLoading, setIsLoading] = useState(false)
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -47,6 +119,21 @@ const PTTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any)
     thirdDate: null,
     lastDate: null
   });
+
+  function formatDayWithSuffix(date) {
+    if (!date) return '';
+    const day = dayjs(date).date(); // Extract the day as a number
+    const suffix = getDaySuffix(day);
+    return `${day}${suffix}`;
+  }
+  
+  // Function to determine the correct suffix
+  function getDaySuffix(day) {
+    if (day % 10 === 1 && day !== 11) return 'st';
+    if (day % 10 === 2 && day !== 12) return 'nd';
+    if (day % 10 === 3 && day !== 13) return 'rd';
+    return 'th';
+  }
 
   useEffect(() => {
     loadStates();
@@ -112,11 +199,133 @@ const PTTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any)
     }
   };
 
+  const validatePTECDates = async () => {
+    try {
+        const validationSchema = createPTValidationSchema(ptEcFrequency);
+        await validationSchema.validate(ptEcDates, { abortEarly: false });
+        setPtEcValidationErrors({});
+        return true;
+    } catch (error) {
+        if (error instanceof yup.ValidationError) {
+            const newErrors = {};
+            error.inner.forEach((err) => {
+                newErrors[err.path] = err.message;
+            });
+            setPtEcValidationErrors(newErrors);
+            return false;
+        }
+        return false;
+    }
+};
+
+const validatePTRCDates = async () => {
+    try {
+        const validationSchema = createPTValidationSchema(ptRcFrequency);
+        await validationSchema.validate(ptRcDates, { abortEarly: false });
+        setPtRcValidationErrors({});
+        return true;
+    } catch (error) {
+        if (error instanceof yup.ValidationError) {
+            const newErrors = {};
+            error.inner.forEach((err) => {
+                newErrors[err.path] = err.message;
+            });
+            setPtRcValidationErrors(newErrors);
+            return false;
+        }
+        return false;
+    }
+};
+
+useEffect(() => {
+  validatePTECDates();
+}, [ptEcDates, ptEcFrequency]);
+
+useEffect(() => {
+  validatePTRCDates();
+}, [ptRcDates, ptRcFrequency]);
+
+// Generic function to handle date changes
+const handleDateChangeForFrequency = (dateType, date, frequency, setDates) => {
+  setDates(prev => {
+      const newDates = { ...prev };
+
+      // Set the changed date
+      newDates[dateType] = date;
+
+      // Reset disabled dates to null based on frequency
+      if (frequency === 'monthly' || frequency === 'yearly') {
+          newDates.secondDate = null;
+          newDates.thirdDate = null;
+          newDates.lastDate = null;
+      } else if (frequency === 'half_yearly') {
+          newDates.secondDate = null;
+          newDates.thirdDate = null;
+      }
+
+      return newDates;
+  });
+};
+
+// For ptEcFrequency
+const handleDateChangePtEc = (dateType, date) => {
+  handleDateChangeForFrequency(dateType, date, ptEcFrequency, setPtEcDates);
+};
+
+// For ptRcFrequency
+const handleDateChangePtRc = (dateType, date) => {
+  handleDateChangeForFrequency(dateType, date, ptRcFrequency, setPtRcDates);
+};
+
+// Update useEffect to reset dates when frequency changes
+useEffect(() => {
+  if (ptEcFrequency === 'monthly' || ptEcFrequency === 'yearly') {
+      setPtEcDates(prev => ({
+          ...prev,
+          secondDate: null,
+          thirdDate: null,
+          lastDate: null,
+      }));
+  } else if (ptEcFrequency === 'half_yearly') {
+      setPtEcDates(prev => ({
+          ...prev,
+          secondDate: null,
+          thirdDate: null,
+      }));
+  }
+}, [ptEcFrequency]);
+
+useEffect(() => {
+  if (ptRcFrequency === 'monthly' || ptRcFrequency === 'yearly') {
+      setPtRcDates(prev => ({
+          ...prev,
+          secondDate: null,
+          thirdDate: null,
+          lastDate: null,
+      }));
+  } else if (ptRcFrequency === 'half_yearly') {
+      setPtRcDates(prev => ({
+          ...prev,
+          secondDate: null,
+          thirdDate: null,
+      }));
+  }
+}, [ptRcFrequency]);
+
+
+
   const handleConfirm = async () => {
-    if (!selectedState || !ptEcFrequency || !ptRcFrequency || !ptEcDates.firstDate || !ptRcDates.firstDate) {
+    if (!selectedState || !ptEcFrequency || !ptRcFrequency) {
       showErrorNotification('Please fill all required fields');
       return;
-    }
+  }
+
+  const isEcValid = await validatePTECDates();
+  const isRcValid = await validatePTRCDates();
+
+  if (!isEcValid || !isRcValid) {
+      return;
+  }
 
     const ptConfigData = {
       ptec_frequency: ptEcFrequency,
@@ -170,6 +379,7 @@ const PTTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any)
       {
         header: 'State',
         accessorKey: 'name',
+        enableSorting:false,
         cell: ({row}) => 
           <div className="w-72 text-start">
         {row.original.name}
@@ -178,6 +388,7 @@ const PTTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any)
       {
         header: 'PT RC Frequency',
         accessorKey: 'ptrc_frequency',
+        enableSorting:false,
         cell: ({ row }) => 
           <div className="w-44 text-start">
         {getFrequencyLabel(row.original.ptrc_frequency)}
@@ -186,38 +397,43 @@ const PTTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any)
       {
         header: 'PTRC First Due Date',
         accessorKey: 'first_date',
+        enableSorting:false,
         cell: ({ row }) => 
           <div className="w-44 text-start">
-        {formatDate(row.original.ptrc_payment_due_date.first_date)}
+        {formatDayWithSuffix(row.original.ptrc_payment_due_date.first_date)}
   </div>
       },
       {
         header: 'PTRC Second Due Date',
         accessorKey: 'second_date',
+        enableSorting:false,
         cell: ({ row }) => 
           <div className="w-44 text-start">
-        {formatDate(row.original.ptrc_payment_due_date.second_date)}
+        {formatDayWithSuffix(row.original.ptrc_payment_due_date.second_date)}
   </div>
       },
       {
         header: 'PTRC Third Due Date',
         accessorKey: 'third_date',
+        enableSorting:false,
         cell: ({ row }) => 
           <div className="w-44 text-start">
-        {formatDate(row.original.ptrc_payment_due_date.third_date)}
+        {formatDayWithSuffix(row.original.ptrc_payment_due_date.third_date)}
   </div>
       },
       {
         header: 'PTRC Last Due Date',
         accessorKey: 'last_date',
+        enableSorting:false,
         cell: ({ row }) => 
           <div className="w-44 text-start">
-        {formatDate(row.original.ptrc_payment_due_date.last_date)}
+        {formatDayWithSuffix(row.original.ptrc_payment_due_date.last_date)}
   </div>
       },
       {
         header: 'PT EC Frequency',
         accessorKey: 'ptec_frequency',
+        enableSorting:false,
         cell: ({ row }) => 
           <div className="w-44 text-start">
         {getFrequencyLabel(row.original.ptec_frequency)}
@@ -225,38 +441,43 @@ const PTTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any)
       {
         header: 'PTEC First Due Date',
         accessorKey: 'first_date',
+        enableSorting:false,
         cell: ({ row }) => 
           <div className="w-44 text-start">
-            {formatDate(row.original.ptec_payment_due_date.first_date)}
+            {formatDayWithSuffix(row.original.ptec_payment_due_date.first_date)}
       </div>
       },
       {
         header: 'PTEC Second Due Date',
         accessorKey: 'second_date',
+        enableSorting:false,
         cell: ({ row }) => 
           <div className="w-44 text-start">
-            {formatDate(row.original.ptec_payment_due_date.second_date)}
+            {formatDayWithSuffix(row.original.ptec_payment_due_date.second_date)}
       </div>
       },
       {
         header: 'PTEC Third Due Date',
         accessorKey: 'third_date',
+        enableSorting:false,
         cell: ({ row }) => 
           <div className="w-44 text-start">
-        {formatDate(row.original.ptec_payment_due_date?.third)}
+        {formatDayWithSuffix(row.original.ptec_payment_due_date?.third_date)}
       </div>
       },
       {
         header: 'PTEC Fourth Due Date',
         accessorKey: 'last_date',
+        enableSorting:false,
         cell: ({ row }) => 
           <div className="w-44 text-start">
-        {formatDate(row.original.ptec_payment_due_date?.last_date)}
+        {formatDayWithSuffix(row.original.ptec_payment_due_date?.last_date)}
       </div>
       },
       {
         header: 'Status',
         accessorKey: 'status',
+        enableSorting:false,
         cell: ({ row }) => {
           const isActive = row.original.ptrc_active && row.original.ptec_active;
           return (
@@ -410,165 +631,6 @@ const PTTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any)
         selectable={true}
       />
     )}
-   {/* <Dialog
-        isOpen={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
-        width={1200}
-      >
-        <h5 className="mb-6">Edit PT Setup</h5>
-        <div className="flex flex-col gap-6">
-          <div className="flex gap-4">
-            <div className="w-full">
-              <label className="text-gray-600 mb-2 block">State</label>
-              <OutlinedSelect
-                label="Select State"
-                options={states}
-                value={selectedState}
-                onChange={setSelectedState}
-              />
-            </div>
-          </div>
-
-          <div className="flex gap-4">
-            <div className="w-1/2">
-              <label className="text-gray-600 mb-2 block">PT EC Frequency</label>
-              <OutlinedSelect
-                label="Select PT EC Frequency"
-                options={frequencyOptions}
-                value={frequencyOptions.find(option => option.value === ptEcFrequency)}
-                onChange={(selected) => setPtEcFrequency(selected?.value)}
-              />
-            </div>
-            <div className="w-1/2">
-              <label className="text-gray-600 mb-2 block">PT RC Frequency</label>
-              <OutlinedSelect
-                label="Select PT RC Frequency"
-                options={frequencyOptions}
-                value={frequencyOptions.find(option => option.value === ptRcFrequency)}
-                onChange={(selected) => setPtRcFrequency(selected?.value)}
-              />
-            </div>
-          </div>
-
-          <div className="flex gap-4">
-            <div className="w-1/2">
-              <h4 className="text-lg font-semibold mb-4">PT EC Due Dates</h4>
-              <div className="space-y-4">
-                <div>
-                  <label className="text-gray-600 mb-2 block">First Due Date <span className="text-red-500">*</span></label>
-                  <DatePicker
-                    className="w-full"
-                    placeholder="Select first due date"
-                    value={ptEcDates.firstDate}
-                    onChange={(date) => setPtEcDates(prev => ({ ...prev, firstDate: date }))}
-                  />
-                </div>
-                <div>
-                  <label className="text-gray-600 mb-2 block">Second Due Date</label>
-                  <DatePicker
-                    className="w-full"
-                    placeholder="Select second due date"
-                    value={ptEcDates.secondDate}
-                    onChange={(date) => setPtEcDates(prev => ({ ...prev, secondDate: date }))}
-                    disabled={isDueDateDisabled(ptEcFrequency, 1)}
-                  />
-                </div>
-                <div>
-                  <label className="text-gray-600 mb-2 block">Third Due Date</label>
-                  <DatePicker
-                    className="w-full"
-                    placeholder="Select third due date"
-                    value={ptEcDates.thirdDate}
-                    onChange={(date) => setPtEcDates(prev => ({ ...prev, thirdDate: date }))}
-                    disabled={isDueDateDisabled(ptEcFrequency, 2)}
-                  />
-                </div>
-                <div>
-                  <label className="text-gray-600 mb-2 block">Last Due Date</label>
-                  <DatePicker
-                    className="w-full"
-                    placeholder="Select last due date"
-                    value={ptEcDates.lastDate}
-                    onChange={(date) => setPtEcDates(prev => ({ ...prev, lastDate: date }))}
-                    disabled={isDueDateDisabled(ptEcFrequency, 3)}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="w-1/2">
-              <h4 className="text-lg font-semibold mb-4">PT RC Due Dates</h4>
-              <div className="space-y-4">
-                <div>
-                  <label className="text-gray-600 mb-2 block">First Due Date <span className="text-red-500">*</span></label>
-                  <DatePicker
-                    className="w-full"
-                    placeholder="Select first due date"
-                    value={ptRcDates.firstDate}
-                    onChange={(date) => setPtRcDates(prev => ({ ...prev, firstDate: date }))}
-                  />
-                </div>
-                <div>
-                  <label className="text-gray-600 mb-2 block">Second Due Date</label>
-                  <DatePicker
-                    className="w-full"
-                    placeholder="Select second due date"
-                    value={ptRcDates.secondDate}
-                    onChange={(date) => setPtRcDates(prev => ({ ...prev, secondDate: date }))}
-                    disabled={isDueDateDisabled(ptRcFrequency, 1)}
-                  />
-                </div>
-                <div>
-                  <label className="text-gray-600 mb-2 block">Third Due Date</label>
-                  <DatePicker
-                    className="w-full"
-                    placeholder="Select third due date"
-                    value={ptRcDates.thirdDate}
-                    onChange={(date) => setPtRcDates(prev => ({ ...prev, thirdDate: date }))}
-                    disabled={isDueDateDisabled(ptRcFrequency, 2)}
-                  />
-                </div>
-                <div>
-                  <label className="text-gray-600 mb-2 block">Last Due Date</label>
-                  <DatePicker
-                    className="w-full"
-                    placeholder="Select last due date"
-                    value={ptRcDates.lastDate}
-                    onChange={(date) => setPtRcDates(prev => ({ ...prev, lastDate: date }))}
-                    disabled={isDueDateDisabled(ptRcFrequency, 3)}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Checkbox
-              checked={isActive}
-              onChange={(checked) => setIsActive(checked)}
-            />
-            <label className="text-gray-600">
-              Is PT applicable for Selected State
-            </label>
-          </div>
-        </div>
-
-        <div className="flex justify-end gap-2 mt-6">
-          <Button
-            variant="plain"
-            onClick={() => setIsDialogOpen(false)}
-          >
-            Cancel
-          </Button>
-          <Button 
-            variant="solid" 
-            onClick={handleConfirm}
-          >
-            Update
-          </Button>
-        </div>
-      </Dialog> */}
-    
     <Dialog
       isOpen={isDialogOpen}
       onClose={() => setIsDialogOpen(false)}
@@ -619,40 +681,112 @@ const PTTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any)
                   className="w-full"
                   placeholder="Select first due date"
                   value={ptEcDates.firstDate}
-                  onChange={(date) => setPtEcDates(prev => ({ ...prev, firstDate: date }))}
+                  onChange={(date) => handleDateChangePtEc('firstDate', date)}
+                  inputFormat="DD"
+                  defaultView="date"
+                  enableHeaderLabel={false}
+                  dateViewCount={1}
+                  labelFormat={{
+                      month: ' ',  // Using space instead of empty string
+                      year: ' '    // Using space instead of empty string
+                  }}
+                  monthLabelFormat=" "
+                  yearLabelFormat=" "
+                  hideWeekdays={false}             
                 />
+                {ptEcValidationErrors.firstDate && (
+    <div className="text-red-500 text-sm mt-1">
+        {ptEcValidationErrors.firstDate}
+    </div>
+)}
               </div>
               <div className="w-1/2">
-                <label className="text-gray-600 mb-2 block">Second Due Date</label>
+              <label className="text-gray-600 mb-2 block">
+          Second Due Date {ptEcFrequency === 'quarterly' && <span className="text-red-500">*</span>}
+        </label>
                 <DatePicker
                   className="w-full"
                   placeholder="Select second due date"
                   value={ptEcDates.secondDate}
-                  onChange={(date) => setPtEcDates(prev => ({ ...prev, secondDate: date }))}
+                  onChange={(date) => handleDateChangePtEc('secondDate', date)}
+
                   disabled={isDueDateDisabled(ptEcFrequency, 1)}
+                  inputFormat="DD"
+                  defaultView="date"
+                  enableHeaderLabel={false}
+                  dateViewCount={1}
+                  labelFormat={{
+                      month: ' ',  // Using space instead of empty string
+                      year: ' '    // Using space instead of empty string
+                  }}
+                  monthLabelFormat=" "
+                  yearLabelFormat=" "
+                  hideWeekdays={false}             
                 />
+                {ptEcValidationErrors.secondDate && (
+    <div className="text-red-500 text-sm mt-1">
+        {ptEcValidationErrors.secondDate}
+    </div>
+)}
               </div>
             </div>
             <div className="flex gap-4 mt-4">
               <div className="w-1/2">
-                <label className="text-gray-600 mb-2 block">Third Due Date</label>
+              <label className="text-gray-600 mb-2 block">
+          Third Due Date {ptEcFrequency === 'quarterly' && <span className="text-red-500">*</span>}
+        </label>
                 <DatePicker
                   className="w-full"
                   placeholder="Select third due date"
                   value={ptEcDates.thirdDate}
-                  onChange={(date) => setPtEcDates(prev => ({ ...prev, thirdDate: date }))}
+                  onChange={(date) => handleDateChangePtEc('thirdDate', date)}
                   disabled={isDueDateDisabled(ptEcFrequency, 2)}
+                  inputFormat="DD"
+                  defaultView="date"
+                  enableHeaderLabel={false}
+                  dateViewCount={1}
+                  labelFormat={{
+                      month: ' ',  // Using space instead of empty string
+                      year: ' '    // Using space instead of empty string
+                  }}
+                  monthLabelFormat=" "
+                  yearLabelFormat=" "
+                  hideWeekdays={false}             
                 />
+                {ptEcValidationErrors.thirdDate && (
+    <div className="text-red-500 text-sm mt-1">
+        {ptEcValidationErrors.thirdDate}
+    </div>
+)}
               </div>
               <div className="w-1/2">
-                <label className="text-gray-600 mb-2 block">Fourth Due Date</label>
+              <label className="text-gray-600 mb-2 block">
+          Fourth Due Date {(ptEcFrequency === 'quarterly' || ptEcFrequency === 'half_yearly') && 
+            <span className="text-red-500">*</span>}
+        </label>
                 <DatePicker
                   className="w-full"
                   placeholder="Select fourth due date"
                   value={ptEcDates.lastDate}
-                  onChange={(date) => setPtEcDates(prev => ({ ...prev, lastDate: date }))}
+                  onChange={(date) => handleDateChangePtEc('lastDate', date)}
                   disabled={isDueDateDisabled(ptEcFrequency, 3)}
+                  inputFormat="DD"
+                  defaultView="date"
+                  enableHeaderLabel={false}
+                  dateViewCount={1}
+                  labelFormat={{
+                      month: ' ',  // Using space instead of empty string
+                      year: ' '    // Using space instead of empty string
+                  }}
+                  monthLabelFormat=" "
+                  yearLabelFormat=" "
+                  hideWeekdays={false}             
                 />
+                {ptEcValidationErrors.lastDate && (
+    <div className="text-red-500 text-sm mt-1">
+        {ptEcValidationErrors.lastDate}
+    </div>
+)}
               </div>
             </div>
           </div>
@@ -666,40 +800,111 @@ const PTTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any)
                   className="w-full"
                   placeholder="Select first due date"
                   value={ptRcDates.firstDate}
-                  onChange={(date) => setPtRcDates(prev => ({ ...prev, firstDate: date }))}
+                  onChange={(date) => handleDateChangePtRc('firstDate', date)}
+                  inputFormat="DD"
+                  defaultView="date"
+                  enableHeaderLabel={false}
+                  dateViewCount={1}
+                  labelFormat={{
+                      month: ' ',  // Using space instead of empty string
+                      year: ' '    // Using space instead of empty string
+                  }}
+                  monthLabelFormat=" "
+                  yearLabelFormat=" "
+                  hideWeekdays={false}             
                 />
+                 {ptRcValidationErrors.firstDate && (
+    <div className="text-red-500 text-sm mt-1">
+        {ptRcValidationErrors.firstDate}
+    </div>
+)}
               </div>
               <div className="w-1/2">
-                <label className="text-gray-600 mb-2 block">Second Due Date</label>
+              <label className="text-gray-600 mb-2 block">
+          Second Due Date {ptRcFrequency === 'quarterly' && <span className="text-red-500">*</span>}
+        </label>
                 <DatePicker
                   className="w-full"
                   placeholder="Select second due date"
                   value={ptRcDates.secondDate}
-                  onChange={(date) => setPtRcDates(prev => ({ ...prev, secondDate: date }))}
+                  onChange={(date) => handleDateChangePtRc('secondDate', date)}
                   disabled={isDueDateDisabled(ptRcFrequency, 1)}
+                  inputFormat="DD"
+                  defaultView="date"
+                  enableHeaderLabel={false}
+                  dateViewCount={1}
+                  labelFormat={{
+                      month: ' ',  // Using space instead of empty string
+                      year: ' '    // Using space instead of empty string
+                  }}
+                  monthLabelFormat=" "
+                  yearLabelFormat=" "
+                  hideWeekdays={false}             
                 />
+                 {ptRcValidationErrors.secondDate && (
+    <div className="text-red-500 text-sm mt-1">
+        {ptRcValidationErrors.secondDate}
+    </div>
+)}
               </div>
             </div>
             <div className="flex gap-4 mt-4">
               <div className="w-1/2">
-                <label className="text-gray-600 mb-2 block">Third Due Date</label>
+              <label className="text-gray-600 mb-2 block">
+          Third Due Date {ptRcFrequency === 'quarterly' && <span className="text-red-500">*</span>}
+        </label>
                 <DatePicker
                   className="w-full"
                   placeholder="Select third due date"
                   value={ptRcDates.thirdDate}
-                  onChange={(date) => setPtRcDates(prev => ({ ...prev, thirdDate: date }))}
+                  onChange={(date) => handleDateChangePtRc('thirdDate', date)}
                   disabled={isDueDateDisabled(ptRcFrequency, 2)}
+                  inputFormat="DD"
+                  defaultView="date"
+                  enableHeaderLabel={false}
+                  dateViewCount={1}
+                  labelFormat={{
+                      month: ' ',  // Using space instead of empty string
+                      year: ' '    // Using space instead of empty string
+                  }}
+                  monthLabelFormat=" "
+                  yearLabelFormat=" "
+                  hideWeekdays={false}             
                 />
+                 {ptRcValidationErrors.thirdDate && (
+    <div className="text-red-500 text-sm mt-1">
+        {ptRcValidationErrors.thirdDate}
+    </div>
+)}
               </div>
               <div className="w-1/2">
-                <label className="text-gray-600 mb-2 block">Fourth Due Date</label>
+                <label className="text-gray-600 mb-2 block">
+          Fourth Due Date {(ptRcFrequency === 'quarterly' || ptRcFrequency === 'half_yearly') && 
+            <span className="text-red-500">*</span>}
+        </label>
                 <DatePicker
                   className="w-full"
                   placeholder="Select fourth due date"
                   value={ptRcDates.lastDate}
-                  onChange={(date) => setPtRcDates(prev => ({ ...prev, lastDate: date }))}
+                  onChange={(date) => handleDateChangePtRc('lastDate', date)}
                   disabled={isDueDateDisabled(ptRcFrequency, 3)}
+                  inputFormat="DD"
+                  defaultView="date"
+                  enableHeaderLabel={false}
+                  dateViewCount={1}
+                  labelFormat={{
+                      month: ' ',  // Using space instead of empty string
+                      year: ' '    // Using space instead of empty string
+                  }}
+                  monthLabelFormat=" "
+                  yearLabelFormat=" "
+                  hideWeekdays={false}             
                 />
+                 {ptRcValidationErrors.lastDate && (
+    <div className="text-red-500 text-sm mt-1">
+        {ptRcValidationErrors.lastDate}
+    </div>
+)}
               </div>
             </div>
           </div>
