@@ -14,6 +14,11 @@ import AdminTable from './components/AdminTable';
 import * as yup from 'yup';
 import { createCompanyGroup } from '@/store/slices/companyAdmin/companyGroupSlice';
 const validationSchema = yup.object().shape({
+  entityName: yup
+  .string()
+  .required('Entity name is required')
+  .min(3, 'Entity name must be at least 3 characters')
+  .matches(/^\S.*\S$|^\S$/, 'The input must not have leading or trailing spaces'),
   name: yup
     .string()
     .required('Name is required')
@@ -49,8 +54,10 @@ interface Module {
 const CompanyAdmin = () => {
   const dispatch = useDispatch();
   const [errors, setErrors] = useState<ValidationErrors>({});
-  const [entityName, setEntityName] = useState('');
-  const [entityNameError, setEntityNameError] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [touchedFields, setTouchedFields] = useState<{ [key: string]: boolean }>({});
+  // const [entityName, setEntityName] = useState('');
+  // const [entityNameError, setEntityNameError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [companyData, setCompanyData] = useState([]);
   const [modules, setModules] = useState<Module[]>([]);
@@ -62,7 +69,8 @@ const CompanyAdmin = () => {
     name: '',
     email: '',
     password: '',
-    moduleAccess: [] as number[]
+    moduleAccess: [] as number[],
+    entityName: '' 
   });
   const [pagination, setPagination] = useState({
     total: 0,
@@ -71,21 +79,18 @@ const CompanyAdmin = () => {
   });
 
   const handleEntityNameChange = (value: string) => {
-    setEntityName(value);
-    setEntityNameError('');
+    handleInputChange('entityName', value);
   };
 
-  const validateEntityName = async () => {
-    try {
-      await validationSchema.validateAt('entityName', { entityName });
-      setEntityNameError('');
-      return true;
-    } catch (error) {
-      if (error instanceof yup.ValidationError) {
-        setEntityNameError(error.message);
-      }
+  const validatePasswords = () => {
+    if (formData.password !== confirmPassword) {
+      setErrors(prev => ({
+        ...prev,
+        confirmPassword: 'Passwords must match'
+      }));
       return false;
     }
+    return true;
   };
 
   const refreshData = () => {
@@ -124,10 +129,31 @@ const CompanyAdmin = () => {
     },
     []
   );
+  // useEffect(()=>{
+  //   validateForm();
+  // },[formData])
 
   useEffect(() => {
     fetchAdminData(pagination.pageIndex, pagination.pageSize);
   }, [fetchAdminData, pagination.pageIndex, pagination.pageSize]);
+
+  const validateField = async (field: string, value: any) => {
+    try {
+      await validationSchema.validateAt(field, { ...formData, [field]: value });
+      setErrors(prev => ({
+        ...prev,
+        [field]: ''
+      }));
+    } catch (error) {
+      if (error instanceof yup.ValidationError) {
+        setErrors(prev => ({
+          ...prev,
+          [field]: error.message
+        }));
+      }
+    }
+  };
+  
 
   const handlePaginationChange = (page: number) => {
     setPagination((prev) => ({ ...prev, pageIndex: page }));
@@ -147,37 +173,59 @@ const CompanyAdmin = () => {
       [field]: value
     }));
     // Clear error for the field being changed
-    setErrors(prev => ({
-      ...prev,
-      [field]: ''
-    }));
+    setTouchedFields(prev => ({
+    ...prev,
+    [field]: true
+  }));
+
+  if (touchedFields[field]) {
+    validateField(field, value);
+  }
+
+  if (field === 'password' && touchedFields.confirmPassword) {
+    if (confirmPassword !== value) {
+      setErrors(prev => ({
+        ...prev,
+        confirmPassword: 'Passwords must match'
+      }));
+    } else {
+      setErrors(prev => ({
+        ...prev,
+        confirmPassword: ''
+      }));
+    }
+  }
   };
 
   const handleModuleChange = (options: (string | number)[]) => {
     setSelectedModules(options);
+    const moduleAccess = options.map(option => Number(option));
     setFormData(prev => ({
       ...prev,
-      moduleAccess: options.map(option => Number(option))
+      moduleAccess
     }));
-    // Clear moduleAccess error when selection changes
-    setErrors(prev => ({
+    
+    setTouchedFields(prev => ({
       ...prev,
-      moduleAccess: ''
+      moduleAccess: true
     }));
+  
+    if (touchedFields.moduleAccess) {
+      validateField('moduleAccess', moduleAccess);
+    }
   };
-
   const handleDialogClose = () => {
     setIsDialogOpen(false);
     setFormData({
       name: '',
       email: '',
       password: '',
-      moduleAccess: []
+      moduleAccess: [],
+      entityName: ''
     });
-    setEntityName('');
-    setEntityNameError('');
     setErrors({});
     setSelectedModules([]);
+    setTouchedFields({});
   };
 
   const sortedModules = useMemo(() => {
@@ -196,9 +244,13 @@ const CompanyAdmin = () => {
         email: formData.email,
         password: formData.password,
         moduleAccess: formData.moduleAccess,
+        entityName: formData.entityName
       };
 
       await validationSchema.validate(validationObject, { abortEarly: false });
+      if (!validatePasswords()) {
+        return false;
+      }
       setErrors({});
       return true;
     } catch (yupError) {
@@ -239,47 +291,25 @@ const CompanyAdmin = () => {
         );
         return;
       }
-  
-      let adminId;
+  console.log(formData)
       try {
-        const adminResponse = await dispatch(createCompanyAdmin(formData)).unwrap();
-        adminId = adminResponse.id;
-        
-        // Add this log
-        console.log('Admin created with ID:', adminId);
-      } catch (error: any) {
-        handleError(error);
-        return;
-      }
-  
-      // Add this log to check the exact payload
-      const groupPayload = { 
-        name: entityName,
-        created_by: Number(adminId)
-      };
-      console.log('Group creation payload:', groupPayload);
-      // After admin creation
-await new Promise(resolve => setTimeout(resolve, 500)); // 500ms delay
-
-      try {
-        const groupResponse = await dispatch(createCompanyGroup(groupPayload)).unwrap();
-        console.log('Group creation response:', groupResponse);
-        
+        const response = await dispatch(createCompanyAdmin(formData)).unwrap();
         handleDialogClose();
         refreshData();
+        if(response){
         toast.push(
           <Notification title="Success" type="success">
-            Company admin and group created successfully
+            Company admin created successfully
           </Notification>
         );
+      }
       } catch (error: any) {
-        console.error('Group creation error:', error);
         handleError(error);
       }
     } finally {
       setIsLoading(false);
     }
-};
+  };
   return (
     <AdaptableCard className="h-full" bodyClass="h-full">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6">
@@ -308,112 +338,128 @@ await new Promise(resolve => setTimeout(resolve, 500)); // 500ms delay
         onPageSizeChange={handlePageSizeChange}
       />
 
-      <Dialog
-        isOpen={isDialogOpen}
-        onClose={handleDialogClose}
-        onRequestClose={handleDialogClose}
-      >
-        <h5 className="mb-6">Add Company Admin</h5>
-        <div className="flex flex-col gap-6">
-          {/* Company Group Section */}
-          <div className="border-b pb-4">
-            <h6 className="text-gray-800 font-medium mb-4">Company Group</h6>
+<Dialog
+      isOpen={isDialogOpen}
+      onClose={handleDialogClose}
+      onRequestClose={handleDialogClose}
+    >
+      <h5 className="mb-3">Add Company Admin</h5>
+      <div className="flex flex-col gap-3">
+        {/* Company Group Section */}
+        <div className="border-b pb-2">
+          <h6 className="text-gray-800 font-medium mb-2">Company Group</h6>
+          <div className="w-full">
+            <label className="text-gray-600 mb-2 block">Entity Name <span className="text-red-500">*</span></label>
+            <OutlinedInput
+              label="Entity Name"
+              value={formData.entityName}
+              onChange={handleEntityNameChange}
+            />
+            {errors.entityName && (
+              <p className="text-red-500 text-xs mt-1">{errors.entityName}</p>
+            )}
+          </div>
+        </div>
+
+        {/* User Details Section */}
+        <div className="border-b pb-2">
+          <h6 className="text-gray-800 font-medium mb-2">User Details</h6>
+          <div className="space-y-2">
             <div className="w-full">
-              <label className="text-gray-600 mb-2 block">Entity Name <span className="text-red-500">*</span></label>
+              <label className="text-gray-600 mb-2 block">Name <span className="text-red-500">*</span></label>
               <OutlinedInput
-                label="Entity Name"
-                value={entityName}
-                onChange={handleEntityNameChange}
+                label="Full Name"
+                value={formData.name}
+                onChange={(value: string) => handleInputChange('name', value)}
               />
-              {entityNameError && (
-                <p className="text-red-500 text-xs mt-1">{entityNameError}</p>
+              {errors.name && (
+                <p className="text-red-500 text-xs mt-1">{errors.name}</p>
               )}
             </div>
-          </div>
-
-          {/* User Details Section */}
-          <div className="border-b pb-4">
-            <h6 className="text-gray-800 font-medium mb-4">User Details</h6>
-            <div className="space-y-4">
-              <div className="w-full">
-                <label className="text-gray-600 mb-2 block">Name <span className="text-red-500">*</span></label>
-                <OutlinedInput
-                  label="Full Name"
-                  value={formData.name}
-                  onChange={(value: string) => handleInputChange('name', value)}
-                />
-                {errors.name && (
-                  <p className="text-red-500 text-xs mt-1">{errors.name}</p>
-                )}
-              </div>
-              <div className="w-full">
-                <label className="text-gray-600 mb-2 block">Email <span className="text-red-500">*</span></label>
-                <OutlinedInput
-                  label="Email"
-                  value={formData.email}
-                  onChange={(value: string) => handleInputChange('email', value)}
-                />
-                {errors.email && (
-                  <p className="text-red-500 text-xs mt-1">{errors.email}</p>
-                )}
-              </div>
-              <div className="w-full">
-                <label className="text-gray-600 mb-2 block">Password <span className="text-red-500">*</span></label>
-                <OutlinedInput
-                  label="Password"
-                  // type="password"
-                  value={formData.password}
-                  onChange={(value: string) => handleInputChange('password', value)}
-                />
-                {errors.password && (
-                  <p className="text-red-500 text-xs mt-1">{errors.password}</p>
-                )}
-              </div>
+            <div className="w-full">
+              <label className="text-gray-600 mb-2 block">Email <span className="text-red-500">*</span></label>
+              <OutlinedInput
+                label="Email"
+                value={formData.email}
+                onChange={(value: string) => handleInputChange('email', value)}
+              />
+              {errors.email && (
+                <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+              )}
             </div>
-          </div>
-
-          {/* Module List Section */}
-          <div>
-            <h6 className="text-gray-800 font-medium mb-4">Module List</h6>
-            <div className="border rounded p-4">
-              <Checkbox.Group
-                value={selectedModules}
-                onChange={handleModuleChange}
-                className="flex flex-row flex-wrap gap-6"
-              >
-                {sortedModules
-                  .filter(module => module.name === 'Remittance Tracker')
-                  .map(module => (
-                    <div key={module.id} className="flex-1 min-w-[180px]">
-                      <Checkbox value={module.id} className="inline-flex items-center">
-                        <span className="ml-2 whitespace-nowrap">{module.name}</span>
-                      </Checkbox>
-                    </div>
-                  ))}
-              </Checkbox.Group>
-              {errors.moduleAccess && (
-                <p className="text-red-500 text-xs mt-2">{errors.moduleAccess}</p>
+            <div className="w-full">
+              <label className="text-gray-600 mb-2 block">Password <span className="text-red-500">*</span></label>
+              <OutlinedInput
+                label="Password"
+                value={formData.password}
+                onChange={(value: string) => handleInputChange('password', value)}
+              />
+              {errors.password && (
+                <p className="text-red-500 text-xs mt-1">{errors.password}</p>
+              )}
+            </div>
+            <div className="w-full">
+              <label className="text-gray-600 mb-2 block">Confirm Password <span className="text-red-500">*</span></label>
+              <OutlinedInput
+                label="Confirm Password"
+                value={confirmPassword}
+                onChange={(value: string) => {
+                  setConfirmPassword(value);
+                  setErrors(prev => ({
+                    ...prev,
+                    confirmPassword: ''
+                  }));
+                }}
+              />
+              {errors.confirmPassword && (
+                <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>
               )}
             </div>
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 mt-6">
-          <Button
-            variant="plain"
-            onClick={handleDialogClose}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="solid"
-            onClick={handleConfirm}
-            loading={isLoading}
-          >
-            Confirm
-          </Button>
+        {/* Module List Section */}
+        <div>
+          <h6 className="text-gray-800 font-medium mb-2">Module List</h6>
+          <div className="border rounded p-2">
+            <Checkbox.Group
+              value={selectedModules}
+              onChange={handleModuleChange}
+              className="flex flex-row flex-wrap gap-3"
+            >
+              {sortedModules
+                .filter(module => module.name === 'Remittance Tracker')
+                .map(module => (
+                  <div key={module.id} className="flex-1 min-w-[180px]">
+                    <Checkbox value={module.id} className="inline-flex items-center">
+                      <span className="ml-2 whitespace-nowrap">{module.name}</span>
+                    </Checkbox>
+                  </div>
+                ))}
+            </Checkbox.Group>
+            {errors.moduleAccess && (
+              <p className="text-red-500 text-xs mt-1">{errors.moduleAccess}</p>
+            )}
+          </div>
         </div>
-      </Dialog>
+      </div>
+
+      <div className="flex justify-end gap-2 mt-3">
+        <Button
+          variant="plain"
+          onClick={handleDialogClose}
+        >
+          Cancel
+        </Button>
+        <Button
+          variant="solid"
+          onClick={handleConfirm}
+          loading={isLoading}
+        >
+          Confirm
+        </Button>
+      </div>
+    </Dialog>
     </AdaptableCard>
   );
 };
