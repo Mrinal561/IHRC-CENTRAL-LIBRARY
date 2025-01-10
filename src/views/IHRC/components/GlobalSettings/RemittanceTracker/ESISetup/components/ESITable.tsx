@@ -30,6 +30,7 @@ import OutlinedSelect from '@/components/ui/Outlined/Outlined'
 import { fetchDetail } from '@/store/slices/common/commonSlice'
 import * as yup from 'yup'
 import dayjs from 'dayjs'
+import SimpleDatePicker from '@/components/ui/OutlinedInput/SimpleDatePicker'
  
 const createESIValidationSchema = (frequency) => {
     const baseSchema = {
@@ -494,6 +495,7 @@ const ESITable = ({ refreshTrigger }) => {
                     <Dialog
                         isOpen={isDialogOpen}
                         onClose={() => setIsDialogOpen(false)}
+                        width={600}
                     >
                         <h5 className="mb-6">Edit ESI Setup</h5>
                         <div className="flex flex-col gap-6">
@@ -536,22 +538,11 @@ const ESITable = ({ refreshTrigger }) => {
                                         First Due Date{' '}
                                         <span className="text-red-500">*</span>
                                     </label>
-                                    <DatePicker
+                                    <SimpleDatePicker
                                         className="w-full"
                                         placeholder="Select first due date"
                                         value={paymentDueDates.firstDate}
-                                        onChange={(date) => handleDateChange('firstDate', date)}
-                                        inputFormat="DD"
-                                        defaultView="date"
-                                        enableHeaderLabel={false}
-                                        dateViewCount={1}
-                                        labelFormat={{
-                                            month: ' ',  // Using space instead of empty string
-                                            year: ' '    // Using space instead of empty string
-                                        }}
-                                        monthLabelFormat=" "
-                                        yearLabelFormat=" "
-                                        hideWeekdays={false}             
+                                        onChange={(date) => handleDateChange('firstDate', date)}       
                                     />
                                     {validationErrors.firstDate && (
                                         <div className="text-red-500 text-sm mt-1">
@@ -561,24 +552,12 @@ const ESITable = ({ refreshTrigger }) => {
                                 </div>
                                 <div className="w-1/2">
                                 <label className="text-gray-600 mb-2 block">Second Due Date  {frequency === 'quarterly' && <span className="text-red-500">*</span>}</label>
-                                    <DatePicker
+                                    <SimpleDatePicker
                                         className="w-full"
                                         placeholder="Select second due date"
                                         value={paymentDueDates.secondDate}
                                         onChange={(date) => handleDateChange('secondDate', date)}
-                                        disabled={isDueDateDisabled(1)}
-
-                                        inputFormat="DD"
-                                        defaultView="date"
-                                        enableHeaderLabel={false}
-                                        dateViewCount={1}
-                                        labelFormat={{
-                                            month: ' ',  // Using space instead of empty string
-                                            year: ' '    // Using space instead of empty string
-                                        }}
-                                        monthLabelFormat=" "
-                                        yearLabelFormat=" "
-                                        hideWeekdays={false}             
+                                        disabled={isDueDateDisabled(1)}           
                                     />
                                     {validationErrors.secondDate && (
                                         <div className="text-red-500 text-sm mt-1">
@@ -591,23 +570,12 @@ const ESITable = ({ refreshTrigger }) => {
                             <div className="flex gap-4">
                                 <div className="w-1/2">
                                 <label className="text-gray-600 mb-2 block">Third Due Date  {frequency === 'quarterly' && <span className="text-red-500">*</span>}</label>
-                                    <DatePicker
+                                    <SimpleDatePicker
                                         className="w-full"
                                         placeholder="Select third due date"
                                         value={paymentDueDates.thirdDate}
                                         onChange={(date) => handleDateChange('thirdDate', date)}
-                                        disabled={isDueDateDisabled(2)}
-                                        inputFormat="DD"
-                                        defaultView="date"
-                                        enableHeaderLabel={false}
-                                        dateViewCount={1}
-                                        labelFormat={{
-                                            month: ' ',  // Using space instead of empty string
-                                            year: ' '    // Using space instead of empty string
-                                        }}
-                                        monthLabelFormat=" "
-                                        yearLabelFormat=" "
-                                        hideWeekdays={false}             
+                                        disabled={isDueDateDisabled(2)}          
                                     />
                                     {validationErrors.thirdDate && (
                                         <div className="text-red-500 text-sm mt-1">
@@ -617,23 +585,12 @@ const ESITable = ({ refreshTrigger }) => {
                                 </div>
                                 <div className="w-1/2">
                                 <label className="text-gray-600 mb-2 block">Last Due Date {(frequency === 'quarterly' || frequency === 'half_yearly') && <span className="text-red-500">*</span>}</label>
-                                    <DatePicker
+                                    <SimpleDatePicker
                                         className="w-full"
                                         placeholder="Select last due date"
                                         value={paymentDueDates.lastDate}
                                         onChange={(date) => handleDateChange('lastDate', date)}
-                                        disabled={isDueDateDisabled(3)}
-                                        inputFormat="DD"
-                                        defaultView="date"
-                                        enableHeaderLabel={false}
-                                        dateViewCount={1}
-                                        labelFormat={{
-                                            month: ' ',  // Using space instead of empty string
-                                            year: ' '    // Using space instead of empty string
-                                        }}
-                                        monthLabelFormat=" "
-                                        yearLabelFormat=" "
-                                        hideWeekdays={false}             
+                                        disabled={isDueDateDisabled(3)}          
                                     />
                                     {validationErrors.lastDate && (
                                         <div className="text-red-500 text-sm mt-1">

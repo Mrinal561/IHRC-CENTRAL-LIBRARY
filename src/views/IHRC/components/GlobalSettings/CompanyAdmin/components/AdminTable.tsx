@@ -82,9 +82,18 @@ const AdminTable: React.FC<AdminTableProps> = ({
     // }, [totalRecords]);
     const columns = useMemo(
         () => [
+            // {
+            //     header: 'Name',
+            //     accessorKey: 'name',
+            //     enableSorting: false,
+            //     cell: (props) => (
+            //         <div className="truncate">{props.getValue() as string}</div>
+            //     ),
+            // },
             {
-                header: 'Name',
-                accessorKey: 'name',
+                header: 'Entity Name',
+                accessorKey: 'entityName',
+                enableSorting: false,
                 cell: (props) => (
                     <div className="truncate">{props.getValue() as string}</div>
                 ),
@@ -92,17 +101,20 @@ const AdminTable: React.FC<AdminTableProps> = ({
             {
                 header: 'Email',
                 accessorKey: 'email',
+                enableSorting: false,
                 cell: (props) => (
                     <div className="truncate">{props.getValue() as string}</div>
                 ),
             },
-            {
-                header: 'Role',
-                accessorKey: 'role',
-                cell: (props) => (
-                    <div className="truncate">{props.getValue() as string}</div>
-                ),
-            },
+            
+            // {
+            //     header: 'Role',
+            //     accessorKey: 'role',
+            //     enableSorting: false,
+            //     cell: (props) => (
+            //         <div className="truncate">{props.getValue() as string}</div>
+            //     ),
+            // },
             // {
             //     header: 'Audit Checklist',
             //     id: 'auditChecklist',
@@ -115,6 +127,7 @@ const AdminTable: React.FC<AdminTableProps> = ({
             {
                 header: 'Remittance Tracker',
                 id: 'remittanceTracker',
+                enableSorting: false,
                 cell: ({ row }) => (
                     <AccessIndicator 
                         hasAccess={row.original.moduleAccessNames.includes('Remittance Tracker')} 
@@ -142,6 +155,7 @@ const AdminTable: React.FC<AdminTableProps> = ({
             {
                 header: 'Actions',
                 id: 'actions',
+                enableSorting: false,
                 cell: ({ row }) => (
                     <div className="flex items-center gap-2">
                         <Tooltip title="Edit">

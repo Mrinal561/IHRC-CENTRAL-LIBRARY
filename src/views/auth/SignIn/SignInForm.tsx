@@ -212,10 +212,10 @@ const SignInForm = (props: SignInFormProps) => {
                             >
                                 {loading ? 'Signing in...' : 'Sign In'}
                             </Button>
-                            <div className="mt-4 text-center">
+                            {/* <div className="mt-4 text-center">
                                 <span>{`Don't have an account yet?`} </span>
                                 <ActionLink to={signUpUrl}>Sign up</ActionLink>
-                            </div>
+                            </div> */}
                         </FormContainer>
                     </Form>
                 )}

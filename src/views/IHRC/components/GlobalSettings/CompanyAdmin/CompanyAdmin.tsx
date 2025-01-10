@@ -13,17 +13,18 @@ import { createCompanyAdmin, fetchCompanyAdmins } from '@/store/slices/companyAd
 import AdminTable from './components/AdminTable';
 import * as yup from 'yup';
 import { createCompanyGroup } from '@/store/slices/companyAdmin/companyGroupSlice';
+import OutlinedPasswordInput from '@/components/ui/OutlinedInput/OutlinedPasswordInput';
 const validationSchema = yup.object().shape({
   entityName: yup
   .string()
   .required('Entity name is required')
   .min(3, 'Entity name must be at least 3 characters')
   .matches(/^\S.*\S$|^\S$/, 'The input must not have leading or trailing spaces'),
-  name: yup
-    .string()
-    .required('Name is required')
-    .min(3, 'Name must be at least 3 characters')
-    .matches(/^\S.*\S$|^\S$/, 'The input must not have leading or trailing spaces'),
+  // name: yup
+  //   .string()
+  //   // .required('Name is required')
+  //   .min(3, 'Name must be at least 3 characters')
+  //   .matches(/^\S.*\S$|^\S$/, 'The input must not have leading or trailing spaces'),
   email: yup
     .string()
     .email('Invalid email address')
@@ -226,6 +227,7 @@ const CompanyAdmin = () => {
     setErrors({});
     setSelectedModules([]);
     setTouchedFields({});
+    setConfirmPassword('');
   };
 
   const sortedModules = useMemo(() => {
@@ -293,7 +295,19 @@ const CompanyAdmin = () => {
       }
   console.log(formData)
       try {
-        const response = await dispatch(createCompanyAdmin(formData)).unwrap();
+        const response = await dispatch(createCompanyAdmin(formData)).unwrap()
+        .catch((error: any) => {
+          if (error.response?.data?.message) {
+            showErrorNotification(error.response.data.message);
+          } else if (error.message) {
+            showErrorNotification(error.message);
+          } else if (Array.isArray(error)) {
+            showErrorNotification(error);
+          } else {
+            showErrorNotification(error);
+          }
+          throw error;
+        });
         handleDialogClose();
         refreshData();
         if(response){
@@ -339,44 +353,47 @@ const CompanyAdmin = () => {
       />
 
 <Dialog
-      isOpen={isDialogOpen}
-      onClose={handleDialogClose}
-      onRequestClose={handleDialogClose}
-    >
-      <h5 className="mb-3">Add Company Admin</h5>
-      <div className="flex flex-col gap-3">
-        {/* Company Group Section */}
-        <div className="border-b pb-2">
-          <h6 className="text-gray-800 font-medium mb-2">Company Group</h6>
-          <div className="w-full">
-            <label className="text-gray-600 mb-2 block">Entity Name <span className="text-red-500">*</span></label>
-            <OutlinedInput
-              label="Entity Name"
-              value={formData.entityName}
-              onChange={handleEntityNameChange}
-            />
-            {errors.entityName && (
-              <p className="text-red-500 text-xs mt-1">{errors.entityName}</p>
-            )}
-          </div>
+    isOpen={isDialogOpen}
+    onClose={handleDialogClose}
+    onRequestClose={handleDialogClose}
+    width={600}
+  >
+    <h5 className="mb-3">Add Company Admin</h5>
+    <div className="flex flex-col gap-3">
+      {/* Company Group Section */}
+      <div className="border-b pb-2">
+        <h6 className="text-gray-800 font-medium mb-2">Company Group</h6>
+        <div className="w-full">
+          <label className="text-gray-600 mb-2 block">Entity Name <span className="text-red-500">*</span></label>
+          <OutlinedInput
+            label="Entity Name"
+            value={formData.entityName}
+            onChange={handleEntityNameChange}
+          />
+          {errors.entityName && (
+            <p className="text-red-500 text-xs mt-1">{errors.entityName}</p>
+          )}
         </div>
+      </div>
 
-        {/* User Details Section */}
-        <div className="border-b pb-2">
-          <h6 className="text-gray-800 font-medium mb-2">User Details</h6>
-          <div className="space-y-2">
-            <div className="w-full">
-              <label className="text-gray-600 mb-2 block">Name <span className="text-red-500">*</span></label>
+      {/* User Details Section */}
+      <div className="border-b pb-2">
+        <h6 className="text-gray-800 font-medium mb-2">User Details</h6>
+        <div className="space-y-4">
+          {/* Name and Email row */}
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <label className="text-gray-600 mb-2 block">Name </label>
               <OutlinedInput
                 label="Full Name"
                 value={formData.name}
                 onChange={(value: string) => handleInputChange('name', value)}
               />
-              {errors.name && (
+              {/* {errors.name && (
                 <p className="text-red-500 text-xs mt-1">{errors.name}</p>
-              )}
+              )} */}
             </div>
-            <div className="w-full">
+            <div className="flex-1">
               <label className="text-gray-600 mb-2 block">Email <span className="text-red-500">*</span></label>
               <OutlinedInput
                 label="Email"
@@ -387,9 +404,13 @@ const CompanyAdmin = () => {
                 <p className="text-red-500 text-xs mt-1">{errors.email}</p>
               )}
             </div>
-            <div className="w-full">
+          </div>
+
+          {/* Password and Confirm Password row */}
+          <div className="flex gap-4">
+            <div className="flex-1">
               <label className="text-gray-600 mb-2 block">Password <span className="text-red-500">*</span></label>
-              <OutlinedInput
+              <OutlinedPasswordInput
                 label="Password"
                 value={formData.password}
                 onChange={(value: string) => handleInputChange('password', value)}
@@ -398,9 +419,9 @@ const CompanyAdmin = () => {
                 <p className="text-red-500 text-xs mt-1">{errors.password}</p>
               )}
             </div>
-            <div className="w-full">
+            <div className="flex-1">
               <label className="text-gray-600 mb-2 block">Confirm Password <span className="text-red-500">*</span></label>
-              <OutlinedInput
+              <OutlinedPasswordInput
                 label="Confirm Password"
                 value={confirmPassword}
                 onChange={(value: string) => {
@@ -417,49 +438,50 @@ const CompanyAdmin = () => {
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Module List Section */}
-        <div>
-          <h6 className="text-gray-800 font-medium mb-2">Module List</h6>
-          <div className="border rounded p-2">
-            <Checkbox.Group
-              value={selectedModules}
-              onChange={handleModuleChange}
-              className="flex flex-row flex-wrap gap-3"
-            >
-              {sortedModules
-                .filter(module => module.name === 'Remittance Tracker')
-                .map(module => (
-                  <div key={module.id} className="flex-1 min-w-[180px]">
-                    <Checkbox value={module.id} className="inline-flex items-center">
-                      <span className="ml-2 whitespace-nowrap">{module.name}</span>
-                    </Checkbox>
-                  </div>
-                ))}
-            </Checkbox.Group>
-            {errors.moduleAccess && (
-              <p className="text-red-500 text-xs mt-1">{errors.moduleAccess}</p>
-            )}
-          </div>
+      {/* Module List Section */}
+      <div>
+        <h6 className="text-gray-800 font-medium mb-2">Module List</h6>
+        <div className="border rounded p-2">
+          <Checkbox.Group
+            value={selectedModules}
+            onChange={handleModuleChange}
+            className="flex flex-row flex-wrap gap-3"
+          >
+            {sortedModules
+              .filter(module => module.name === 'Remittance Tracker')
+              .map(module => (
+                <div key={module.id} className="flex-1 min-w-[180px]">
+                  <Checkbox value={module.id} className="inline-flex items-center">
+                    <span className="ml-2 whitespace-nowrap">{module.name}</span>
+                  </Checkbox>
+                </div>
+              ))}
+          </Checkbox.Group>
+          {errors.moduleAccess && (
+            <p className="text-red-500 text-xs mt-1">{errors.moduleAccess}</p>
+          )}
         </div>
       </div>
+    </div>
 
-      <div className="flex justify-end gap-2 mt-3">
-        <Button
-          variant="plain"
-          onClick={handleDialogClose}
-        >
-          Cancel
-        </Button>
-        <Button
-          variant="solid"
-          onClick={handleConfirm}
-          loading={isLoading}
-        >
-          Confirm
-        </Button>
-      </div>
-    </Dialog>
+    <div className="flex justify-end gap-2 mt-3">
+      <Button
+        variant="plain"
+        onClick={handleDialogClose}
+      >
+        Cancel
+      </Button>
+      <Button
+        variant="solid"
+        onClick={handleConfirm}
+        loading={isLoading}
+      >
+        Confirm
+      </Button>
+    </div>
+  </Dialog>
     </AdaptableCard>
   );
 };
