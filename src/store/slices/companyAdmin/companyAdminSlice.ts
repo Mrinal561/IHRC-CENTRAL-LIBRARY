@@ -281,11 +281,28 @@ export const fetchCompanyAdmins = createAsyncThunk(
 // Create async thunk for updating company admin module access
 export const updateCompanyAdmin = createAsyncThunk(
     'companyAdmin/updateCompanyAdmin',
-    async ({ id, moduleAccess }: { id: string | number, moduleAccess: number[] }, { rejectWithValue }) => {
+    async ({ 
+        id, 
+        moduleAccess,
+        name,
+        email,
+        entityName 
+    }: { 
+        id: string | number;
+        moduleAccess: number[];
+        name: string;
+        email: string;
+        entityName: string;
+    }, { rejectWithValue }) => {
         try {
             const { data } = await httpClient.put(
                 endpoints.companyAdmin.update(id),
-                { moduleAccess }
+                { 
+                    moduleAccess,
+                    name,
+                    email,
+                    entityName
+                }
             )
             return data
         } catch (error: any) {
