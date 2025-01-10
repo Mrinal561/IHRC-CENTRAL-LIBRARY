@@ -21,14 +21,22 @@ const validationSchema = yup.object().shape({
     .required('Entity name is required')
     .min(3, 'Entity name must be at least 3 characters')
     .matches(/^\S.*\S$|^\S$/, 'The input must not have leading or trailing spaces'),
-  email: yup
+    email: yup
     .string()
-    .email('Invalid email address')
+    .matches(
+       /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.(com|in|org|net|edu|gov)$/,
+       'Invalid email address. Please use a valid email with a.com,.in,.org,.net,.edu, or.gov domain.'
+     )
     .required('Email is required'),
   moduleAccess: yup
     .array()
     .of(yup.number())
     .min(1, 'At least one module must be selected'),
+//     name: yup
+//    .string()
+//    .required('Full Name is required')
+//    .min(3, 'Full Name must be at least 3 characters')
+//    .matches(/^\S.*\S$|^\S$/, 'The input must not have leading or trailing spaces'),
 });
 
 interface ValidationErrors {
@@ -257,31 +265,6 @@ const AdminTable: React.FC<AdminTableProps> = ({
         []
     );
 
-    // const handleEditConfirm = async () => {
-    //     if (itemToEdit?.id) {
-    //         try {
-    //             // Convert module names to IDs for the API
-    //             const moduleIds = modules
-    //                 .filter(module => editedAdminData.moduleAccess.includes(module.name))
-    //                 .map(module => module.id);
-
-    //             await dispatch(updateCompanyAdmin({ 
-    //                 id: itemToEdit.id, 
-    //                 moduleAccess: moduleIds
-    //             })).unwrap();
-                
-    //             onDataChange();
-    //             showSuccessNotification('Admin updated successfully');
-    //             handleDialogClose();
-    //         } catch (error) {
-    //             console.error('Error updating admin:', error);
-    //             showErrorNotification('Failed to update admin');
-    //         }
-    //     }
-    // };
-
-
-
 
     const handleEditConfirm = async () => {
         if(itemToEdit?.id){
@@ -336,6 +319,9 @@ const AdminTable: React.FC<AdminTableProps> = ({
     if (touchedFields[field]) {
         validateField(field, value);
     }
+    if (!touchedFields[field] && value) {
+        setTouchedFields((prev) => ({...prev, [field]: true }));
+      }
 };
 
 const handleDialogClose = () => {
@@ -359,14 +345,6 @@ const handleDialogClose = () => {
         );
     };
 
-    // const onPaginationChange = (page: number) => {
-    //     setTableData((prev) => ({ ...prev, pageIndex: page }));
-    //     onDataChange(page, tableData.pageSize);
-    // };
-    // const onSelectChange = (value: number) => {
-    //     setTableData((prev) => ({ ...prev, pageSize: value, pageIndex: 1 }));
-    //     onDataChange(1, value);
-    // };
 
     
     if (isLoading) {
@@ -423,7 +401,7 @@ const handleDialogClose = () => {
                     <div className='border-b pb-2'>
                     <h6 className="text-gray-800 font-medium mb-2">Company Group</h6>
                     <div className="w-full">
-                      <label className="text-gray-600 mb-2 block">Entity Name <span className="text-red-500">*</span></label>
+                      <label className="text-gray-600 mb-2 block">Entity Name</label>
                       <OutlinedInput
                           label="Entity Name"
                           value={editedAdminData.entityName}
@@ -442,15 +420,18 @@ const handleDialogClose = () => {
             {/* Name and Email row */}
             <div className="flex gap-4">
               <div className="flex-1">
-                <label className="text-gray-600 mb-2 block">Name</label>
+                <label className="text-gray-600 mb-2 block">Full Name</label>
                 <OutlinedInput
                   label="Full Name"
                   value={editedAdminData.name}
                   onChange={(value: string) => handleModuleChange('name', value)}
                 />
+                {/* {errors.name && ( 
+    <p className="text-red-500 text-xs mt-1">{errors.name}</p>
+  )} */}
               </div>
               <div className="flex-1">
-                <label className="text-gray-600 mb-2 block">Email <span className="text-red-500">*</span></label>
+                <label className="text-gray-600 mb-2 block">Email</label>
                 <OutlinedInput
                   label="Email"
                   value={editedAdminData.email}
@@ -504,7 +485,7 @@ const handleDialogClose = () => {
                         variant="solid" 
                         onClick={handleEditConfirm}
                     >
-                        Save Changes
+                       Confirm
                     </Button>
                 </div>
             </Dialog>
