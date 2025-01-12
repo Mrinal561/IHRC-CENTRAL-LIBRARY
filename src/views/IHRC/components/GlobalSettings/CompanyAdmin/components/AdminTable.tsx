@@ -183,7 +183,7 @@ const AdminTable: React.FC<AdminTableProps> = ({
             //     ),
             // },
             {
-                header: 'Company Name',
+                header: 'Company Group',
                 accessorKey: 'entityName',
                 enableSorting: false,
                 cell: (props) => (
