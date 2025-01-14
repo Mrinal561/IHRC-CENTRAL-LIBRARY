@@ -26,9 +26,12 @@ const validationSchema = yup.object().shape({
   //   .min(3, 'Name must be at least 3 characters')
   //   .matches(/^\S.*\S$|^\S$/, 'The input must not have leading or trailing spaces'),
   email: yup
-    .string()
-    .email('Invalid email address')
-    .required('Email is required'),
+  .string()
+  .matches(
+      /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.(com|in|org|net|edu|gov)$/,
+      'Invalid email address. Please use a valid email with a.com,.in,.org,.net,.edu, or.gov domain.',
+  )
+  .required('Email is required'),
   password: yup
     .string()
     .required('Password is required')
@@ -328,7 +331,7 @@ const CompanyAdmin = () => {
     <AdaptableCard className="h-full" bodyClass="h-full">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6">
         <div className="mb-4 lg:mb-0">
-          <h3 className="text-2xl font-bold">Company Admin</h3>
+          <h3 className="text-2xl font-bold">Company Group Admin</h3>
         </div>
         <div className="flex gap-2">
           <Button
