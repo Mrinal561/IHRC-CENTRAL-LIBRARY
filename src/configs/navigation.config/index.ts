@@ -101,7 +101,7 @@ const navigationConfig: NavigationTree[] = [
             {
                 key: 'groupMenu.collapse.item7',
                 path: '/company-admin',
-                title: 'Company Admin',
+                title: 'Company Group Admin',
                 translateKey: 'nav.groupMenu.collapse.item7',
                 icon: '',
                 type: NAV_ITEM_TYPE_ITEM,

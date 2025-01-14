@@ -907,7 +907,7 @@ useEffect(() => {
             />
           </FormItem>
 
-          <FormItem>
+          {/* <FormItem>
           <label className="text-gray-600 mb-2 block">PFIW Payment Mode<span className="text-red-500">*</span></label>
             <OutlinedSelect
               label="Select PFIW Payment Mode"
@@ -916,7 +916,7 @@ useEffect(() => {
               onChange={setSelectedPFIWPaymentMode}
               disabled={!isEditMode}
             />
-          </FormItem>
+          </FormItem> */}
 
           <FormItem>
           <label className="text-gray-600 mb-2 block">PF Frequency<span className="text-red-500">*</span></label>

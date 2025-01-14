@@ -42,6 +42,10 @@ export const endpoints = {
         create: () => api('superadmin/state/config/esi'),
         update: (id: string) => api(`superadmin/state/config/esi/${id}`),
       },
+      esiConfig:{
+        detail: (id:any) => api(`superadmin/esiconfig/${id}`),
+        update: (id:any) => api(`superadmin/esiconfig/${id}`)
+      },
     lwf: {
         getAll: () => api('superadmin/state/config'),
         getById: (id: string) => api(`superadmin/state/config/lwf/${id}`),
