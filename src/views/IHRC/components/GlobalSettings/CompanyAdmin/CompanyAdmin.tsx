@@ -29,7 +29,7 @@ const validationSchema = yup.object().shape({
   .string()
   .matches(
       /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.(com|in|org|net|edu|gov)$/,
-      'Invalid email address. Please use a valid email with a.com,.in,.org,.net,.edu, or.gov domain.',
+      'Invalid email address.',
   )
   .required('Email is required'),
   password: yup
@@ -361,7 +361,7 @@ const CompanyAdmin = () => {
     onRequestClose={handleDialogClose}
     width={600}
   >
-    <h5 className="mb-3">Add Company Admin</h5>
+    <h5 className="mb-3">Add Company Group Admin</h5>
     <div className="flex flex-col gap-3">
       {/* Company Group Section */}
       <div className="border-b pb-2">
