@@ -525,7 +525,7 @@ const handleConfirm = async () => {
           <div className="flex gap-4">
             <div className="w-1/2">
               <label className="text-gray-600 mb-2 block">First Due Date <span className="text-red-500">*</span></label>
-              <SimpleDatePicker
+              <DatePicker
                 className="w-full"
                 placeholder="Select first due date"
                 value={paymentDueDates.firstDate}
@@ -539,7 +539,7 @@ const handleConfirm = async () => {
             </div>
             <div className="w-1/2">
               <label className="text-gray-600 mb-2 block">Second Due Date  {frequency === 'quarterly' && <span className="text-red-500">*</span>}</label>
-              <SimpleDatePicker
+              <DatePicker
                 className="w-full"
                 placeholder="Select second due date"
                 value={paymentDueDates.secondDate}
@@ -557,7 +557,7 @@ const handleConfirm = async () => {
           <div className="flex gap-4">
             <div className="w-1/2">
               <label className="text-gray-600 mb-2 block">Third Due Date  {frequency === 'quarterly' && <span className="text-red-500">*</span>}</label>
-              <SimpleDatePicker
+              <DatePicker
                 className="w-full"
                 placeholder="Select third due date"
                 value={paymentDueDates.thirdDate}
@@ -572,7 +572,7 @@ const handleConfirm = async () => {
             </div>
             <div className="w-1/2">
               <label className="text-gray-600 mb-2 block">Last Due Date {(frequency === 'quarterly' || frequency === 'half_yearly') && <span className="text-red-500">*</span>}</label>
-              <SimpleDatePicker
+              <DatePicker
                 className="w-full"
                 placeholder="Select last due date"
                 value={paymentDueDates.lastDate}

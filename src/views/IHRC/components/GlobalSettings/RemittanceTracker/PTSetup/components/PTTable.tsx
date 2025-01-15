@@ -679,7 +679,7 @@ useEffect(() => {
             <div className="flex gap-4">
               <div className="w-1/2">
                 <label className="text-gray-600 mb-2 block">First Due Date <span className="text-red-500">*</span></label>
-                <SimpleDatePicker
+                <DatePicker
                   className="w-full"
                   placeholder="Select first due date"
                   value={ptEcDates.firstDate}
@@ -695,7 +695,7 @@ useEffect(() => {
               <label className="text-gray-600 mb-2 block">
           Second Due Date {ptEcFrequency === 'quarterly' && <span className="text-red-500">*</span>}
         </label>
-                <SimpleDatePicker
+                <DatePicker
                   className="w-full"
                   placeholder="Select second due date"
                   value={ptEcDates.secondDate}
@@ -715,7 +715,7 @@ useEffect(() => {
               <label className="text-gray-600 mb-2 block">
           Third Due Date {ptEcFrequency === 'quarterly' && <span className="text-red-500">*</span>}
         </label>
-                <SimpleDatePicker
+                <DatePicker
                   className="w-full"
                   placeholder="Select third due date"
                   value={ptEcDates.thirdDate}
@@ -733,7 +733,7 @@ useEffect(() => {
           Fourth Due Date {(ptEcFrequency === 'quarterly' || ptEcFrequency === 'half_yearly') && 
             <span className="text-red-500">*</span>}
         </label>
-                <SimpleDatePicker
+                <DatePicker
                   className="w-full"
                   placeholder="Select fourth due date"
                   value={ptEcDates.lastDate}
@@ -754,7 +754,7 @@ useEffect(() => {
             <div className="flex gap-4">
               <div className="w-1/2">
                 <label className="text-gray-600 mb-2 block">First Due Date <span className="text-red-500">*</span></label>
-                <SimpleDatePicker
+                <DatePicker
                   className="w-full"
                   placeholder="Select first due date"
                   value={ptRcDates.firstDate}
@@ -770,7 +770,7 @@ useEffect(() => {
               <label className="text-gray-600 mb-2 block">
           Second Due Date {ptRcFrequency === 'quarterly' && <span className="text-red-500">*</span>}
         </label>
-                <SimpleDatePicker
+                <DatePicker
                   className="w-full"
                   placeholder="Select second due date"
                   value={ptRcDates.secondDate}
@@ -789,7 +789,7 @@ useEffect(() => {
               <label className="text-gray-600 mb-2 block">
           Third Due Date {ptRcFrequency === 'quarterly' && <span className="text-red-500">*</span>}
         </label>
-                <SimpleDatePicker
+                <DatePicker
                   className="w-full"
                   placeholder="Select third due date"
                   value={ptRcDates.thirdDate}
@@ -807,7 +807,7 @@ useEffect(() => {
           Fourth Due Date {(ptRcFrequency === 'quarterly' || ptRcFrequency === 'half_yearly') && 
             <span className="text-red-500">*</span>}
         </label>
-                <SimpleDatePicker
+                <DatePicker
                   className="w-full"
                   placeholder="Select fourth due date"
                   value={ptRcDates.lastDate}
