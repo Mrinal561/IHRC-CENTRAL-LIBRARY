@@ -311,9 +311,11 @@ const CompanyAdmin = () => {
           }
           throw error;
         });
-        handleDialogClose();
-        refreshData();
+      
+        // refreshData();
         if(response){
+          handleDialogClose();
+          await fetchAdminData(pagination.pageIndex, pagination.pageSize);
         toast.push(
           <Notification title="Success" type="success">
             Company admin created successfully

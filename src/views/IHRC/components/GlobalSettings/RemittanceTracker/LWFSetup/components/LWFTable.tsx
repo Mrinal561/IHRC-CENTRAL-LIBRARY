@@ -18,6 +18,31 @@ import * as yup from 'yup';
 import dayjs from 'dayjs';
 import SimpleDatePicker from '@/components/ui/OutlinedInput/SimpleDatePicker';
 
+const DatePickerComponent = ({ frequency, value, onChange, disabled, placeholder }) => {
+  if (frequency === 'monthly') {
+    return (
+      <SimpleDatePicker
+        className="w-full"
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+        disabled={disabled}
+      />
+    );
+  }
+  
+  return (
+    <DatePicker
+      className="w-full"
+      placeholder={placeholder}
+      value={value}
+      onChange={onChange}
+      disabled={disabled}
+    />
+  );
+};
+
+
 const createLWFValidationSchema = (frequency) => {
     const baseSchema = {
         firstDate: yup
@@ -80,6 +105,7 @@ const frequencyOptions = [
   { value: 'quarterly', label: 'Quarterly' },
 ];
 
+
 const LWFTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any) => {
   const dispatch = useDispatch<AppDispatch>();
   const [isLoading, setIsLoading] = useState(true);
@@ -116,6 +142,30 @@ const LWFTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any
     const suffix = getDaySuffix(day);
     return `${day}${suffix}`;
   }
+  const DatePickerComponent = ({ frequency, value, onChange, disabled, placeholder }) => {
+  if (frequency === 'monthly') {
+    return (
+      <SimpleDatePicker
+        className="w-full"
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+        disabled={disabled}
+      />
+    );
+  }
+  
+  return (
+    <DatePicker
+    inputFormat='DD-MM'
+      className="w-full"
+      placeholder={placeholder}
+      value={value}
+      onChange={onChange}
+      disabled={disabled}
+    />
+  );
+};
   
   // Function to determine the correct suffix
   function getDaySuffix(day) {
@@ -525,11 +575,11 @@ const handleConfirm = async () => {
           <div className="flex gap-4">
             <div className="w-1/2">
               <label className="text-gray-600 mb-2 block">First Due Date <span className="text-red-500">*</span></label>
-              <SimpleDatePicker
-                className="w-full"
-                placeholder="Select first due date"
+              <DatePickerComponent
+                frequency={frequency}
                 value={paymentDueDates.firstDate}
-                onChange={(date) => handleDateChange('firstDate', date)}      
+                onChange={(date) => handleDateChange('firstDate', date)}
+                placeholder="Select first due date"
               />
               {validationErrors.firstDate && (
     <div className="text-red-500 text-sm mt-1">
@@ -539,7 +589,8 @@ const handleConfirm = async () => {
             </div>
             <div className="w-1/2">
               <label className="text-gray-600 mb-2 block">Second Due Date  {frequency === 'quarterly' && <span className="text-red-500">*</span>}</label>
-              <SimpleDatePicker
+              <DatePicker
+              inputFormat='DD-MM'
                 className="w-full"
                 placeholder="Select second due date"
                 value={paymentDueDates.secondDate}
@@ -557,7 +608,8 @@ const handleConfirm = async () => {
           <div className="flex gap-4">
             <div className="w-1/2">
               <label className="text-gray-600 mb-2 block">Third Due Date  {frequency === 'quarterly' && <span className="text-red-500">*</span>}</label>
-              <SimpleDatePicker
+              <DatePicker
+              inputFormat='DD-MM'
                 className="w-full"
                 placeholder="Select third due date"
                 value={paymentDueDates.thirdDate}
@@ -572,7 +624,8 @@ const handleConfirm = async () => {
             </div>
             <div className="w-1/2">
               <label className="text-gray-600 mb-2 block">Last Due Date {(frequency === 'quarterly' || frequency === 'half_yearly') && <span className="text-red-500">*</span>}</label>
-              <SimpleDatePicker
+              <DatePicker
+              inputFormat='DD-MM'
                 className="w-full"
                 placeholder="Select last due date"
                 value={paymentDueDates.lastDate}

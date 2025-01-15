@@ -121,6 +121,32 @@ const [ptRcValidationErrors, setPtRcValidationErrors] = useState({
     lastDate: null
   });
 
+  const DatePickerComponent = ({ frequency, value, onChange, disabled, placeholder }) => {
+    if (frequency === 'monthly') {
+      return (
+        <SimpleDatePicker
+          className="w-full"
+          placeholder={placeholder}
+          value={value}
+          onChange={onChange}
+          disabled={disabled}
+        />
+      );
+    }
+    
+    return (
+      <DatePicker
+      inputFormat='DD-MM'
+        className="w-full"
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+        disabled={disabled}
+      />
+    );
+  };
+
+
   function formatDayWithSuffix(date) {
     if (!date) return '';
     const day = dayjs(date).date(); // Extract the day as a number
@@ -679,12 +705,18 @@ useEffect(() => {
             <div className="flex gap-4">
               <div className="w-1/2">
                 <label className="text-gray-600 mb-2 block">First Due Date <span className="text-red-500">*</span></label>
-                <SimpleDatePicker
+                <DatePickerComponent
+                frequency={ptEcFrequency}
+                value={ptEcDates.firstDate}
+                  onChange={(date) => handleDateChangePtEc('firstDate', date)}     
+                placeholder="Select first due date"
+              />
+                {/* <DatePicker
                   className="w-full"
                   placeholder="Select first due date"
                   value={ptEcDates.firstDate}
-                  onChange={(date) => handleDateChangePtEc('firstDate', date)}        
-                />
+                  onChange={(date) => handleDateChangePtEc('firstDate', date)}         */}
+                {/* /> */}
                 {ptEcValidationErrors.firstDate && (
     <div className="text-red-500 text-sm mt-1">
         {ptEcValidationErrors.firstDate}
@@ -695,7 +727,8 @@ useEffect(() => {
               <label className="text-gray-600 mb-2 block">
           Second Due Date {ptEcFrequency === 'quarterly' && <span className="text-red-500">*</span>}
         </label>
-                <SimpleDatePicker
+                <DatePicker
+                inputFormat='DD-MM'
                   className="w-full"
                   placeholder="Select second due date"
                   value={ptEcDates.secondDate}
@@ -715,7 +748,8 @@ useEffect(() => {
               <label className="text-gray-600 mb-2 block">
           Third Due Date {ptEcFrequency === 'quarterly' && <span className="text-red-500">*</span>}
         </label>
-                <SimpleDatePicker
+                <DatePicker
+                inputFormat='DD-MM'
                   className="w-full"
                   placeholder="Select third due date"
                   value={ptEcDates.thirdDate}
@@ -733,7 +767,8 @@ useEffect(() => {
           Fourth Due Date {(ptEcFrequency === 'quarterly' || ptEcFrequency === 'half_yearly') && 
             <span className="text-red-500">*</span>}
         </label>
-                <SimpleDatePicker
+                <DatePicker
+                  inputFormat='DD-MM'
                   className="w-full"
                   placeholder="Select fourth due date"
                   value={ptEcDates.lastDate}
@@ -754,12 +789,18 @@ useEffect(() => {
             <div className="flex gap-4">
               <div className="w-1/2">
                 <label className="text-gray-600 mb-2 block">First Due Date <span className="text-red-500">*</span></label>
-                <SimpleDatePicker
+                <DatePickerComponent
+                frequency={ptRcFrequency}
+                value={ptRcDates.firstDate}
+                onChange={(date) => handleDateChangePtRc('firstDate', date)}  
+                placeholder="Select first due date"
+              />
+                {/* <DatePicker
                   className="w-full"
                   placeholder="Select first due date"
                   value={ptRcDates.firstDate}
                   onChange={(date) => handleDateChangePtRc('firstDate', date)}    
-                />
+                /> */}
                  {ptRcValidationErrors.firstDate && (
     <div className="text-red-500 text-sm mt-1">
         {ptRcValidationErrors.firstDate}
@@ -770,7 +811,8 @@ useEffect(() => {
               <label className="text-gray-600 mb-2 block">
           Second Due Date {ptRcFrequency === 'quarterly' && <span className="text-red-500">*</span>}
         </label>
-                <SimpleDatePicker
+                <DatePicker
+                inputFormat='DD-MM'
                   className="w-full"
                   placeholder="Select second due date"
                   value={ptRcDates.secondDate}
@@ -789,7 +831,8 @@ useEffect(() => {
               <label className="text-gray-600 mb-2 block">
           Third Due Date {ptRcFrequency === 'quarterly' && <span className="text-red-500">*</span>}
         </label>
-                <SimpleDatePicker
+                <DatePicker
+                inputFormat='DD-MM'
                   className="w-full"
                   placeholder="Select third due date"
                   value={ptRcDates.thirdDate}
@@ -807,7 +850,8 @@ useEffect(() => {
           Fourth Due Date {(ptRcFrequency === 'quarterly' || ptRcFrequency === 'half_yearly') && 
             <span className="text-red-500">*</span>}
         </label>
-                <SimpleDatePicker
+                <DatePicker
+                inputFormat='DD-MM'
                   className="w-full"
                   placeholder="Select fourth due date"
                   value={ptRcDates.lastDate}
