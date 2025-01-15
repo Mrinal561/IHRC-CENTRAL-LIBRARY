@@ -615,7 +615,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { format } from 'date-fns';
+import { format, parseISO, startOfDay } from 'date-fns';
 import { Button, Dialog } from '@/components/ui';
 import { FormItem, FormContainer } from '@/components/ui/Form';
 import { HiOutlineViewGrid } from 'react-icons/hi';
@@ -664,6 +664,17 @@ const paymentModeOptions = [
 const frequencyOptions = [
   { value: 'monthly', label: 'Monthly' },
 ];
+
+const formatDateForSubmission = (date: Date | null): string | null => {
+  if (!date) return null;
+  return format(startOfDay(date), 'yyyy-MM-dd');
+};
+
+const parseAPIDate = (dateString: string | null): Date | null => {
+  if (!dateString) return null;
+  return parseISO(dateString);
+};
+
 
 const PFSetupTable = ({ refreshTrigger } : any) => {
   const dispatch = useDispatch<AppDispatch>();
@@ -771,6 +782,7 @@ useEffect(() => {
       const { payload } = await dispatch(fetchPFConfigs({ page: 1, page_size: 1 }));
       if (payload?.data && payload?.data.length > 0) {
         setPFData(payload.data[0]);
+        
         // If data exists, populate the form fields
         const pfConfig = payload.data[0];
         setSelectedPFPaymentMode({ 
@@ -790,16 +802,18 @@ useEffect(() => {
           label: pfConfig.pfiw_frequency.charAt(0).toUpperCase() + pfConfig.pfiw_frequency.slice(1)
         });
         setPFPaymentDueDates({
-          first_date: pfConfig.pf_payment_due_date.first_date,
-          second_date: pfConfig.pf_payment_due_date.second_date,
-          third_date: pfConfig.pf_payment_due_date.third_date,
-          last_date: pfConfig.pf_payment_due_date.last_date
+          first_date: pfConfig.pf_payment_due_date.first_date ? 
+            format(parseAPIDate(pfConfig.pf_payment_due_date.first_date), 'yyyy-MM-dd') : null,
+          second_date: null,
+          third_date: null,
+          last_date: null
         });
         setPFIWPaymentDueDates({
-          first_date: pfConfig.pfiw_payment_due_date.first_date,
-          second_date: pfConfig.pfiw_payment_due_date.second_date,
-          third_date: pfConfig.pfiw_payment_due_date.third_date,
-          last_date: pfConfig.pfiw_payment_due_date.last_date
+          first_date: pfConfig.pfiw_payment_due_date.first_date ? 
+            format(parseAPIDate(pfConfig.pfiw_payment_due_date.first_date), 'yyyy-MM-dd') : null,
+          second_date: null,
+          third_date: null,
+          last_date: null
         });
       }
     } catch (error) {
@@ -837,8 +851,14 @@ useEffect(() => {
       pfiw_payment_mode: selectedPFIWPaymentMode.value as PaymentMode,
       pf_frequency: selectedPFFrequency.value as PFFrequency,
       pfiw_frequency: selectedPFIWFrequency.value as PFFrequency,
-      pf_payment_due_date: pfPaymentDueDates,
-      pfiw_payment_due_date: pfiWPaymentDueDates
+      pf_payment_due_date: {
+        ...pfPaymentDueDates,
+        first_date: pfPaymentDueDates.first_date
+      },
+      pfiw_payment_due_date: {
+        ...pfiWPaymentDueDates,
+        first_date: pfiWPaymentDueDates.first_date
+      }
     };
 
     try {
@@ -970,10 +990,10 @@ useEffect(() => {
             <SimpleDatePicker
               className="w-full"
               placeholder="Select PF first due date"
-              value={pfPaymentDueDates.first_date ? new Date(pfPaymentDueDates.first_date) : null}
+              value={pfPaymentDueDates.first_date ? parseISO(pfPaymentDueDates.first_date) : null}
               onChange={(date) => setPFPaymentDueDates(prev => ({
                 ...prev,
-                first_date: date ? date.toISOString() : null
+                first_date: date ? formatDateForSubmission(date) : null
               }))}
               disabled={!isEditMode}
             />
@@ -1009,11 +1029,11 @@ useEffect(() => {
             <SimpleDatePicker
               className="w-full"
               placeholder="Select PFIW first due date"
-              value={pfiWPaymentDueDates.first_date ? new Date(pfiWPaymentDueDates.first_date) : null}
-              onChange={(date) => setPFIWPaymentDueDates(prev => ({
-                ...prev,
-                first_date: date ? date.toISOString() : null
-              }))}
+              value={pfiWPaymentDueDates.first_date ? parseISO(pfiWPaymentDueDates.first_date) : null}
+        onChange={(date) => setPFIWPaymentDueDates(prev => ({
+          ...prev,
+          first_date: date ? formatDateForSubmission(date) : null
+        }))}
               disabled={!isEditMode}
             />
           </FormItem>

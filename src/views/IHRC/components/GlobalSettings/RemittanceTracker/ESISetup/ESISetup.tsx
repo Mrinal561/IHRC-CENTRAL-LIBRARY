@@ -1104,6 +1104,18 @@ import { showErrorNotification } from '@/components/ui/ErrorMessage';
 import * as yup from 'yup';
 import httpClient from '@/api/http-client';
 import { endpoints } from '@/api/endpoint';
+import { format, parseISO, startOfDay } from 'date-fns';
+
+const formatDateForSubmission = (date: Date | null): string | null => {
+    if (!date) return null;
+    return format(startOfDay(date), 'yyyy-MM-dd');
+};
+
+// Helper function to parse API date
+const parseAPIDate = (dateString: string | null): Date | null => {
+    if (!dateString) return null;
+    return parseISO(dateString);
+};
 
 const createESIValidationSchema = () => {
     return yup.object().shape({
@@ -1147,7 +1159,11 @@ const ESIConfiguration = () => {
                     value: configData.esi_frequency,
                     label: configData.esi_frequency.charAt(0).toUpperCase() + configData.esi_frequency.slice(1),
                 });
-                setPaymentDueDate(configData.esi_payment_due_date?.first_date || null);
+                setPaymentDueDate(
+                    configData.esi_payment_due_date?.first_date ? 
+                    format(parseAPIDate(configData.esi_payment_due_date.first_date), 'yyyy-MM-dd') : 
+                    null
+                );
             }
         } catch (error) {
             showErrorNotification('Failed to fetch ESI configuration');
@@ -1159,7 +1175,10 @@ const ESIConfiguration = () => {
     const validateDates = async () => {
         try {
             const validationSchema = createESIValidationSchema();
-            await validationSchema.validate({ payment_due_date: paymentDueDate }, { abortEarly: false });
+            await validationSchema.validate(
+                { payment_due_date: paymentDueDate ? parseAPIDate(paymentDueDate) : null }, 
+                { abortEarly: false }
+            );
             setValidationErrors({});
             return true;
         } catch (error) {
@@ -1243,8 +1262,8 @@ const ESIConfiguration = () => {
                         <SimpleDatePicker
                             className="w-full"
                             placeholder="Select ESI due date"
-                            value={paymentDueDate ? new Date(paymentDueDate) : null}
-                            onChange={(date) => setPaymentDueDate(date ? date.toISOString() : null)}
+                            value={paymentDueDate ? parseISO(paymentDueDate) : null}
+                            onChange={(date) => setPaymentDueDate(date ? formatDateForSubmission(date) : null)}
                             disabled={!isEditMode}
                         />
                     </FormItem>

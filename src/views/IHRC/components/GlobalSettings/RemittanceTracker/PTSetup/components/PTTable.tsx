@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import DataTable from '@/components/shared/DataTable';
-import { format } from 'date-fns';
+import { format, parseISO, startOfDay } from 'date-fns';
 import { Button, Checkbox, DatePicker, Dialog, Tooltip } from '@/components/ui';
 import { MdEdit } from 'react-icons/md';
 import { AppDispatch } from '@/store'
@@ -20,6 +20,58 @@ import * as yup from 'yup';
 import dayjs from 'dayjs';
 import SimpleDatePicker from '@/components/ui/OutlinedInput/SimpleDatePicker';
 
+
+
+const formatDateForSubmission = (date) => {
+  if (!date) return null;
+  return format(startOfDay(date), 'yyyy-MM-dd');
+};
+
+const parseAPIDate = (dateString) => {
+  if (!dateString) return null;
+  return parseISO(dateString);
+};
+
+const DatePickerComponent = ({ frequency, value, onChange, disabled, placeholder }) => {
+  if (frequency === 'monthly') {
+    return (
+      <SimpleDatePicker
+        className="w-full"
+        placeholder={placeholder}
+        value={value ? parseAPIDate(value) : null}
+        onChange={(date) => onChange(formatDateForSubmission(date))}
+        disabled={disabled}
+      />
+    );
+  }
+  
+  return (
+    <DatePicker
+    // size='sm'
+      inputFormat='DD-MM'
+      className="w-full"
+      placeholder={placeholder}
+      value={value ? parseAPIDate(value) : null}
+      onChange={(date) => onChange(formatDateForSubmission(date))}
+      disabled={disabled}
+    />
+  );
+};
+
+// Function to get day with suffix for display
+function formatDayWithSuffix(date) {
+    if (!date) return '';
+    const day = dayjs(date).date();
+    const suffix = getDaySuffix(day);
+    return `${day}${suffix}`;
+}
+
+function getDaySuffix(day) {
+    if (day % 10 === 1 && day !== 11) return 'st';
+    if (day % 10 === 2 && day !== 12) return 'nd';
+    if (day % 10 === 3 && day !== 13) return 'rd';
+    return 'th';
+}
 // First, add these validation schemas
 const createPTValidationSchema = (frequency) => {
     const baseSchema = {
@@ -121,47 +173,6 @@ const [ptRcValidationErrors, setPtRcValidationErrors] = useState({
     lastDate: null
   });
 
-  const DatePickerComponent = ({ frequency, value, onChange, disabled, placeholder }) => {
-    if (frequency === 'monthly') {
-      return (
-        <SimpleDatePicker
-          className="w-full"
-          placeholder={placeholder}
-          value={value}
-          onChange={onChange}
-          disabled={disabled}
-        />
-      );
-    }
-    
-    return (
-      <DatePicker
-      inputFormat='DD-MM'
-        className="w-full"
-        placeholder={placeholder}
-        value={value}
-        onChange={onChange}
-        disabled={disabled}
-      />
-    );
-  };
-
-
-  function formatDayWithSuffix(date) {
-    if (!date) return '';
-    const day = dayjs(date).date(); // Extract the day as a number
-    const suffix = getDaySuffix(day);
-    return `${day}${suffix}`;
-  }
-  
-  // Function to determine the correct suffix
-  function getDaySuffix(day) {
-    if (day % 10 === 1 && day !== 11) return 'st';
-    if (day % 10 === 2 && day !== 12) return 'nd';
-    if (day % 10 === 3 && day !== 13) return 'rd';
-    return 'th';
-  }
-
   useEffect(() => {
     loadStates();
   }, []);
@@ -195,17 +206,17 @@ const [ptRcValidationErrors, setPtRcValidationErrors] = useState({
       setIsActive(detailData.ptrc_active && detailData.ptec_active);
       
       setPtEcDates({
-        firstDate: formatDate(detailData.ptec_payment_due_date?.first_date),
-        secondDate: formatDate(detailData.ptec_payment_due_date?.second_date),
-        thirdDate: formatDate(detailData.ptec_payment_due_date?.third_date),
-        lastDate: formatDate(detailData.ptec_payment_due_date?.last_date)
+        firstDate:  detailData.ptec_payment_due_date?.first_date,
+        secondDate:  detailData.ptec_payment_due_date?.second_date,
+        thirdDate:  detailData.ptec_payment_due_date?.third_date,
+        lastDate:  detailData.ptec_payment_due_date?.last_date
       });
   
       setPtRcDates({
-        firstDate: formatDate(detailData.ptrc_payment_due_date?.first_date),
-        secondDate: formatDate(detailData.ptrc_payment_due_date?.second_date),
-        thirdDate: formatDate(detailData.ptrc_payment_due_date?.third_date),
-        lastDate: formatDate(detailData.ptrc_payment_due_date?.last_date)
+        firstDate:  detailData.ptrc_payment_due_date?.first_date,
+        secondDate:  detailData.ptrc_payment_due_date?.second_date,
+        thirdDate:  detailData.ptrc_payment_due_date?.third_date,
+        lastDate:  detailData.ptrc_payment_due_date?.last_date
       });
     } catch (error) {
       showErrorNotification('Failed to fetch PT details');
@@ -276,8 +287,6 @@ useEffect(() => {
 const handleDateChangeForFrequency = (dateType, date, frequency, setDates) => {
   setDates(prev => {
       const newDates = { ...prev };
-
-      // Set the changed date
       newDates[dateType] = date;
 
       // Reset disabled dates to null based on frequency
@@ -727,9 +736,8 @@ useEffect(() => {
               <label className="text-gray-600 mb-2 block">
           Second Due Date {ptEcFrequency === 'quarterly' && <span className="text-red-500">*</span>}
         </label>
-                <DatePicker
-                inputFormat='DD-MM'
-                  className="w-full"
+              <DatePickerComponent
+              frequency={ptEcFrequency}
                   placeholder="Select second due date"
                   value={ptEcDates.secondDate}
                   onChange={(date) => handleDateChangePtEc('secondDate', date)}
@@ -748,9 +756,8 @@ useEffect(() => {
               <label className="text-gray-600 mb-2 block">
           Third Due Date {ptEcFrequency === 'quarterly' && <span className="text-red-500">*</span>}
         </label>
-                <DatePicker
-                inputFormat='DD-MM'
-                  className="w-full"
+        <DatePickerComponent
+              frequency={ptEcFrequency}
                   placeholder="Select third due date"
                   value={ptEcDates.thirdDate}
                   onChange={(date) => handleDateChangePtEc('thirdDate', date)}
@@ -767,10 +774,9 @@ useEffect(() => {
           Fourth Due Date {(ptEcFrequency === 'quarterly' || ptEcFrequency === 'half_yearly') && 
             <span className="text-red-500">*</span>}
         </label>
-                <DatePicker
-                  inputFormat='DD-MM'
-                  className="w-full"
-                  placeholder="Select fourth due date"
+        <DatePickerComponent
+              frequency={ptEcFrequency}
+                  placeholder="Select last due date"
                   value={ptEcDates.lastDate}
                   onChange={(date) => handleDateChangePtEc('lastDate', date)}
                   disabled={isDueDateDisabled(ptEcFrequency, 3)}    
@@ -811,10 +817,9 @@ useEffect(() => {
               <label className="text-gray-600 mb-2 block">
           Second Due Date {ptRcFrequency === 'quarterly' && <span className="text-red-500">*</span>}
         </label>
-                <DatePicker
-                inputFormat='DD-MM'
-                  className="w-full"
-                  placeholder="Select second due date"
+        <DatePickerComponent
+                 placeholder="Select second due date"
+                frequency={ptRcFrequency}
                   value={ptRcDates.secondDate}
                   onChange={(date) => handleDateChangePtRc('secondDate', date)}
                   disabled={isDueDateDisabled(ptRcFrequency, 1)}    
@@ -831,10 +836,9 @@ useEffect(() => {
               <label className="text-gray-600 mb-2 block">
           Third Due Date {ptRcFrequency === 'quarterly' && <span className="text-red-500">*</span>}
         </label>
-                <DatePicker
-                inputFormat='DD-MM'
-                  className="w-full"
-                  placeholder="Select third due date"
+        <DatePickerComponent
+               placeholder="Select third due date"    
+                frequency={ptRcFrequency}
                   value={ptRcDates.thirdDate}
                   onChange={(date) => handleDateChangePtRc('thirdDate', date)}
                   disabled={isDueDateDisabled(ptRcFrequency, 2)}     
@@ -850,10 +854,9 @@ useEffect(() => {
           Fourth Due Date {(ptRcFrequency === 'quarterly' || ptRcFrequency === 'half_yearly') && 
             <span className="text-red-500">*</span>}
         </label>
-                <DatePicker
-                inputFormat='DD-MM'
-                  className="w-full"
-                  placeholder="Select fourth due date"
+        <DatePickerComponent
+                  placeholder="Select last due date"
+                frequency={ptRcFrequency}
                   value={ptRcDates.lastDate}
                   onChange={(date) => handleDateChangePtRc('lastDate', date)}
                   disabled={isDueDateDisabled(ptRcFrequency, 3)}       
