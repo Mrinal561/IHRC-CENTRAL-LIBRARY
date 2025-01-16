@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import DataTable from '@/components/shared/DataTable';
-import { format } from 'date-fns';
+import { format, parseISO, startOfDay } from 'date-fns';
 import { Button, Tooltip, Badge, Dialog, Checkbox, DatePicker } from '@/components/ui';
 import { MdEdit } from 'react-icons/md';
 import { HiOutlineViewGrid } from 'react-icons/hi';
@@ -18,14 +18,25 @@ import * as yup from 'yup';
 import dayjs from 'dayjs';
 import SimpleDatePicker from '@/components/ui/OutlinedInput/SimpleDatePicker';
 
+
+const formatDateForSubmission = (date) => {
+  if (!date) return null;
+  return format(startOfDay(date), 'yyyy-MM-dd');
+};
+
+const parseAPIDate = (dateString) => {
+  if (!dateString) return null;
+  return parseISO(dateString);
+};
+
 const DatePickerComponent = ({ frequency, value, onChange, disabled, placeholder }) => {
   if (frequency === 'monthly') {
     return (
       <SimpleDatePicker
         className="w-full"
         placeholder={placeholder}
-        value={value}
-        onChange={onChange}
+        value={value ? parseAPIDate(value) : null}
+        onChange={(date) => onChange(formatDateForSubmission(date))}
         disabled={disabled}
       />
     );
@@ -33,14 +44,31 @@ const DatePickerComponent = ({ frequency, value, onChange, disabled, placeholder
   
   return (
     <DatePicker
+      inputFormat='DD-MM'
       className="w-full"
       placeholder={placeholder}
-      value={value}
-      onChange={onChange}
+      value={value ? parseAPIDate(value) : null}
+      onChange={(date) => onChange(formatDateForSubmission(date))}
       disabled={disabled}
     />
   );
 };
+
+// Function to get day with suffix for display
+function formatDayWithSuffix(date) {
+    if (!date) return '';
+    const day = dayjs(date).date();
+    const suffix = getDaySuffix(day);
+    return `${day}${suffix}`;
+}
+
+function getDaySuffix(day) {
+    if (day % 10 === 1 && day !== 11) return 'st';
+    if (day % 10 === 2 && day !== 12) return 'nd';
+    if (day % 10 === 3 && day !== 13) return 'rd';
+    return 'th';
+}
+
 
 
 const createLWFValidationSchema = (frequency) => {
@@ -136,44 +164,6 @@ const LWFTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any
     sort: { order: '', key: '' },
   });
 
-  function formatDayWithSuffix(date) {
-    if (!date) return '';
-    const day = dayjs(date).date(); // Extract the day as a number
-    const suffix = getDaySuffix(day);
-    return `${day}${suffix}`;
-  }
-  const DatePickerComponent = ({ frequency, value, onChange, disabled, placeholder }) => {
-  if (frequency === 'monthly') {
-    return (
-      <SimpleDatePicker
-        className="w-full"
-        placeholder={placeholder}
-        value={value}
-        onChange={onChange}
-        disabled={disabled}
-      />
-    );
-  }
-  
-  return (
-    <DatePicker
-    inputFormat='DD-MM'
-      className="w-full"
-      placeholder={placeholder}
-      value={value}
-      onChange={onChange}
-      disabled={disabled}
-    />
-  );
-};
-  
-  // Function to determine the correct suffix
-  function getDaySuffix(day) {
-    if (day % 10 === 1 && day !== 11) return 'st';
-    if (day % 10 === 2 && day !== 12) return 'nd';
-    if (day % 10 === 3 && day !== 13) return 'rd';
-    return 'th';
-  }
 
   useEffect(() => {
     loadStates();
@@ -211,11 +201,11 @@ const LWFTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any
       setFrequency(detailData.lwf_frequency);
       setIsActive(detailData.lwf_active);
       setPaymentDueDates({
-        firstDate: formatDate(detailData.lwf_payment_due_date.first_date),
-        secondDate: formatDate(detailData.lwf_payment_due_date.second_date),
-        thirdDate: formatDate(detailData.lwf_payment_due_date.third_date),
-        lastDate: formatDate(detailData.lwf_payment_due_date.last_date)
-      });
+        firstDate: detailData.lwf_payment_due_date?.first_date,
+        secondDate: detailData.lwf_payment_due_date?.second_date,
+        thirdDate: detailData.lwf_payment_due_date?.third_date,
+        lastDate: detailData.lwf_payment_due_date?.last_date
+    });
     } catch (error) {
       showErrorNotification('Failed to fetch state details');
     }
@@ -256,24 +246,22 @@ const LWFTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any
 
 const handleDateChange = (dateType, date) => {
   setPaymentDueDates(prev => {
-      const newDates = { ...prev }
-      
-      // Set the changed date
-      newDates[dateType] = date
+      const newDates = { ...prev };
+      newDates[dateType] = date;
 
-      // Check and reset disabled dates to null based on frequency
+      // Reset disabled dates based on frequency
       if (frequency === 'monthly' || frequency === 'yearly') {
-          newDates.secondDate = null
-          newDates.thirdDate = null
-          newDates.lastDate = null
+          newDates.secondDate = null;
+          newDates.thirdDate = null;
+          newDates.lastDate = null;
       } else if (frequency === 'half_yearly') {
-          newDates.secondDate = null
-          newDates.thirdDate = null
+          newDates.secondDate = null;
+          newDates.thirdDate = null;
       }
 
-      return newDates
-  })
-}
+      return newDates;
+  });
+};
 
 // Update useEffect to reset dates when frequency changes
 useEffect(() => {
@@ -589,14 +577,13 @@ const handleConfirm = async () => {
             </div>
             <div className="w-1/2">
               <label className="text-gray-600 mb-2 block">Second Due Date  {frequency === 'quarterly' && <span className="text-red-500">*</span>}</label>
-              <DatePicker
-              inputFormat='DD-MM'
-                className="w-full"
-                placeholder="Select second due date"
+              <DatePickerComponent
+                frequency={frequency}
                 value={paymentDueDates.secondDate}
                 onChange={(date) => handleDateChange('secondDate', date)}
-                disabled={isDueDateDisabled(1)}         
-              />
+                placeholder="Select second due date"
+                disabled={isDueDateDisabled(1)}
+            />
               {validationErrors.secondDate && (
     <div className="text-red-500 text-sm mt-1">
         {validationErrors.secondDate}
@@ -608,14 +595,13 @@ const handleConfirm = async () => {
           <div className="flex gap-4">
             <div className="w-1/2">
               <label className="text-gray-600 mb-2 block">Third Due Date  {frequency === 'quarterly' && <span className="text-red-500">*</span>}</label>
-              <DatePicker
-              inputFormat='DD-MM'
-                className="w-full"
-                placeholder="Select third due date"
+              <DatePickerComponent
+                frequency={frequency}
                 value={paymentDueDates.thirdDate}
                 onChange={(date) => handleDateChange('thirdDate', date)}
-                disabled={isDueDateDisabled(2)}        
-              />
+                placeholder="Select third due date"
+                disabled={isDueDateDisabled(2)}
+            />
               {validationErrors.thirdDate && (
     <div className="text-red-500 text-sm mt-1">
         {validationErrors.thirdDate}
@@ -624,14 +610,13 @@ const handleConfirm = async () => {
             </div>
             <div className="w-1/2">
               <label className="text-gray-600 mb-2 block">Last Due Date {(frequency === 'quarterly' || frequency === 'half_yearly') && <span className="text-red-500">*</span>}</label>
-              <DatePicker
-              inputFormat='DD-MM'
-                className="w-full"
-                placeholder="Select last due date"
+              <DatePickerComponent
+                frequency={frequency}
                 value={paymentDueDates.lastDate}
                 onChange={(date) => handleDateChange('lastDate', date)}
-                disabled={isDueDateDisabled(3)}            
-              />
+                placeholder="Select last due date"
+                disabled={isDueDateDisabled(3)}
+            />
               {validationErrors.lastDate && (
     <div className="text-red-500 text-sm mt-1">
         {validationErrors.lastDate}

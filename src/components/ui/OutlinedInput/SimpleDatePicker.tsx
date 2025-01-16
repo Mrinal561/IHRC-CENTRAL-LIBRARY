@@ -35,7 +35,7 @@ const SimpleDatePicker = ({ value, onChange, placeholder, disabled, className })
     <div className="relative w-full" ref={wrapperRef}>
       <input
         type="text"
-        className={`w-full h-10 px-4 rounded-md ${
+        className={`w-full h-11 px-4 rounded-md ${
           disabled 
             ? 'bg-gray-50 border border-gray-200 text-gray-400'
             : 'bg-white border border-gray-300 hover:border-gray-400'
