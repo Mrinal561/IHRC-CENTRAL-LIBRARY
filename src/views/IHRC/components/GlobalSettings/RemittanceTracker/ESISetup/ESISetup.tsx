@@ -1258,7 +1258,7 @@ const ESIConfiguration = () => {
                         invalid={!!validationErrors.payment_due_date}
                         errorMessage={validationErrors.payment_due_date}
                     >
-                        <label className="text-gray-600 mb-2 block">ESI Monthly Due Date</label>
+                        <label className="text-gray-600 mb-2 block">ESI Monthly Due Date <span className="text-red-500">*</span></label>
                         <SimpleDatePicker
                             className="w-full"
                             placeholder="Select ESI due date"
