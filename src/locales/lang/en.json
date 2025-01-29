@@ -21,7 +21,8 @@
                 "item4": "PF Configuration",
                 "item5": "Register Template",
                 "item6": "Role Configuration",
-                "item7": "Company Admin"
+                "item7": "Company Admin",
+                "item8": "External User"
             }
         }
     }
