@@ -226,24 +226,24 @@ const AdminTable: React.FC<AdminTableProps> = ({
                     />
                 ),
             },
-            // {
-            //     header: 'Register & Return',
-            //     id: 'registerReturn',
-            //     cell: ({ row }) => (
-            //         <AccessIndicator 
-            //             hasAccess={row.original.moduleAccessNames.includes('Register & Return')} 
-            //         />
-            //     ),
-            // },
-            // {
-            //     header: 'Company Setup',
-            //     id: 'companySetup',
-            //     cell: ({ row }) => (
-            //         <AccessIndicator 
-            //             hasAccess={row.original.moduleAccessNames.includes('Company Setup')} 
-            //         />
-            //     ),
-            // },
+            {
+                header: 'Notice',
+                id: 'Notice',
+                cell: ({ row }) => (
+                    <AccessIndicator 
+                        hasAccess={row.original.moduleAccessNames.includes('Notice')} 
+                    />
+                ),
+            },
+            {
+                header: 'Agreement',
+                id: 'Agreement',
+                cell: ({ row }) => (
+                    <AccessIndicator 
+                        hasAccess={row.original.moduleAccessNames.includes('Agreement')} 
+                    />
+                ),
+            },
             {
                 header: 'Actions',
                 id: 'actions',
@@ -445,33 +445,32 @@ const handleDialogClose = () => {
           </div>
         </div>
 
-                    <div>
-                        <label className="text-gray-600 mb-2 block">Modules List</label>
-                        <div className="border rounded p-4">
-                            <Checkbox.Group
-    value={editedAdminData.moduleAccess}
-    onChange={(values: string[]) => handleModuleChange('moduleAccess', values)}
-    className="flex flex-row flex-wrap gap-6"
->
-    {modules
-        .filter(module => module.name === 'Remittance Tracker')
-        .map(module => (
-            <div key={module.id} className="flex-1 min-w-[180px]">
-                <Checkbox 
-                    value={module.name}
-                    className="inline-flex items-center"
-                >
-                    <span className="ml-2 whitespace-nowrap">{module.name}</span>
-                </Checkbox>
-            </div>
-        ))}
-</Checkbox.Group>
-{errors.moduleAccess && (
-                                <p className="text-red-500 text-xs mt-1">{errors.moduleAccess}</p>
-                            )}
-                          </div>
-
+        <div>
+    <label className="text-gray-600 mb-2 block">Modules List</label>
+    <div className="border rounded p-4">
+        <Checkbox.Group
+            value={editedAdminData.moduleAccess}
+            onChange={(values: string[]) => handleModuleChange('moduleAccess', values)}
+            className="flex flex-row flex-wrap gap-6"
+        >
+            {modules
+                .filter(module => ['Remittance Tracker', 'Notice', 'Agreement'].includes(module.name))
+                .map(module => (
+                    <div key={module.id} className="flex-1 min-w-[180px]">
+                        <Checkbox 
+                            value={module.name}
+                            className="inline-flex items-center"
+                        >
+                            <span className="ml-2 whitespace-nowrap">{module.name}</span>
+                        </Checkbox>
                     </div>
+                ))}
+        </Checkbox.Group>
+        {errors.moduleAccess && (
+            <p className="text-red-500 text-xs mt-1">{errors.moduleAccess}</p>
+        )}
+    </div>
+</div>
                 </div>
                 <div className="text-right mt-6">
                     <Button

@@ -447,28 +447,28 @@ const CompanyAdmin = () => {
 
       {/* Module List Section */}
       <div>
-        <h6 className="text-gray-800 font-medium mb-2">Module List</h6>
-        <div className="border rounded p-2">
-          <Checkbox.Group
-            value={selectedModules}
-            onChange={handleModuleChange}
-            className="flex flex-row flex-wrap gap-3"
-          >
-            {sortedModules
-              .filter(module => module.name === 'Remittance Tracker')
-              .map(module => (
-                <div key={module.id} className="flex-1 min-w-[180px]">
-                  <Checkbox value={module.id} className="inline-flex items-center">
-                    <span className="ml-2 whitespace-nowrap">{module.name}</span>
-                  </Checkbox>
-                </div>
-              ))}
-          </Checkbox.Group>
-          {errors.moduleAccess && (
-            <p className="text-red-500 text-xs mt-1">{errors.moduleAccess}</p>
-          )}
-        </div>
-      </div>
+  <h6 className="text-gray-800 font-medium mb-2">Module List</h6>
+  <div className="border rounded p-2">
+    <Checkbox.Group
+      value={selectedModules}
+      onChange={handleModuleChange}
+      className="flex flex-row flex-wrap gap-3"
+    >
+      {sortedModules
+        .filter(module => ['Remittance Tracker', 'Notice', 'Agreement'].includes(module.name))
+        .map(module => (
+          <div key={module.id} className="flex-1 min-w-[180px]">
+            <Checkbox value={module.id} className="inline-flex items-center">
+              <span className="ml-2 whitespace-nowrap">{module.name}</span>
+            </Checkbox>
+          </div>
+        ))}
+    </Checkbox.Group>
+    {errors.moduleAccess && (
+      <p className="text-red-500 text-xs mt-1">{errors.moduleAccess}</p>
+    )}
+  </div>
+</div>
     </div>
 
     <div className="flex justify-end gap-2 mt-3">
