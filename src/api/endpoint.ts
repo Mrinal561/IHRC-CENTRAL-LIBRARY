@@ -81,7 +81,14 @@ export const endpoints = {
         update: (id: string) => api(`companyadmin/company-group/${id}`),
         delete: (id: string) => api(`companyadmin/company-group/${id}`),
     },
+   externaluser: {
+    template: () => api(`superadmin/externaluser/export-external-user-template`),
+    list: () => api(`superadmin/externaluser/external-user`),
+    delete: (id:any) => api(`superadmin/externaluser/external-user/${id}`),
+    update:(id:any)=> api(`superadmin/externaluser/external-user/${id}`),
+    create: (id:any) => api(`superadmin/externaluser/external-user`)
 
+   }
     
 
 }

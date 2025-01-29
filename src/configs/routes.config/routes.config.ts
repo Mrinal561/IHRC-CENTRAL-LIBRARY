@@ -12,6 +12,17 @@ export const protectedRoutes = [
         component: lazy(() => import('@/views/IHRC/components/Home/Home')),
         authority: [],
     },
+    {
+        key: 'groupMenu.collapse.item7',
+        path: '/external-user',
+        component: lazy(
+            () =>
+                import(
+                    '@/views/IHRC/components/GlobalSettings/ExternalUser/ExternalUser'
+                ),
+        ),
+        authority: [],
+    },
     // {
     //     key: 'groupMenu.collapse.item1',
     //     path: '/remittance-tracker',
