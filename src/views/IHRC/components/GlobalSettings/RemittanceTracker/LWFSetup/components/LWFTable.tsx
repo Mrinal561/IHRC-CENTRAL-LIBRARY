@@ -567,7 +567,7 @@ const handleConfirm = async () => {
                 frequency={frequency}
                 value={paymentDueDates.firstDate}
                 onChange={(date) => handleDateChange('firstDate', date)}
-                placeholder="Select first due date"
+                placeholder="Select First Due Date"
               />
               {validationErrors.firstDate && (
     <div className="text-red-500 text-sm mt-1">
@@ -581,7 +581,7 @@ const handleConfirm = async () => {
                 frequency={frequency}
                 value={paymentDueDates.secondDate}
                 onChange={(date) => handleDateChange('secondDate', date)}
-                placeholder="Select second due date"
+                placeholder="Select Second Due Date"
                 disabled={isDueDateDisabled(1)}
             />
               {validationErrors.secondDate && (
@@ -599,7 +599,7 @@ const handleConfirm = async () => {
                 frequency={frequency}
                 value={paymentDueDates.thirdDate}
                 onChange={(date) => handleDateChange('thirdDate', date)}
-                placeholder="Select third due date"
+                placeholder="Select Third Due Date"
                 disabled={isDueDateDisabled(2)}
             />
               {validationErrors.thirdDate && (
@@ -614,7 +614,7 @@ const handleConfirm = async () => {
                 frequency={frequency}
                 value={paymentDueDates.lastDate}
                 onChange={(date) => handleDateChange('lastDate', date)}
-                placeholder="Select last due date"
+                placeholder="Select Last Due Date"
                 disabled={isDueDateDisabled(3)}
             />
               {validationErrors.lastDate && (
@@ -646,8 +646,7 @@ const handleConfirm = async () => {
           <Button 
             variant="solid" 
             onClick={handleConfirm}
-          >
-            Update
+          >Confirm
           </Button>
         </div>
       </Dialog>

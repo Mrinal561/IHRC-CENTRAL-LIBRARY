@@ -718,7 +718,7 @@ useEffect(() => {
                 frequency={ptEcFrequency}
                 value={ptEcDates.firstDate}
                   onChange={(date) => handleDateChangePtEc('firstDate', date)}     
-                placeholder="Select first due date"
+                placeholder="Select First Due Date"
               />
                 {/* <DatePicker
                   className="w-full"
@@ -738,7 +738,7 @@ useEffect(() => {
         </label>
               <DatePickerComponent
               frequency={ptEcFrequency}
-                  placeholder="Select second due date"
+                  placeholder="Select Second Due Date"
                   value={ptEcDates.secondDate}
                   onChange={(date) => handleDateChangePtEc('secondDate', date)}
 
@@ -758,7 +758,7 @@ useEffect(() => {
         </label>
         <DatePickerComponent
               frequency={ptEcFrequency}
-                  placeholder="Select third due date"
+                  placeholder="Select Third Due Date"
                   value={ptEcDates.thirdDate}
                   onChange={(date) => handleDateChangePtEc('thirdDate', date)}
                   disabled={isDueDateDisabled(ptEcFrequency, 2)}        
@@ -776,7 +776,7 @@ useEffect(() => {
         </label>
         <DatePickerComponent
               frequency={ptEcFrequency}
-                  placeholder="Select last due date"
+                  placeholder="Select Last Due Date"
                   value={ptEcDates.lastDate}
                   onChange={(date) => handleDateChangePtEc('lastDate', date)}
                   disabled={isDueDateDisabled(ptEcFrequency, 3)}    
@@ -799,7 +799,7 @@ useEffect(() => {
                 frequency={ptRcFrequency}
                 value={ptRcDates.firstDate}
                 onChange={(date) => handleDateChangePtRc('firstDate', date)}  
-                placeholder="Select first due date"
+                placeholder="Select First Due Date"
               />
                 {/* <DatePicker
                   className="w-full"
@@ -818,7 +818,7 @@ useEffect(() => {
           Second Due Date {ptRcFrequency === 'quarterly' && <span className="text-red-500">*</span>}
         </label>
         <DatePickerComponent
-                 placeholder="Select second due date"
+                 placeholder="Select Second Due Date"
                 frequency={ptRcFrequency}
                   value={ptRcDates.secondDate}
                   onChange={(date) => handleDateChangePtRc('secondDate', date)}
@@ -837,7 +837,7 @@ useEffect(() => {
           Third Due Date {ptRcFrequency === 'quarterly' && <span className="text-red-500">*</span>}
         </label>
         <DatePickerComponent
-               placeholder="Select third due date"    
+               placeholder="Select Third Due Date"    
                 frequency={ptRcFrequency}
                   value={ptRcDates.thirdDate}
                   onChange={(date) => handleDateChangePtRc('thirdDate', date)}
@@ -855,7 +855,7 @@ useEffect(() => {
             <span className="text-red-500">*</span>}
         </label>
         <DatePickerComponent
-                  placeholder="Select last due date"
+                  placeholder="Select Last Due Date"
                 frequency={ptRcFrequency}
                   value={ptRcDates.lastDate}
                   onChange={(date) => handleDateChangePtRc('lastDate', date)}
@@ -893,7 +893,7 @@ useEffect(() => {
           variant="solid" 
           onClick={handleConfirm}
         >
-          Update
+          Confirm
         </Button>
       </div>
     </Dialog>

@@ -497,7 +497,7 @@ const ExternalUserTable: React.FC<ExternalUserTableProps> = ({
       >
         <h5 className="mb-4">Confirm Deletion</h5>
         <p>Are you sure you want to delete this user?</p>
-        <div className="flex justify-end items-center mt-6 gap-2">
+        <div className="mt-6 text-right flex gap-2 justify-end items-center">
           <Button
             size="sm"
             variant="plain"
