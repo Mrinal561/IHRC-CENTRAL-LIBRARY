@@ -88,7 +88,7 @@ const SignInForm = (props: SignInFormProps) => {
                     //     }
                     //   }
                     toast.push(
-                        <Notification title="succes" type="success">
+                        <Notification title="Success" type="success">
                             Login successful
                         </Notification>,
                         {
@@ -118,7 +118,7 @@ const SignInForm = (props: SignInFormProps) => {
             const err = error as AxiosError
             if (err.response?.status == 401) {
                 toast.push(
-                    <Notification title="error" type="danger">
+                    <Notification title="Error" type="danger">
                         Invalid email or password{' '}
                     </Notification>,
                     {
@@ -127,7 +127,7 @@ const SignInForm = (props: SignInFormProps) => {
                 )
             } else {
                 toast.push(
-                    <Notification title="error" type="danger">
+                    <Notification title="Error" type="danger">
                      {error.response.data.message}
                     </Notification>,
                     {
