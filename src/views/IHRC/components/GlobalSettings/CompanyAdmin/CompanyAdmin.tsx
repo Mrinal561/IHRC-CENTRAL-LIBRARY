@@ -280,7 +280,7 @@ const CompanyAdmin = () => {
     } else if (Array.isArray(error)) {
       showErrorNotification(error);
     } else {
-      showErrorNotification('An unexpected error occurred. Please try again.');
+      showErrorNotification(error);
     }
   };
 
