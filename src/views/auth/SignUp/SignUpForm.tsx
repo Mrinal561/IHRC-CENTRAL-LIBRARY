@@ -7,8 +7,12 @@ import ActionLink from '@/components/shared/ActionLink'
 import useTimeOutMessage from '@/utils/hooks/useTimeOutMessage'
 import { Field, Form, Formik } from 'formik'
 import * as Yup from 'yup'
-import useAuth from '@/utils/hooks/useAuth'
 import type { CommonProps } from '@/@types/common'
+import httpClient from '@/api/http-client'
+import { endpoints } from '@/api/endpoint'
+import { AxiosError } from 'axios'
+import { Notification, toast } from '@/components/ui'
+import { useNavigate } from 'react-router-dom'
 
 interface SignUpFormProps extends CommonProps {
     disableSubmit?: boolean
@@ -16,42 +20,86 @@ interface SignUpFormProps extends CommonProps {
 }
 
 type SignUpFormSchema = {
-    userName: string
-    password: string
+    name: string
     email: string
+    password: string
+    confirmPassword: string
 }
 
 const validationSchema = Yup.object().shape({
-    userName: Yup.string().required('Please enter your user name'),
+    name: Yup.string()
+        .transform((value) => value.trim())
+        .required('Please enter your name')
+        .test('no-empty-spaces', 'Name cannot be just spaces', 
+            value => value.trim().length > 0),
     email: Yup.string()
+        .transform((value) => value.trim())
         .email('Invalid email')
         .required('Please enter your email'),
-    password: Yup.string().required('Please enter your password'),
-    confirmPassword: Yup.string().oneOf(
-        [Yup.ref('password')],
-        'Your passwords do not match'
-    ),
+    password: Yup.string()
+        .transform((value) => value.trim())
+        .required('Please enter your password')
+        .test('no-empty-spaces', 'Password cannot be just spaces',
+            value => value.trim().length > 0),
+    confirmPassword: Yup.string()
+        .transform((value) => value.trim())
+        .oneOf([Yup.ref('password')], 'Your passwords do not match')
+        .test('no-empty-spaces', 'Password cannot be just spaces',
+            value => value.trim().length > 0),
 })
 
 const SignUpForm = (props: SignUpFormProps) => {
     const { disableSubmit = false, className, signInUrl = '/sign-in' } = props
-
-    const { signUp } = useAuth()
-
     const [message, setMessage] = useTimeOutMessage()
+    const navigate = useNavigate()
 
     const onSignUp = async (
         values: SignUpFormSchema,
         setSubmitting: (isSubmitting: boolean) => void
     ) => {
-        const { userName, password, email } = values
         setSubmitting(true)
-        const result = await signUp({ userName, password, email })
+        try {
+            // Trim all values before sending to API
+            const trimmedValues = {
+                name: values.name.trim(),
+                email: values.email.trim(),
+                password: values.password.trim(),
+            }
 
-        if (result?.status === 'failed') {
-            setMessage(result.message)
+            const { data } = await httpClient.post(endpoints.auth.signup(), trimmedValues)
+
+            toast.push(
+                <Notification title="success" type="success">
+                    Account created successfully
+                </Notification>,
+                {
+                    placement: 'top-end',
+                }
+            )
+
+            navigate(signInUrl)
+        } catch (error) {
+            const err = error as AxiosError
+            if (err.response?.status === 400) {
+                toast.push(
+                    <Notification title="error" type="danger">
+                        Email already exists
+                    </Notification>,
+                    {
+                        placement: 'top-end',
+                    }
+                )
+            } else {
+                toast.push(
+                    <Notification title="error" type="danger">
+                        Something went wrong! Please try again.
+                    </Notification>,
+                    {
+                        placement: 'top-end',
+                    }
+                )
+            }
         }
-
         setSubmitting(false)
     }
 
@@ -64,10 +112,10 @@ const SignUpForm = (props: SignUpFormProps) => {
             )}
             <Formik
                 initialValues={{
-                    userName: 'admin1',
-                    password: '123Qwe1',
-                    confirmPassword: '123Qwe1',
-                    email: 'test@testmail.com',
+                    name: '',
+                    email: '',
+                    password: '',
+                    confirmPassword: '',
                 }}
                 validationSchema={validationSchema}
                 onSubmit={(values, { setSubmitting }) => {
@@ -78,20 +126,24 @@ const SignUpForm = (props: SignUpFormProps) => {
                     }
                 }}
             >
-                {({ touched, errors, isSubmitting }) => (
+                {({ touched, errors, isSubmitting, handleChange, setFieldValue }) => (
                     <Form>
                         <FormContainer>
                             <FormItem
-                                label="User Name"
-                                invalid={errors.userName && touched.userName}
-                                errorMessage={errors.userName}
+                                label="Name"
+                                invalid={errors.name && touched.name}
+                                errorMessage={errors.name}
                             >
                                 <Field
                                     type="text"
                                     autoComplete="off"
-                                    name="userName"
-                                    placeholder="User Name"
+                                    name="name"
+                                    placeholder="Name"
                                     component={Input}
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                        const value = e.target.value;
+                                        setFieldValue('name', value);
+                                    }}
                                 />
                             </FormItem>
                             <FormItem
@@ -105,6 +157,10 @@ const SignUpForm = (props: SignUpFormProps) => {
                                     name="email"
                                     placeholder="Email"
                                     component={Input}
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                        const value = e.target.value;
+                                        setFieldValue('email', value);
+                                    }}
                                 />
                             </FormItem>
                             <FormItem
@@ -117,6 +173,10 @@ const SignUpForm = (props: SignUpFormProps) => {
                                     name="password"
                                     placeholder="Password"
                                     component={PasswordInput}
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                        const value = e.target.value;
+                                        setFieldValue('password', value);
+                                    }}
                                 />
                             </FormItem>
                             <FormItem
@@ -132,6 +192,10 @@ const SignUpForm = (props: SignUpFormProps) => {
                                     name="confirmPassword"
                                     placeholder="Confirm Password"
                                     component={PasswordInput}
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                        const value = e.target.value;
+                                        setFieldValue('confirmPassword', value);
+                                    }}
                                 />
                             </FormItem>
                             <Button

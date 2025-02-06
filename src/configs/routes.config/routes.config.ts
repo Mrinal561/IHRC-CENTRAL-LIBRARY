@@ -12,6 +12,17 @@ export const protectedRoutes = [
         component: lazy(() => import('@/views/IHRC/components/Home/Home')),
         authority: [],
     },
+    {
+        key: 'groupMenu.collapse.item7',
+        path: '/external-user',
+        component: lazy(
+            () =>
+                import(
+                    '@/views/IHRC/components/GlobalSettings/ExternalUser/ExternalUser'
+                ),
+        ),
+        authority: [],
+    },
     // {
     //     key: 'groupMenu.collapse.item1',
     //     path: '/remittance-tracker',
@@ -92,6 +103,22 @@ export const protectedRoutes = [
         authority: [],
     },
     {
+        key: 'groupMenu.collapse.item6',
+        path: '/role',
+        component: lazy(() =>
+            import('@/views/IHRC/components/GlobalSettings/Compliance/components/Roles')
+        ),
+        authority: [],
+    },
+    {
+        key: 'groupMenu.collapse.item7',
+        path: '/company-admin',
+        component: lazy(() =>
+            import('@/views/IHRC/components/GlobalSettings/CompanyAdmin/CompanyAdmin')
+        ),
+        authority: [],
+    },
+    {
         key: 'customChecklist.customChecklistForm',
         path: '/add-compliance-form',
         component: lazy(
@@ -103,6 +130,12 @@ export const protectedRoutes = [
         authority: [],
     },
     {
+        key: 'permission.details',
+        path: `/permission`,
+        component: lazy(() => import('@/views/IHRC/components/GlobalSettings/Compliance/components/Permission')),
+        authority: [],
+    },
+    {
         key: 'compliance.edit',
         path: `${APP_PREFIX_PATH}/compliance/edit/:id`,
         component: lazy(
@@ -110,6 +143,14 @@ export const protectedRoutes = [
                 import(
                     '@/views/IHRC/components/GlobalSettings/Compliance/components/ComplianceEditForm'
                 ),
+        ),
+        authority: [],
+    },
+    {
+        key: 'roles.details',
+        path: `${APP_PREFIX_PATH}/roles`,
+        component: lazy(() =>
+            import('@/views/IHRC/components/GlobalSettings/Compliance/components/Roles')
         ),
         authority: [],
     },

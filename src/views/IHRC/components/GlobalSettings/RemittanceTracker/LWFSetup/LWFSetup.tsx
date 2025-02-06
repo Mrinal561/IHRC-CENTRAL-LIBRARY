@@ -298,14 +298,14 @@ const loadStates = async () => {
         </div>
         <div className="flex gap-2">
           {/* <BulkUpload /> */}
-          <Button
+          {/* <Button
             variant="solid"
             size="sm"
             icon={<HiPlusCircle />}
             onClick={() => setIsDialogOpen(true)}
           >
             Edit LWF Setup
-          </Button>
+          </Button> */}
         </div>
       </div>
       

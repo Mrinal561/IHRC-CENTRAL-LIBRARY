@@ -80,7 +80,7 @@ export const createLWFConfig = createAsyncThunk(
     'lwfConfig/updateLWFConfig',
     async ({ id, data }: { id: string; data: LWFConfigData }, { rejectWithValue }) => {
       try {
-        const response = await httpClient.put(endpoints.lwf.update(id), data)
+        const response = await httpClient.post(endpoints.lwf.update(id), data)
         return response.data
       }
       catch (error: any) {

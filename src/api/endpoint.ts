@@ -42,6 +42,10 @@ export const endpoints = {
         create: () => api('superadmin/state/config/esi'),
         update: (id: string) => api(`superadmin/state/config/esi/${id}`),
       },
+      esiConfig:{
+        detail: (id:any) => api(`superadmin/esiconfig/${id}`),
+        update: (id:any) => api(`superadmin/esiconfig/${id}`)
+      },
     lwf: {
         getAll: () => api('superadmin/state/config'),
         getById: (id: string) => api(`superadmin/state/config/lwf/${id}`),
@@ -55,9 +59,35 @@ export const endpoints = {
         update: (id: string) => api(`superadmin/state/config/pt/${id}`),
     },
     common: {
-        getStatesAll: () => api('/states')
+        getStatesAll: () => api('/states'),
+        detail:(id:any)=> api(`superadmin/state/config/${id}`)
     },
+    role:{
+        list:() =>  api('superadmin/role')
+    },
+    module:{
+        list:()=> api('superadmin/modules')
+    },
+    companyAdmin:{
+        create:()=> api('companyadmin/signup'),
+        list:()=> api(`/companyadmin/list`),
+        update:(id:any)=> api(`/companyadmin/${id}`)
+    },
+    companyGroup: {
+        getAll: () => api('companyadmin/company-group'),
+        getById: (id: string) => api(`companyadmin/company-group/${id}`),
+        create: () => api('companyadmin/company-group'),
+        update: (id: string) => api(`companyadmin/company-group/${id}`),
+        delete: (id: string) => api(`companyadmin/company-group/${id}`),
+    },
+   externaluser: {
+    template: () => api(`superadmin/externaluser/export-external-user-template`),
+    list: () => api(`superadmin/externaluser/external-user`),
+    delete: (id:any) => api(`superadmin/externaluser/external-user/${id}`),
+    update:(id:any)=> api(`superadmin/externaluser/external-user/${id}`),
+    create: (id:any) => api(`superadmin/externaluser/external-user`)
 
+   }
     
 
 }

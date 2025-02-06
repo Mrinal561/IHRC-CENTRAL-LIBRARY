@@ -88,7 +88,7 @@ const SignInForm = (props: SignInFormProps) => {
                     //     }
                     //   }
                     toast.push(
-                        <Notification title="succes" type="success">
+                        <Notification title="Success" type="success">
                             Login successful
                         </Notification>,
                         {
@@ -114,10 +114,11 @@ const SignInForm = (props: SignInFormProps) => {
 
             setLoading(false)
         } catch (error) {
+            // console.log(error)
             const err = error as AxiosError
             if (err.response?.status == 401) {
                 toast.push(
-                    <Notification title="error" type="danger">
+                    <Notification title="Error" type="danger">
                         Invalid email or password{' '}
                     </Notification>,
                     {
@@ -126,8 +127,8 @@ const SignInForm = (props: SignInFormProps) => {
                 )
             } else {
                 toast.push(
-                    <Notification title="error" type="danger">
-                        Something went wrong! Please Try again.{' '}
+                    <Notification title="Error" type="danger">
+                     {error.response.data.message}
                     </Notification>,
                     {
                         placement: 'top-end',
@@ -161,7 +162,7 @@ const SignInForm = (props: SignInFormProps) => {
                     <Form>
                         <FormContainer>
                             <FormItem
-                                label="User Name"
+                                label="Email"
                                 invalid={
                                     (errors.userName &&
                                         touched.userName) as boolean
@@ -172,7 +173,7 @@ const SignInForm = (props: SignInFormProps) => {
                                     type="text"
                                     autoComplete="off"
                                     name="userName"
-                                    placeholder="User Name"
+                                    placeholder="Email"
                                     component={Input}
                                 />
                             </FormItem>
@@ -211,10 +212,10 @@ const SignInForm = (props: SignInFormProps) => {
                             >
                                 {loading ? 'Signing in...' : 'Sign In'}
                             </Button>
-                            <div className="mt-4 text-center">
+                            {/* <div className="mt-4 text-center">
                                 <span>{`Don't have an account yet?`} </span>
                                 <ActionLink to={signUpUrl}>Sign up</ActionLink>
-                            </div>
+                            </div> */}
                         </FormContainer>
                     </Form>
                 )}

@@ -12,8 +12,8 @@ import district, { DistrictState } from './slices/district/districtSlice'
 import esiconfig, { ESIConfigState } from './slices/esiConfig/esiConfigSlice'
 import lwfconfig, { LWFConfigState } from './slices/lwfConfig/lwfConfigSlice';
 import ptconfig,  { PTSetupState } from './slices/ptConfig/ptConfigSlice'
-
-
+import companyadmin,{ CompanyAdminState } from './slices/companyAdmin/companyAdminSlice'
+import companygroup, { CompanyGroupState } from './slices/companyAdmin/companyGroupSlice'
 
 export type RootState = CombinedState<{
     auth: CombinedState<AuthState>
@@ -26,8 +26,10 @@ export type RootState = CombinedState<{
     lwfconfig: LWFConfigState,
     ptconfig: PTSetupState,
     district: DistrictState,
+    companyadmin: CompanyAdminState,
     locale: LocaleState
     theme: ThemeState
+    companygroup: CompanyGroupState
     /* eslint-disable @typescript-eslint/no-explicit-any */
     [RtkQueryService.reducerPath]: any
 }>
@@ -49,6 +51,8 @@ const staticReducers = {
     esiconfig,
     lwfconfig,
     ptconfig,
+    companyadmin,
+    companygroup,
     [RtkQueryService.reducerPath]: RtkQueryService.reducer,
 }
 
