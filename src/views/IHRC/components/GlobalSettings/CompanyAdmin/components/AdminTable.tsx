@@ -28,10 +28,10 @@ const validationSchema = yup.object().shape({
        'Invalid email address. Please use a valid email with a.com,.in,.org,.net,.edu, or.gov domain.'
      )
     .required('Email is required'),
-  moduleAccess: yup
-    .array()
-    .of(yup.number())
-    .min(1, 'At least one module must be selected'),
+//   moduleAccess: yup
+//     .array()
+//     .of(yup.number())
+//     .min(1, 'At least one module must be selected'),
 //     name: yup
 //    .string()
 //    .required('Full Name is required')
@@ -466,9 +466,9 @@ const handleDialogClose = () => {
                     </div>
                 ))}
         </Checkbox.Group>
-        {errors.moduleAccess && (
+        {/* {errors.moduleAccess && (
             <p className="text-red-500 text-xs mt-1">{errors.moduleAccess}</p>
-        )}
+        )} */}
     </div>
 </div>
                 </div>
