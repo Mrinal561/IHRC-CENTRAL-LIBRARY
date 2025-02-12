@@ -55,11 +55,19 @@ const DatePickerComponent = ({ frequency, value, onChange, disabled, placeholder
 };
 
 // Function to get day with suffix for display
-function formatDayWithSuffix(date) {
-    if (!date) return '';
-    const day = dayjs(date).date();
-    const suffix = getDaySuffix(day);
-    return `${day}${suffix}`;
+function formatDayWithSuffix(date, frequency) {
+  if (!date) return '-';
+  const dayjs_date = dayjs(date);
+  const day = dayjs_date.date();
+  const suffix = getDaySuffix(day);
+  
+  // For monthly/yearly, only show the day with suffix
+  if (frequency === 'monthly' || frequency === 'yearly') {
+      return `${day}${suffix}`;
+  }
+  
+  // For quarterly/half_yearly, show month and day
+  return `${dayjs_date.format('MMM')} ${day}${suffix}`;
 }
 
 function getDaySuffix(day) {
@@ -71,60 +79,65 @@ function getDaySuffix(day) {
 
 
 
-const createLWFValidationSchema = (frequency) => {
-    const baseSchema = {
-        firstDate: yup
-            .date()
-            .required('First due date is required')
-            .typeError('First due date must be a valid date'),
-    }
+const createLWFValidationSchema = (frequency, isActive) => {
+  if (!isActive) {
+    // If LWF is not applicable, no need to validate dates
+    return yup.object().shape({});
+  }
 
-    if (frequency === 'quarterly') {
-        return yup.object().shape({
-            ...baseSchema,
-            secondDate: yup
-                .date()
-                .required('Second due date is required')
-                .min(
-                    yup.ref('firstDate'),
-                    'Second due date must be after first due date',
-                )
-                .typeError('Second due date must be a valid date'),
-            thirdDate: yup
-                .date()
-                .required('Third due date is required')
-                .min(
-                    yup.ref('secondDate'),
-                    'Third due date must be after second due date',
-                )
-                .typeError('Third due date must be a valid date'),
-            lastDate: yup
-                .date()
-                .required('Last due date is required')
-                .min(
-                    yup.ref('thirdDate'),
-                    'Last due date must be after third due date',
-                )
-                .typeError('Last due date must be a valid date'),
-        })
-    }
+  const baseSchema = {
+    firstDate: yup
+      .date()
+      .required('First due date is required')
+      .typeError('First due date must be a valid date'),
+  };
 
-    if (frequency === 'half_yearly') {
-        return yup.object().shape({
-            ...baseSchema,
-            lastDate: yup
-                .date()
-                .required('Last due date is required')
-                .min(
-                    yup.ref('firstDate'),
-                    'Last due date must be after first due date',
-                )
-                .typeError('Last due date must be a valid date'),
-        })
-    }
+  if (frequency === 'quarterly') {
+    return yup.object().shape({
+      ...baseSchema,
+      secondDate: yup
+        .date()
+        .required('Second due date is required')
+        .min(
+          yup.ref('firstDate'),
+          'Second due date must be after first due date',
+        )
+        .typeError('Second due date must be a valid date'),
+      thirdDate: yup
+        .date()
+        .required('Third due date is required')
+        .min(
+          yup.ref('secondDate'),
+          'Third due date must be after second due date',
+        )
+        .typeError('Third due date must be a valid date'),
+      lastDate: yup
+        .date()
+        .required('Last due date is required')
+        .min(
+          yup.ref('thirdDate'),
+          'Last due date must be after third due date',
+        )
+        .typeError('Last due date must be a valid date'),
+    });
+  }
 
-    return yup.object().shape(baseSchema)
-}
+  if (frequency === 'half_yearly') {
+    return yup.object().shape({
+      ...baseSchema,
+      lastDate: yup
+        .date()
+        .required('Last due date is required')
+        .min(
+          yup.ref('firstDate'),
+          'Last due date must be after first due date',
+        )
+        .typeError('Last due date must be a valid date'),
+    });
+  }
+
+  return yup.object().shape(baseSchema);
+};
 
 const frequencyOptions = [
   { value: 'monthly', label: 'Monthly' },
@@ -164,6 +177,16 @@ const LWFTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any
     sort: { order: '', key: '' },
   });
 
+  useEffect(() => {
+    if (!isActive) {
+      setValidationErrors({
+        firstDate: undefined,
+        secondDate: undefined,
+        thirdDate: undefined,
+        lastDate: undefined,
+      });
+    }
+  }, [isActive]);
 
   useEffect(() => {
     loadStates();
@@ -227,22 +250,22 @@ const LWFTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any
 
   const validateDates = async () => {
     try {
-        const validationSchema = createLWFValidationSchema(frequency);
-        await validationSchema.validate(paymentDueDates, { abortEarly: false });
-        setValidationErrors({});
-        return true;
+      const validationSchema = createLWFValidationSchema(frequency, isActive);
+      await validationSchema.validate(paymentDueDates, { abortEarly: false });
+      setValidationErrors({});
+      return true;
     } catch (error) {
-        if (error instanceof yup.ValidationError) {
-            const newErrors = {};
-            error.inner.forEach((err) => {
-                newErrors[err.path] = err.message;
-            });
-            setValidationErrors(newErrors);
-            return false;
-        }
+      if (error instanceof yup.ValidationError) {
+        const newErrors = {};
+        error.inner.forEach((err) => {
+          newErrors[err.path] = err.message;
+        });
+        setValidationErrors(newErrors);
         return false;
+      }
+      return false;
     }
-};
+  };
 
 const handleDateChange = (dateType, date) => {
   setPaymentDueDates(prev => {
@@ -282,36 +305,44 @@ useEffect(() => {
 }, [frequency])
 
 const handleConfirm = async () => {
-  if (!selectedState || !frequency) {
-      showErrorNotification('Please fill all required fields');
-      return;
+  if (!selectedState || !frequency || isActive === null) {
+    showErrorNotification('Please fill all required fields');
+    return;
   }
 
-  const isValid = await validateDates();
-  if (!isValid) {
+  // Only validate dates if LWF is applicable
+  if (isActive) {
+    const isValid = await validateDates();
+    if (!isValid) {
       return;
+    }
   }
 
   const lwfConfigData = {
-      frequency,
-      payment_due_date: {
-          first_date: paymentDueDates.firstDate,
-          second_date: paymentDueDates.secondDate,
-          third_date: paymentDueDates.thirdDate,
-          last_date: paymentDueDates.lastDate
-      },
-      payment_mode: 'online',
-      active: isActive,
-      state_id: selectedState.value
+    frequency: isActive ? frequency : null,
+    payment_due_date: isActive ? {
+      first_date: paymentDueDates.firstDate,
+      second_date: paymentDueDates.secondDate,
+      third_date: paymentDueDates.thirdDate,
+      last_date: paymentDueDates.lastDate,
+    } : {
+      first_date: null,
+      second_date: null,
+      third_date: null,
+      last_date: null,
+    },
+    payment_mode: 'online',
+    active: isActive,
+    state_id: selectedState.value,
   };
 
   try {
-      await dispatch(updateLWFConfig({ id: selectedState.value, data: lwfConfigData }));
-      setIsDialogOpen(false);
-      fetchLWFSetupData(tableData.pageIndex, tableData.pageSize);
-      setValidationErrors({});
+    await dispatch(updateLWFConfig({ id: selectedState.value, data: lwfConfigData }));
+    setIsDialogOpen(false);
+    fetchLWFSetupData(tableData.pageIndex, tableData.pageSize);
+    setValidationErrors({});
   } catch (error) {
-      showErrorNotification(error.message);
+    showErrorNotification(error.message);
   }
 };
   
@@ -324,15 +355,13 @@ const handleConfirm = async () => {
     try {
       const response = await dispatch(fetchLWFConfigs({page, page_size: size}));
       
-      // Log the entire response to see its structure
-      console.log('Full API Response:', response);
-
-      // Adjust this based on the actual response structure
       if (response?.payload?.data) {
-        console.log('Data:', response.payload.data);
-        console.log('Paginate Data:', response.payload.paginateData);
-
-        setLWFTableData(response.payload.data);
+        // Sort the data alphabetically by state name
+        const sortedData = [...response.payload.data].sort((a, b) => 
+          a.name.localeCompare(b.name)
+        );
+  
+        setLWFTableData(sortedData);
         setTableData((prev) => ({
           ...prev,
           total: response.payload.paginateData?.totalResults || 0,
@@ -396,8 +425,11 @@ const handleConfirm = async () => {
         enableSorting:false,
         cell: ({ row }) => 
           <div className="w-40 text-start">
-        {formatDayWithSuffix(row.original.lwf_payment_due_date?.first_date)}
-      </div>
+              {formatDayWithSuffix(
+                  row.original.lwf_payment_due_date?.first_date, 
+                  row.original.lwf_frequency
+              )}
+          </div>
       },
       {
         header: 'Second Due Date',
@@ -405,8 +437,11 @@ const handleConfirm = async () => {
         enableSorting:false,
         cell: ({ row }) => 
           <div className="w-40 text-start">
-        {formatDayWithSuffix(row.original.lwf_payment_due_date?.second_date)}
-      </div>
+              {formatDayWithSuffix(
+                  row.original.lwf_payment_due_date?.second_date, 
+                  row.original.lwf_frequency
+              )}
+          </div>
       },
       {
         header: 'Third Due Date',
@@ -414,8 +449,11 @@ const handleConfirm = async () => {
         enableSorting:false,
         cell: ({ row }) => 
           <div className="w-40 text-start">
-        {formatDayWithSuffix(row.original.lwf_payment_due_date?.third_date)}
-      </div>
+              {formatDayWithSuffix(
+                  row.original.lwf_payment_due_date?.third_date, 
+                  row.original.lwf_frequency
+              )}
+          </div>
       },
       {
         header: 'Last Due Date',
@@ -423,8 +461,11 @@ const handleConfirm = async () => {
         enableSorting:false,
         cell: ({ row }) => 
           <div className="w-40 text-start">
-        {formatDayWithSuffix(row.original.lwf_payment_due_date?.last_date)}
-      </div>
+              {formatDayWithSuffix(
+                  row.original.lwf_payment_due_date?.last_date, 
+                  row.original.lwf_frequency
+              )}
+          </div>
       },
       {
         header: 'Status',
@@ -546,6 +587,18 @@ const handleConfirm = async () => {
                 onChange={setSelectedState}
               />
             </div>
+              <div className="w-full">
+                <label className="text-gray-600 mb-2 block">Is LWF applicable for Selected State <span className="text-red-500">*</span></label>
+                <OutlinedSelect
+                  label="Select Applicability"
+                  options={[
+                    { value: true, label: 'Yes' },
+                    { value: false, label: 'No' }
+                  ]}
+                  value={isActive ? { value: true, label: 'Yes' } : { value: false, label: 'No' }}
+                  onChange={(selected) => setIsActive(selected?.value)}
+                />
+              </div>
           </div>
 
           <div className="flex gap-4">
@@ -556,6 +609,7 @@ const handleConfirm = async () => {
                 options={frequencyOptions}
                 value={frequencyOptions.find(option => option.value === frequency)}
                 onChange={(selected) => setFrequency(selected?.value)}
+                disabled={!isActive}
               />
             </div>
           </div>
@@ -568,6 +622,7 @@ const handleConfirm = async () => {
                 value={paymentDueDates.firstDate}
                 onChange={(date) => handleDateChange('firstDate', date)}
                 placeholder="Select First Due Date"
+                disabled={!isActive}
               />
               {validationErrors.firstDate && (
     <div className="text-red-500 text-sm mt-1">
@@ -582,7 +637,7 @@ const handleConfirm = async () => {
                 value={paymentDueDates.secondDate}
                 onChange={(date) => handleDateChange('secondDate', date)}
                 placeholder="Select Second Due Date"
-                disabled={isDueDateDisabled(1)}
+                disabled={!isActive || isDueDateDisabled(1)}
             />
               {validationErrors.secondDate && (
     <div className="text-red-500 text-sm mt-1">
@@ -600,7 +655,7 @@ const handleConfirm = async () => {
                 value={paymentDueDates.thirdDate}
                 onChange={(date) => handleDateChange('thirdDate', date)}
                 placeholder="Select Third Due Date"
-                disabled={isDueDateDisabled(2)}
+                disabled={!isActive || isDueDateDisabled(2)}
             />
               {validationErrors.thirdDate && (
     <div className="text-red-500 text-sm mt-1">
@@ -615,7 +670,7 @@ const handleConfirm = async () => {
                 value={paymentDueDates.lastDate}
                 onChange={(date) => handleDateChange('lastDate', date)}
                 placeholder="Select Last Due Date"
-                disabled={isDueDateDisabled(3)}
+                disabled={!isActive || isDueDateDisabled(3)} 
             />
               {validationErrors.lastDate && (
     <div className="text-red-500 text-sm mt-1">
@@ -625,7 +680,7 @@ const handleConfirm = async () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* <div className="flex items-center gap-2">
             <Checkbox
               checked={isActive}
               onChange={(checked) => setIsActive(checked)}
@@ -633,7 +688,7 @@ const handleConfirm = async () => {
             <label className="text-gray-600">
               Is LWF applicable for Selected State
             </label>
-          </div>
+          </div> */}
         </div>
 
         <div className="flex justify-end gap-2 mt-6">

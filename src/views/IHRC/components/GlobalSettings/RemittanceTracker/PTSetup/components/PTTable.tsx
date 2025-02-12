@@ -59,11 +59,19 @@ const DatePickerComponent = ({ frequency, value, onChange, disabled, placeholder
 };
 
 // Function to get day with suffix for display
-function formatDayWithSuffix(date) {
-    if (!date) return '';
-    const day = dayjs(date).date();
-    const suffix = getDaySuffix(day);
-    return `${day}${suffix}`;
+function formatDayWithSuffix(date, frequency) {
+  if (!date) return '-';
+  const dayjs_date = dayjs(date);
+  const day = dayjs_date.date();
+  const suffix = getDaySuffix(day);
+  
+  // For monthly/yearly, only show the day with suffix
+  if (frequency === 'monthly' || frequency === 'yearly') {
+      return `${day}${suffix}`;
+  }
+  
+  // For quarterly/half_yearly, show month and day
+  return `${dayjs_date.format('MMM')} ${day}${suffix}`;
 }
 
 function getDaySuffix(day) {
@@ -73,7 +81,10 @@ function getDaySuffix(day) {
     return 'th';
 }
 // First, add these validation schemas
-const createPTValidationSchema = (frequency) => {
+const createPTValidationSchema = (frequency, isActive) => {
+  if (!isActive) {
+    return yup.object().shape({}); // Return an empty schema
+  }
     const baseSchema = {
         firstDate: yup
             .date()
@@ -238,8 +249,12 @@ const [ptRcValidationErrors, setPtRcValidationErrors] = useState({
   };
 
   const validatePTECDates = async () => {
+    if (!isActive) {
+      setPtEcValidationErrors({});
+      return true;
+    }
     try {
-        const validationSchema = createPTValidationSchema(ptEcFrequency);
+        const validationSchema = createPTValidationSchema(ptEcFrequency, isActive);
         await validationSchema.validate(ptEcDates, { abortEarly: false });
         setPtEcValidationErrors({});
         return true;
@@ -257,8 +272,12 @@ const [ptRcValidationErrors, setPtRcValidationErrors] = useState({
 };
 
 const validatePTRCDates = async () => {
+  if (!isActive) {
+    setPtRcValidationErrors({});
+    return true;
+  }
     try {
-        const validationSchema = createPTValidationSchema(ptRcFrequency);
+        const validationSchema = createPTValidationSchema(ptRcFrequency,isActive);
         await validationSchema.validate(ptRcDates, { abortEarly: false });
         setPtRcValidationErrors({});
         return true;
@@ -277,11 +296,11 @@ const validatePTRCDates = async () => {
 
 useEffect(() => {
   validatePTECDates();
-}, [ptEcDates, ptEcFrequency]);
+}, [ptEcDates, ptEcFrequency, isActive]);
 
 useEffect(() => {
   validatePTRCDates();
-}, [ptRcDates, ptRcFrequency]);
+}, [ptRcDates, ptRcFrequency, isActive]);
 
 // Generic function to handle date changes
 const handleDateChangeForFrequency = (dateType, date, frequency, setDates) => {
@@ -351,32 +370,45 @@ useEffect(() => {
 
 
   const handleConfirm = async () => {
-    if (!selectedState || !ptEcFrequency || !ptRcFrequency) {
+    if (!selectedState || isActive === null) {
       showErrorNotification('Please fill all required fields');
       return;
   }
 
-  const isEcValid = await validatePTECDates();
-  const isRcValid = await validatePTRCDates();
 
+
+  if(isActive){
+    const isEcValid = await validatePTECDates();
+    const isRcValid = await validatePTRCDates();
   if (!isEcValid || !isRcValid) {
       return;
   }
+}
 
     const ptConfigData = {
-      ptec_frequency: ptEcFrequency,
-      ptrc_frequency: ptRcFrequency,
-      ptec_payment_due_date: {
+      ptec_frequency: isActive ? ptEcFrequency : null,
+      ptrc_frequency: isActive ? ptRcFrequency : null,
+      ptec_payment_due_date: isActive ? {
         first_date: ptEcDates.firstDate,
         second_date: ptEcDates.secondDate,
         third_date: ptEcDates.thirdDate,
         last_date: ptEcDates.lastDate
+      } : {
+        first_date: null,
+      second_date: null,
+      third_date: null,
+      last_date: null,
       },
-      ptrc_payment_due_date: {
+      ptrc_payment_due_date: isActive ? {
         first_date: ptRcDates.firstDate,
         second_date: ptRcDates.secondDate,
         third_date: ptRcDates.thirdDate,
         last_date: ptRcDates.lastDate
+      } : {
+        first_date: null,
+      second_date: null,
+      third_date: null,
+      last_date: null,
       },
       ptec_payment_mode: 'online',
       ptrc_payment_mode: 'online',
@@ -436,7 +468,7 @@ useEffect(() => {
         enableSorting:false,
         cell: ({ row }) => 
           <div className="w-44 text-start">
-        {formatDayWithSuffix(row.original.ptrc_payment_due_date.first_date)}
+        {formatDayWithSuffix(row.original.ptrc_payment_due_date.first_date,row.original.ptrc_frequency)}
   </div>
       },
       {
@@ -445,7 +477,7 @@ useEffect(() => {
         enableSorting:false,
         cell: ({ row }) => 
           <div className="w-44 text-start">
-        {formatDayWithSuffix(row.original.ptrc_payment_due_date.second_date)}
+        {formatDayWithSuffix(row.original.ptrc_payment_due_date.second_date, row.original.ptrc_frequency)}
   </div>
       },
       {
@@ -454,7 +486,7 @@ useEffect(() => {
         enableSorting:false,
         cell: ({ row }) => 
           <div className="w-44 text-start">
-        {formatDayWithSuffix(row.original.ptrc_payment_due_date.third_date)}
+        {formatDayWithSuffix(row.original.ptrc_payment_due_date.third_date, row.original.ptrc_frequency)}
   </div>
       },
       {
@@ -463,7 +495,7 @@ useEffect(() => {
         enableSorting:false,
         cell: ({ row }) => 
           <div className="w-44 text-start">
-        {formatDayWithSuffix(row.original.ptrc_payment_due_date.last_date)}
+        {formatDayWithSuffix(row.original.ptrc_payment_due_date.last_date, row.original.ptrc_frequency)}
   </div>
       },
       {
@@ -480,7 +512,7 @@ useEffect(() => {
         enableSorting:false,
         cell: ({ row }) => 
           <div className="w-44 text-start">
-            {formatDayWithSuffix(row.original.ptec_payment_due_date.first_date)}
+            {formatDayWithSuffix(row.original.ptec_payment_due_date.first_date, row.original.ptrc_frequency)}
       </div>
       },
       {
@@ -489,7 +521,7 @@ useEffect(() => {
         enableSorting:false,
         cell: ({ row }) => 
           <div className="w-44 text-start">
-            {formatDayWithSuffix(row.original.ptec_payment_due_date.second_date)}
+            {formatDayWithSuffix(row.original.ptec_payment_due_date.second_date, row.original.ptrc_frequency)}
       </div>
       },
       {
@@ -498,7 +530,7 @@ useEffect(() => {
         enableSorting:false,
         cell: ({ row }) => 
           <div className="w-44 text-start">
-        {formatDayWithSuffix(row.original.ptec_payment_due_date?.third_date)}
+        {formatDayWithSuffix(row.original.ptec_payment_due_date?.third_date, row.original.ptrc_frequency)}
       </div>
       },
       {
@@ -507,7 +539,7 @@ useEffect(() => {
         enableSorting:false,
         cell: ({ row }) => 
           <div className="w-44 text-start">
-        {formatDayWithSuffix(row.original.ptec_payment_due_date?.last_date)}
+        {formatDayWithSuffix(row.original.ptec_payment_due_date?.last_date, row.original.ptrc_frequency)}
       </div>
       },
       {
@@ -585,8 +617,12 @@ useEffect(() => {
       if (response?.payload?.data) {
         console.log('Data:', response.payload.data);
         console.log('Paginate Data:', response.payload.paginateData);
-
-        setPTTableData(response.payload.data);
+        const sortedData = [...response.payload.data].sort((a, b) => 
+          a.name.localeCompare(b.name)
+        );
+  
+        setPTTableData(sortedData);
+        // setPTTableData(response.payload.data);
         setTableData((prev) => ({
           ...prev,
           total: response.payload.paginateData?.totalResults || 0,
@@ -685,6 +721,18 @@ useEffect(() => {
               onChange={setSelectedState}
             />
           </div>
+          <div className="w-full">
+                <label className="text-gray-600 mb-2 block">Is PT applicable for Selected State <span className="text-red-500">*</span></label>
+                <OutlinedSelect
+                  label="Select Applicability"
+                  options={[
+                    { value: true, label: 'Yes' },
+                    { value: false, label: 'No' }
+                  ]}
+                  value={isActive ? { value: true, label: 'Yes' } : { value: false, label: 'No' }}
+                  onChange={(selected) => setIsActive(selected?.value)}
+                />
+              </div>
         </div>
 
         <div className="flex gap-4">
@@ -695,6 +743,7 @@ useEffect(() => {
               options={frequencyOptions}
               value={frequencyOptions.find(option => option.value === ptEcFrequency)}
               onChange={(selected) => setPtEcFrequency(selected?.value)}
+              disabled={!isActive}
             />
           </div>
           <div className="w-1/2">
@@ -704,6 +753,7 @@ useEffect(() => {
               options={frequencyOptions}
               value={frequencyOptions.find(option => option.value === ptRcFrequency)}
               onChange={(selected) => setPtRcFrequency(selected?.value)}
+              disabled={!isActive}
             />
           </div>
         </div>
@@ -719,6 +769,7 @@ useEffect(() => {
                 value={ptEcDates.firstDate}
                   onChange={(date) => handleDateChangePtEc('firstDate', date)}     
                 placeholder="Select First Due Date"
+                disabled={!isActive}
               />
                 {/* <DatePicker
                   className="w-full"
@@ -742,7 +793,7 @@ useEffect(() => {
                   value={ptEcDates.secondDate}
                   onChange={(date) => handleDateChangePtEc('secondDate', date)}
 
-                  disabled={isDueDateDisabled(ptEcFrequency, 1)}           
+                  disabled={ !isActive || isDueDateDisabled(ptEcFrequency, 1)}           
                 />
                 {ptEcValidationErrors.secondDate && (
     <div className="text-red-500 text-sm mt-1">
@@ -761,7 +812,7 @@ useEffect(() => {
                   placeholder="Select Third Due Date"
                   value={ptEcDates.thirdDate}
                   onChange={(date) => handleDateChangePtEc('thirdDate', date)}
-                  disabled={isDueDateDisabled(ptEcFrequency, 2)}        
+                  disabled={!isActive || isDueDateDisabled(ptEcFrequency, 2)}        
                 />
                 {ptEcValidationErrors.thirdDate && (
     <div className="text-red-500 text-sm mt-1">
@@ -779,7 +830,7 @@ useEffect(() => {
                   placeholder="Select Last Due Date"
                   value={ptEcDates.lastDate}
                   onChange={(date) => handleDateChangePtEc('lastDate', date)}
-                  disabled={isDueDateDisabled(ptEcFrequency, 3)}    
+                  disabled={!isActive || isDueDateDisabled(ptEcFrequency, 3)}    
                 />
                 {ptEcValidationErrors.lastDate && (
     <div className="text-red-500 text-sm mt-1">
@@ -800,6 +851,7 @@ useEffect(() => {
                 value={ptRcDates.firstDate}
                 onChange={(date) => handleDateChangePtRc('firstDate', date)}  
                 placeholder="Select First Due Date"
+                disabled={!isActive}
               />
                 {/* <DatePicker
                   className="w-full"
@@ -822,7 +874,7 @@ useEffect(() => {
                 frequency={ptRcFrequency}
                   value={ptRcDates.secondDate}
                   onChange={(date) => handleDateChangePtRc('secondDate', date)}
-                  disabled={isDueDateDisabled(ptRcFrequency, 1)}    
+                  disabled={!isActive || isDueDateDisabled(ptRcFrequency, 1)}    
                 />
                  {ptRcValidationErrors.secondDate && (
     <div className="text-red-500 text-sm mt-1">
@@ -841,7 +893,7 @@ useEffect(() => {
                 frequency={ptRcFrequency}
                   value={ptRcDates.thirdDate}
                   onChange={(date) => handleDateChangePtRc('thirdDate', date)}
-                  disabled={isDueDateDisabled(ptRcFrequency, 2)}     
+                  disabled={!isActive || isDueDateDisabled(ptRcFrequency, 2)}     
                 />
                  {ptRcValidationErrors.thirdDate && (
     <div className="text-red-500 text-sm mt-1">
@@ -859,7 +911,7 @@ useEffect(() => {
                 frequency={ptRcFrequency}
                   value={ptRcDates.lastDate}
                   onChange={(date) => handleDateChangePtRc('lastDate', date)}
-                  disabled={isDueDateDisabled(ptRcFrequency, 3)}       
+                  disabled={!isActive || isDueDateDisabled(ptRcFrequency, 3)}       
                 />
                  {ptRcValidationErrors.lastDate && (
     <div className="text-red-500 text-sm mt-1">
@@ -871,7 +923,7 @@ useEffect(() => {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* <div className="flex items-center gap-2">
           <Checkbox
             checked={isActive}
             onChange={(checked) => setIsActive(checked)}
@@ -879,7 +931,7 @@ useEffect(() => {
           <label className="text-gray-600">
             Is PT applicable for Selected State
           </label>
-        </div>
+        </div> */}
       </div>
 
       <div className="flex justify-end gap-2 mt-6">
