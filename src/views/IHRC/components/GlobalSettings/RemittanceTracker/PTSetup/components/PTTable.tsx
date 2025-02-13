@@ -147,7 +147,7 @@ const frequencyOptions = [
   { value: 'quarterly', label: 'Quarterly' },
 ];
 
-const PTTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any) => {
+const PTTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger,search }: any) => {
   const dispatch = useDispatch<AppDispatch>();
   const [ptEcValidationErrors, setPtEcValidationErrors] = useState({
     firstDate: undefined,
@@ -596,19 +596,19 @@ useEffect(() => {
   const [tableData, setTableData] = useState({
     total: 0,
     pageIndex: 1,
-    pageSize: 10,
+    pageSize: 50,
     query: '',
     sort: { order: '', key: '' },
   });
 
   useEffect(() => {
     fetchPTSetupData(tableData.pageIndex, tableData.pageSize);
-  }, [refreshTrigger]);
+  }, [refreshTrigger,search]);
 
   const fetchPTSetupData = async (page: number, size: number) => {
     setIsLoading(true);
     try {
-      const response = await dispatch(fetchPTConfigs({page, page_size: size}));
+      const response = await dispatch(fetchPTConfigs({page, page_size: size,search}));
       
       // Log the entire response to see its structure
       console.log('Full API Response:', response);

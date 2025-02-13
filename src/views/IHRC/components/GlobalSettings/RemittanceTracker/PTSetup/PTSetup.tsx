@@ -6,6 +6,8 @@ import OutlinedSelect from '@/components/ui/Outlined/Outlined';
 import DatePicker from '@/components/ui/DatePicker';
 import httpClient from '@/api/http-client';
 import { endpoints } from '@/api/endpoint';
+
+import OutlinedInput from '@/components/ui/OutlinedInput';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '@/store';
 import { 
@@ -44,6 +46,7 @@ interface SelectOption {
 
 const PTSetup: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
+  const [searchTerm, setSearchTerm] = useState('')
   const { loading, error, success } = useSelector((state: RootState) => state.ptconfig);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -80,6 +83,10 @@ const PTSetup: React.FC = () => {
       isLastDateEnabled: false
     }
   });
+
+  const handleSearch = (value: string) => {
+    setSearchTerm(value)
+}
 
   const loadStates = async () => {
     try {
@@ -383,8 +390,15 @@ const PTSetup: React.FC = () => {
   return (
     <AdaptableCard className="h-full" bodyClass="h-full">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6">
-        <div className="mb-4 lg:mb-0">
+      <div className="mb-4 lg:mb-0 flex justify-between w-full">
           <h3 className="text-2xl font-bold">PT Global Setup</h3>
+          <div className="flex items-center gap-4">
+                        <OutlinedInput
+                            label="Search By Name"
+                            value={searchTerm}
+                            onChange={(e) => handleSearch(e)}
+                        />
+                         </div>
         </div>
         <div className="flex gap-2">
           {/* <Button
@@ -398,7 +412,7 @@ const PTSetup: React.FC = () => {
         </div>
       </div>
       
-      <PTTable onEdit={handleEdit} refreshTrigger={refreshCounter}/>
+      <PTTable  search={searchTerm} onEdit={handleEdit} refreshTrigger={refreshCounter}/>
 
       <Dialog
         isOpen={isDialogOpen}

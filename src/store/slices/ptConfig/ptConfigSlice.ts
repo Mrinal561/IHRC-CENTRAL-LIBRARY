@@ -43,12 +43,13 @@ const initialState: PTSetupState = {
 // Fetch PT Configurations
 export const fetchPTConfigs = createAsyncThunk(
   'ptConfig/fetchPTConfigs',
-  async ({ page, page_size }: { page: number, page_size: number }, { rejectWithValue }) => {
+  async ({ page, page_size,search }: { page: number, page_size: number }, { rejectWithValue }) => {
     try {
       const { data } = await httpClient.get(endpoints.pt.getAll(), {
         params: {
           page,
           page_size: page_size,
+          search
         },
       });
       return {

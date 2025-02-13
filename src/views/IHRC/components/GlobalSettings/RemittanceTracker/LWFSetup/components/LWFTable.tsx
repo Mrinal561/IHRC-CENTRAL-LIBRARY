@@ -147,7 +147,7 @@ const frequencyOptions = [
 ];
 
 
-const LWFTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any) => {
+const LWFTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger, search }: any) => {
   const dispatch = useDispatch<AppDispatch>();
   const [isLoading, setIsLoading] = useState(true);
   const [lwfTableData, setLWFTableData] = useState([]);
@@ -172,7 +172,7 @@ const LWFTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger }: any
   const [tableData, setTableData] = useState({
     total: 0,
     pageIndex: 1,
-    pageSize: 10,
+    pageSize: 50,
     query: '',
     sort: { order: '', key: '' },
   });
@@ -348,12 +348,12 @@ const handleConfirm = async () => {
   
   useEffect(() => {
     fetchLWFSetupData(tableData.pageIndex, tableData.pageSize);
-  }, [refreshTrigger]);
+  }, [refreshTrigger,search]);
 
   const fetchLWFSetupData = async (page: number, size: number) => {
     setIsLoading(true);
     try {
-      const response = await dispatch(fetchLWFConfigs({page, page_size: size}));
+      const response = await dispatch(fetchLWFConfigs({page, page_size: size,search}));
       
       if (response?.payload?.data) {
         // Sort the data alphabetically by state name

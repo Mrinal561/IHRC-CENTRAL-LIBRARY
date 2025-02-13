@@ -28,6 +28,7 @@ interface SelectOption {
 }
 const LWFSetup = () => {
   const dispatch = useDispatch<AppDispatch>();
+  const [searchTerm, setSearchTerm] = useState('')
   const { lwfConfigs, loading, error, currentLWFConfig } = useSelector((state: RootState) => state.lwfconfig);
     const [refreshCounter, setRefreshCounter] = useState(0);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -56,6 +57,10 @@ const LWFSetup = () => {
   }, [dispatch]);
 
 
+
+  const handleSearch = (value: string) => {
+    setSearchTerm(value)
+}
 
 const loadStates = async () => {
     try {
@@ -293,8 +298,15 @@ const loadStates = async () => {
   return (
     <AdaptableCard className="h-full" bodyClass="h-full">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6">
-        <div className="mb-4 lg:mb-0">
+        <div className="mb-4 lg:mb-0 flex justify-between w-full">
           <h3 className="text-2xl font-bold">LWF Global Setup</h3>
+          <div className="flex items-center gap-4">
+                        <OutlinedInput
+                            label="Search By Name"
+                            value={searchTerm}
+                            onChange={(e) => handleSearch(e)}
+                        />
+                         </div>
         </div>
         <div className="flex gap-2">
           {/* <BulkUpload /> */}
@@ -310,6 +322,7 @@ const loadStates = async () => {
       </div>
       
       <LWFTable 
+       search={searchTerm}
         // Add necessary props
         onEdit={handleEdit}
         refreshTrigger={refreshCounter}
