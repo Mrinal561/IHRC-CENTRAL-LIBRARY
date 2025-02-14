@@ -394,7 +394,7 @@ const PTSetup: React.FC = () => {
           <h3 className="text-2xl font-bold">PT Global Setup</h3>
           <div className="flex items-center gap-4">
                         <OutlinedInput
-                            label="Search By Name"
+                            label="Search By State Name"
                             value={searchTerm}
                             onChange={(e) => handleSearch(e)}
                         />
