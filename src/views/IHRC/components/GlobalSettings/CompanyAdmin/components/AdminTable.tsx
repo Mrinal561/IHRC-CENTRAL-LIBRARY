@@ -191,6 +191,14 @@ const AdminTable: React.FC<AdminTableProps> = ({
                 ),
             },
             {
+                header: 'Full Name',
+                accessorKey: 'name',
+                enableSorting: false,
+                cell: (props) => (
+                    <div className="truncate">{props.getValue() as string}</div>
+                ),
+            },
+            {
                 header: 'Email',
                 accessorKey: 'email',
                 enableSorting: false,
@@ -198,6 +206,7 @@ const AdminTable: React.FC<AdminTableProps> = ({
                     <div className="truncate">{props.getValue() as string}</div>
                 ),
             },
+           
             
             // {
             //     header: 'Role',

@@ -59,6 +59,7 @@ const CompanyAdmin = () => {
   const dispatch = useDispatch();
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [searchTerm, setSearchTerm] = useState('')
   const [touchedFields, setTouchedFields] = useState<{ [key: string]: boolean }>({});
   // const [entityName, setEntityName] = useState('');
   // const [entityNameError, setEntityNameError] = useState('');
@@ -81,6 +82,12 @@ const CompanyAdmin = () => {
     pageIndex: 1,
     pageSize: 10,
   });
+
+
+  const handleSearch = (value: string) => {
+    setSearchTerm(value)
+    setPagination((prev) => ({ ...prev, pageIndex: 1 }));
+}
 
   const handleEntityNameChange = (value: string) => {
     handleInputChange('entityName', value);
@@ -112,11 +119,13 @@ const CompanyAdmin = () => {
   };
 
   const fetchAdminData = useCallback(
-    async (page = 1, pageSize = 10) => {
+    
+    async (page = 1, pageSize = 10,searchTerm='') => {
+      console.log(searchTerm)
       setIsLoading(true);
       try {
         const response = await httpClient.get(endpoints.companyAdmin.list(), {
-          params: { page, page_size: pageSize },
+          params: { page, page_size: pageSize, 'search': searchTerm },
         });
         setAdminData(response.data.data);
         setPagination((prev) => ({
@@ -138,8 +147,8 @@ const CompanyAdmin = () => {
   // },[formData])
 
   useEffect(() => {
-    fetchAdminData(pagination.pageIndex, pagination.pageSize);
-  }, [fetchAdminData, pagination.pageIndex, pagination.pageSize]);
+    fetchAdminData(pagination.pageIndex, pagination.pageSize, searchTerm);
+  }, [fetchAdminData, pagination.pageIndex, pagination.pageSize,searchTerm]);
 
   const validateField = async (field: string, value: any) => {
     try {
@@ -335,7 +344,12 @@ const CompanyAdmin = () => {
         <div className="mb-4 lg:mb-0">
           <h3 className="text-2xl font-bold">Company Group Admin</h3>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+        <OutlinedInput
+                            label="Search By Name/Email"
+                            value={searchTerm}
+                            onChange={(e) => handleSearch(e)}
+                        />
           <Button
             variant="solid"
             size="sm"
