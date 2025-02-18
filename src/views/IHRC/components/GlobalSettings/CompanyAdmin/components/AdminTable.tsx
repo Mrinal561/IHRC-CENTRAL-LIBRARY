@@ -295,7 +295,7 @@ const AdminTable: React.FC<AdminTableProps> = ({
                 handleDialogClose();
             } catch (error) {
                 console.error('Error updating admin:', error);
-                showErrorNotification('Failed to update admin');
+               throw error;
             }
         }
     };

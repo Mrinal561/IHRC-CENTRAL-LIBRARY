@@ -66,7 +66,7 @@ function formatDayWithSuffix(date, frequency) {
   const suffix = getDaySuffix(day);
   
   // For monthly/yearly, only show the day with suffix
-  if (frequency === 'monthly' || frequency === 'yearly') {
+  if (frequency === 'monthly') {
       return `${day}${suffix}`;
   }
   
@@ -722,7 +722,7 @@ useEffect(() => {
             />
           </div>
           <div className="w-full">
-                <label className="text-gray-600 mb-2 block">Is PT applicable for Selected State <span className="text-red-500">*</span></label>
+                <label className="text-gray-600 mb-2 block">Is PT Applicable For Selected State <span className="text-red-500">*</span></label>
                 <OutlinedSelect
                   label="Select Applicability"
                   options={[
@@ -778,7 +778,7 @@ useEffect(() => {
                   onChange={(date) => handleDateChangePtEc('firstDate', date)}         */}
                 {/* /> */}
                 {ptEcValidationErrors.firstDate && (
-    <div className="text-red-500 text-sm mt-1">
+    <div className="text-red-500 text-sm mt-1 h-4">
         {ptEcValidationErrors.firstDate}
     </div>
 )}
@@ -860,7 +860,7 @@ useEffect(() => {
                   onChange={(date) => handleDateChangePtRc('firstDate', date)}    
                 /> */}
                  {ptRcValidationErrors.firstDate && (
-    <div className="text-red-500 text-sm mt-1">
+    <div className="text-red-500 text-sm mt-1 h-4">
         {ptRcValidationErrors.firstDate}
     </div>
 )}
