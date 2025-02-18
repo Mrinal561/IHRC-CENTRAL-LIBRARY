@@ -512,7 +512,7 @@ useEffect(() => {
         enableSorting:false,
         cell: ({ row }) => 
           <div className="w-44 text-start">
-            {formatDayWithSuffix(row.original.ptec_payment_due_date.first_date, row.original.ptrc_frequency)}
+            {formatDayWithSuffix(row.original.ptec_payment_due_date.first_date, row.original.ptec_frequency)}
       </div>
       },
       {
@@ -521,7 +521,7 @@ useEffect(() => {
         enableSorting:false,
         cell: ({ row }) => 
           <div className="w-44 text-start">
-            {formatDayWithSuffix(row.original.ptec_payment_due_date.second_date, row.original.ptrc_frequency)}
+            {formatDayWithSuffix(row.original.ptec_payment_due_date.second_date, row.original.ptec_frequency)}
       </div>
       },
       {
@@ -530,7 +530,7 @@ useEffect(() => {
         enableSorting:false,
         cell: ({ row }) => 
           <div className="w-44 text-start">
-        {formatDayWithSuffix(row.original.ptec_payment_due_date?.third_date, row.original.ptrc_frequency)}
+        {formatDayWithSuffix(row.original.ptec_payment_due_date?.third_date, row.original.ptec_frequency)}
       </div>
       },
       {
@@ -539,7 +539,7 @@ useEffect(() => {
         enableSorting:false,
         cell: ({ row }) => 
           <div className="w-44 text-start">
-        {formatDayWithSuffix(row.original.ptec_payment_due_date?.last_date, row.original.ptrc_frequency)}
+        {formatDayWithSuffix(row.original.ptec_payment_due_date?.last_date, row.original.ptec_frequency)}
       </div>
       },
       {
