@@ -328,6 +328,7 @@ const CompanyAdmin = () => {
     } finally {
       setIsLoading(false);
     }
+  
   };
   return (
     <AdaptableCard className="h-full" bodyClass="h-full">
