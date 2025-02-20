@@ -124,7 +124,7 @@ const PFConfiguration = () => {
             }
         } catch (error) {
             toast.push(
-                <Notification title="Error" type="danger">
+                <Notification title="Error" closable={true} type="danger">
                     Failed to {isEditing ? 'update' : 'add'} PF Configuration
                 </Notification>,
             )

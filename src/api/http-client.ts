@@ -10,7 +10,7 @@ const httpClient = axios.create({
 })
 
 httpClient.interceptors.request.use(function (config) {
-    const token = Cookies.get('token')
+    const token = Cookies.get('central_token')
     // const clientId = process.env.NEXT_PUBLIC_LOCAL_CLIENT_ID;
 
     if (token && !config.headers['Authorization']) {
@@ -28,24 +28,27 @@ httpClient.interceptors.response.use(
     (response) => response,
     (error) => {
         console.log(error)
-        if (error.response?.data.message.length) {
+        if (
+            (error.response?.status == 401 &&
+                !error.request.responseURL.includes('companyadmin/profile')) ||
+            error.response?.status === 403
+        ) {
+            console.log('okkk')
+            // store.dispatch(loginUser());
+            window.location.reload()
+        } else if (
+            error.response?.status !== 401 &&
+            error.response?.data?.message?.length
+        ) {
             showErrorNotification(error.response?.data.message)
-        } else if (error.message.length) {
+        } else if (error.response?.status !== 401 && error.message.length) {
             showErrorNotification(error.message)
-        } else {
+        } else if (error.response?.status !== 401 && error.length) {
             showErrorNotification(
                 error || 'Something went wrong ! Please try again !',
             )
         }
-        if (
-            error.response?.status === 401
-            &&
-            !error.request.responseURL.includes('superadmin/profile') ||
-            error.response?.status === 403
-        ) {
-            // store.dispatch(setIsAuthenticated(false))
-            window.location.reload()
-        }
+
         return Promise.reject(error)
     },
 )

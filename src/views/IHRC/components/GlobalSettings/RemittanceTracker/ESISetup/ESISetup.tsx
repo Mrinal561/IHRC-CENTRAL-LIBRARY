@@ -16,7 +16,6 @@
 // import { showErrorNotification } from '@/components/ui/ErrorMessage';
 // import * as yup from 'yup';
 
-
 // const validationSchema = yup.object().shape({
 //   selectedState: yup
 //     .object()
@@ -58,7 +57,6 @@
 // interface ValidationErrors {
 //   [key: string]: string;
 // }
-
 
 // const frequencyOptions = [
 //   { value: 'monthly', label: 'Monthly' },
@@ -105,19 +103,19 @@
 //   const loadStates = async () => {
 //     try {
 //       const response = await httpClient.get(endpoints.common.getStatesAll());
-      
+
 //       if (response.data) {
 //         const formattedStates = response.data.map((state: any) => ({
 //           label: state.name,
 //           value: String(state.id)
 //         }));
-        
+
 //         setStates(formattedStates);
 //       }
 //     } catch (error) {
 //       console.error('Failed to load states:', error);
 //       toast.push(
-//         <Notification title="Error" type="danger">
+//         <Notification title="Error" closable={true} type="danger">
 //           Failed to load states
 //         </Notification>
 //       );
@@ -127,7 +125,7 @@
 //   const handleFrequencyChange = (selectedFrequency: any) => {
 //     const frequencyValue = selectedFrequency?.value || '';
 //     setFrequency(frequencyValue);
-    
+
 //     // Reset date fields based on frequency
 //     switch (frequencyValue) {
 //       case 'monthly':
@@ -199,7 +197,6 @@
 //     dispatch(clearCurrentESIConfig());
 //   };
 
-
 //   const validateForm = async () => {
 //     try {
 //       await validationSchema.validate(formData, { abortEarly: false });
@@ -223,7 +220,7 @@
 //     // Validate form
 //     // if (!selectedState || !frequency || !paymentDueDates.firstDate) {
 //     //   toast.push(
-//     //     <Notification title="Error" type="danger">
+//     //     <Notification title="Error" closable={true} type="danger">
 //     //       Please fill all required fields
 //     //     </Notification>
 //     //   );
@@ -253,16 +250,16 @@
 //         return;
 //       }
 //       if (isEditMode && currentESIConfig?.id) {
-//         const result = await dispatch(updateESIConfig({ 
-//           id: currentESIConfig.id, 
-//           data: esiConfigData 
+//         const result = await dispatch(updateESIConfig({
+//           id: currentESIConfig.id,
+//           data: esiConfigData
 //         }))
 //         .unwrap()
 //         .catch((error: any) => {
 //           console.error('Full error object:', error);
 //           console.error('Error response:', error.response);
 //           console.error('Error message:', error.message);
-          
+
 //           if (error.response?.data?.message) {
 //             showErrorNotification(error.response.data.message)
 //           } else if (error.message) {
@@ -278,9 +275,9 @@
 //         if(result) {
 //           handleDialogClose();
 //           dispatch(fetchESIConfigs({ page: 1, page_size: 10 }));
-//            setRefreshCounter(prev => prev + 1); 
+//            setRefreshCounter(prev => prev + 1);
 //         }
-        
+
 //       } else {
 //         const result = await dispatch(createESIConfig(esiConfigData))
 //         .unwrap()
@@ -288,7 +285,7 @@
 //           console.error('Full error object:', error);
 //           console.error('Error response:', error.response);
 //           console.error('Error message:', error.message);
-          
+
 //           if (error.response?.data?.message) {
 //             showErrorNotification(error.response.data.message)
 //           } else if (error.message) {
@@ -300,7 +297,7 @@
 //           }
 //           throw error;
 //         });
-        
+
 //         // toast.push(
 //         //   <Notification title="Success" type="success">
 //         //     ESI Configuration created successfully
@@ -309,35 +306,34 @@
 //         if(result) {
 //           handleDialogClose();
 //           dispatch(fetchESIConfigs({ page: 1, page_size: 10 }));
-//            setRefreshCounter(prev => prev + 1); 
+//            setRefreshCounter(prev => prev + 1);
 //         }
 //       }
-      
+
 //     } catch (error: any) {
 //      console.log(error);
 //     //  showErrorNotification(error);
 
-     
 //     }
 //   };
 
 //   const handleEdit = (config) => {
 //     setIsEditMode(true);
 //     setIsDialogOpen(true);
-    
+
 //     // Set state from the selected configuration
 //     const selectedStateObj = states.find(state => state.value === config.state_id);
 //     setSelectedState(selectedStateObj || null);
 //     setFrequency(config.frequency);
 //     setIsActive(config.active);
-    
+
 //     setPaymentDueDates({
 //       firstDate: config.payment_due_date.first_date,
 //       secondDate: config.payment_due_date.second_date,
 //       thirdDate: config.payment_due_date.third_date,
 //       lastDate: config.payment_due_date.last_date
 //     });
-    
+
 //     // Update date fields state based on frequency
 //     switch (config.frequency) {
 //       case 'monthly':
@@ -383,8 +379,8 @@
 //           </Button> */}
 //         </div>
 //       </div>
-      
-//       <ESITable 
+
+//       <ESITable
 //         onEdit={handleEdit}
 //         refreshTrigger={refreshCounter}
 //       />
@@ -405,7 +401,7 @@
 //                 value={selectedState}
 //                 onChange={setSelectedState}
 //               />
-              
+
 //             </div>
 //           </div>
 
@@ -499,8 +495,8 @@
 //           >
 //             Cancel
 //           </Button>
-//           <Button 
-//             variant="solid" 
+//           <Button
+//             variant="solid"
 //             onClick={handleConfirm}
 //             loading={loading}
 //           >
@@ -544,19 +540,19 @@
 //             <div className="mb-6">
 //                 <h3>ESI Configuration</h3>
 //             </div>
-            
+
 //             <div className="max-w-xl">
 //                 <div className="flex flex-col gap-6">
 //                     <div className="flex flex-col gap-2">
 //                         <label className="font-medium">Payment Mode</label>
 //                         <div className="text-gray-500 p-2 bg-gray-50 rounded border">Online</div>
 //                     </div>
-                    
+
 //                     <div className="flex flex-col gap-2">
 //                         <label className="font-medium">ESI Frequency</label>
 //                         <div className="text-gray-500 p-2 bg-gray-50 rounded border">Monthly</div>
 //                     </div>
-                    
+
 //                     <div className="flex flex-col gap-2">
 //                         <label className="font-medium">Due Date</label>
 //                         <DatePicker
@@ -785,12 +781,12 @@
 // const ESIConfiguration = () => {
 //     const [isEditMode, setIsEditMode] = useState(false);
 //     const [selectedFrequency, setSelectedFrequency] = useState<SelectOption>({ value: 'monthly', label: 'Monthly' });
-    
+
 //     // Initialize the date to the 15th of current month
 //     const initialDate = new Date();
 //     initialDate.setDate(15);
 //     const [paymentDueDate, setPaymentDueDate] = useState<string | null>(initialDate.toISOString());
-    
+
 //     const [validationErrors, setValidationErrors] = useState({
 //         payment_due_date: undefined,
 //     });
@@ -1094,28 +1090,27 @@
 
 // export default ESIConfiguration;
 
-
-import React, { useEffect, useState } from 'react';
-import { Button, toast, Notification } from '@/components/ui';
-import { FormItem, FormContainer } from '@/components/ui/Form';
-import SimpleDatePicker from '@/components/ui/OutlinedInput/SimpleDatePicker';
-import OutlinedSelect from '@/components/ui/Outlined/Outlined';
-import { showErrorNotification } from '@/components/ui/ErrorMessage';
-import * as yup from 'yup';
-import httpClient from '@/api/http-client';
-import { endpoints } from '@/api/endpoint';
-import { format, parseISO, startOfDay } from 'date-fns';
+import React, { useEffect, useState } from 'react'
+import { Button, toast, Notification } from '@/components/ui'
+import { FormItem, FormContainer } from '@/components/ui/Form'
+import SimpleDatePicker from '@/components/ui/OutlinedInput/SimpleDatePicker'
+import OutlinedSelect from '@/components/ui/Outlined/Outlined'
+import { showErrorNotification } from '@/components/ui/ErrorMessage'
+import * as yup from 'yup'
+import httpClient from '@/api/http-client'
+import { endpoints } from '@/api/endpoint'
+import { format, parseISO, startOfDay } from 'date-fns'
 
 const formatDateForSubmission = (date: Date | null): string | null => {
-    if (!date) return null;
-    return format(startOfDay(date), 'yyyy-MM-dd');
-};
+    if (!date) return null
+    return format(startOfDay(date), 'yyyy-MM-dd')
+}
 
 // Helper function to parse API date
 const parseAPIDate = (dateString: string | null): Date | null => {
-    if (!dateString) return null;
-    return parseISO(dateString);
-};
+    if (!dateString) return null
+    return parseISO(dateString)
+}
 
 const createESIValidationSchema = () => {
     return yup.object().shape({
@@ -1123,87 +1118,101 @@ const createESIValidationSchema = () => {
             .date()
             .required('Due date is required')
             .typeError('Due date must be a valid date'),
-    });
-};
-
-type ESIFrequency = 'monthly';
-
-interface SelectOption {
-    value: string;
-    label: string;
+    })
 }
 
-const frequencyOptions = [{ value: 'monthly', label: 'Monthly' }];
+type ESIFrequency = 'monthly'
+
+interface SelectOption {
+    value: string
+    label: string
+}
+
+const frequencyOptions = [{ value: 'monthly', label: 'Monthly' }]
 
 const ESIConfiguration = () => {
-    const [isEditMode, setIsEditMode] = useState(false);
-    const [selectedFrequency, setSelectedFrequency] = useState<SelectOption>({ value: 'monthly', label: 'Monthly' });
-    const [paymentMode, setPaymentMode] = useState('online');
-    const [paymentDueDate, setPaymentDueDate] = useState<string | null>(null);
-    const [validationErrors, setValidationErrors] = useState({});
-    const [isLoading, setIsLoading] = useState(true);
+    const [isEditMode, setIsEditMode] = useState(false)
+    const [selectedFrequency, setSelectedFrequency] = useState<SelectOption>({
+        value: 'monthly',
+        label: 'Monthly',
+    })
+    const [paymentMode, setPaymentMode] = useState('online')
+    const [paymentDueDate, setPaymentDueDate] = useState<string | null>(null)
+    const [validationErrors, setValidationErrors] = useState({})
+    const [isLoading, setIsLoading] = useState(true)
 
     useEffect(() => {
-        fetchESIConfig();
-    }, []);
+        fetchESIConfig()
+    }, [])
 
     const fetchESIConfig = async () => {
         try {
-            setIsLoading(true);
-            const response = await httpClient.get(endpoints.esiConfig.detail(1));
-            const configData = response.data;
+            setIsLoading(true)
+            const response = await httpClient.get(endpoints.esiConfig.detail(1))
+            const configData = response.data
 
             if (configData) {
-                setPaymentMode(configData.esi_payment_mode);
+                setPaymentMode(configData.esi_payment_mode)
                 setSelectedFrequency({
                     value: configData.esi_frequency,
-                    label: configData.esi_frequency.charAt(0).toUpperCase() + configData.esi_frequency.slice(1),
-                });
+                    label:
+                        configData.esi_frequency.charAt(0).toUpperCase() +
+                        configData.esi_frequency.slice(1),
+                })
                 setPaymentDueDate(
-                    configData.esi_payment_due_date?.first_date ? 
-                    format(parseAPIDate(configData.esi_payment_due_date.first_date), 'yyyy-MM-dd') : 
-                    null
-                );
+                    configData.esi_payment_due_date?.first_date
+                        ? format(
+                              parseAPIDate(
+                                  configData.esi_payment_due_date.first_date,
+                              ),
+                              'yyyy-MM-dd',
+                          )
+                        : null,
+                )
             }
         } catch (error) {
-            showErrorNotification('Failed to fetch ESI configuration');
+            showErrorNotification('Failed to fetch ESI configuration')
         } finally {
-            setIsLoading(false);
+            setIsLoading(false)
         }
-    };
+    }
 
     const validateDates = async () => {
         try {
-            const validationSchema = createESIValidationSchema();
+            const validationSchema = createESIValidationSchema()
             await validationSchema.validate(
-                { payment_due_date: paymentDueDate ? parseAPIDate(paymentDueDate) : null }, 
-                { abortEarly: false }
-            );
-            setValidationErrors({});
-            return true;
+                {
+                    payment_due_date: paymentDueDate
+                        ? parseAPIDate(paymentDueDate)
+                        : null,
+                },
+                { abortEarly: false },
+            )
+            setValidationErrors({})
+            return true
         } catch (error) {
             if (error instanceof yup.ValidationError) {
-                const newErrors = {};
+                const newErrors = {}
                 error.inner.forEach((err) => {
-                    newErrors[err.path] = err.message;
-                });
-                setValidationErrors(newErrors);
+                    newErrors[err.path] = err.message
+                })
+                setValidationErrors(newErrors)
             }
-            return false;
+            return false
         }
-    };
+    }
 
-    const handleEdit = () => setIsEditMode(true);
+    const handleEdit = () => setIsEditMode(true)
 
     const handleCancel = () => {
-        setIsEditMode(false);
-        fetchESIConfig();
-    };
+        setIsEditMode(false)
+        fetchESIConfig()
+    }
 
     const handleSubmit = async () => {
-        const isValid = await validateDates();
+        const isValid = await validateDates()
 
-        if (!isValid) return;
+        if (!isValid) return
 
         const esiConfigData = {
             esi_frequency: selectedFrequency.value,
@@ -1212,24 +1221,26 @@ const ESIConfiguration = () => {
                 first_date: paymentDueDate,
                 second_date: null,
                 third_date: null,
-                last_date: null
-            }
-        };
+                last_date: null,
+            },
+        }
 
         try {
-            await httpClient.put(endpoints.esiConfig.update(1), esiConfigData);
-          toast.push(
-            <Notification title="Copy Success" type="success">
-           ESI configuration updatd Successfully
-        </Notification>,
-          )
-            setIsEditMode(false);
+            await httpClient.put(endpoints.esiConfig.update(1), esiConfigData)
+            toast.push(
+                <Notification title="Copy Success" type="success">
+                    ESI configuration updatd Successfully
+                </Notification>,
+            )
+            setIsEditMode(false)
         } catch (error) {
-            showErrorNotification('An error occurred while saving the configuration');
+            showErrorNotification(
+                'An error occurred while saving the configuration',
+            )
         }
-    };
+    }
 
-    if (isLoading) return <div>Loading...</div>;
+    if (isLoading) return <div>Loading...</div>
 
     return (
         <div className="bg-white p-6 rounded-lg shadow-sm">
@@ -1239,12 +1250,18 @@ const ESIConfiguration = () => {
             <FormContainer>
                 <div className="grid grid-cols-2 gap-6">
                     <FormItem>
-                        <label className="text-gray-600 mb-2 block">ESI Payment Mode</label>
-                        <div className="text-gray-500 p-2 bg-gray-50 rounded border">{paymentMode}</div>
+                        <label className="text-gray-600 mb-2 block">
+                            ESI Payment Mode
+                        </label>
+                        <div className="text-gray-500 p-2 bg-gray-50 rounded border">
+                            {paymentMode}
+                        </div>
                     </FormItem>
 
                     <FormItem>
-                        <label className="text-gray-600 mb-2 block">ESI Frequency</label>
+                        <label className="text-gray-600 mb-2 block">
+                            ESI Frequency
+                        </label>
                         <OutlinedSelect
                             label="Select ESI Frequency"
                             options={frequencyOptions}
@@ -1258,12 +1275,21 @@ const ESIConfiguration = () => {
                         invalid={!!validationErrors.payment_due_date}
                         errorMessage={validationErrors.payment_due_date}
                     >
-                        <label className="text-gray-600 mb-2 block">ESI Monthly Due Date <span className="text-red-500">*</span></label>
+                        <label className="text-gray-600 mb-2 block">
+                            ESI Monthly Due Date{' '}
+                            <span className="text-red-500">*</span>
+                        </label>
                         <SimpleDatePicker
                             className="w-full"
                             placeholder="Select ESI due date"
-                            value={paymentDueDate ? parseISO(paymentDueDate) : null}
-                            onChange={(date) => setPaymentDueDate(date ? formatDateForSubmission(date) : null)}
+                            value={
+                                paymentDueDate ? parseISO(paymentDueDate) : null
+                            }
+                            onChange={(date) =>
+                                setPaymentDueDate(
+                                    date ? formatDateForSubmission(date) : null,
+                                )
+                            }
                             disabled={!isEditMode}
                         />
                     </FormItem>
@@ -1287,7 +1313,7 @@ const ESIConfiguration = () => {
                 </div>
             </FormContainer>
         </div>
-    );
-};
+    )
+}
 
-export default ESIConfiguration;
+export default ESIConfiguration

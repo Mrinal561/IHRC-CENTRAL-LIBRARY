@@ -30,8 +30,11 @@ const validationSchema = Yup.object().shape({
     name: Yup.string()
         .transform((value) => value.trim())
         .required('Please enter your name')
-        .test('no-empty-spaces', 'Name cannot be just spaces', 
-            value => value.trim().length > 0),
+        .test(
+            'no-empty-spaces',
+            'Name cannot be just spaces',
+            (value) => value.trim().length > 0,
+        ),
     email: Yup.string()
         .transform((value) => value.trim())
         .email('Invalid email')
@@ -39,13 +42,19 @@ const validationSchema = Yup.object().shape({
     password: Yup.string()
         .transform((value) => value.trim())
         .required('Please enter your password')
-        .test('no-empty-spaces', 'Password cannot be just spaces',
-            value => value.trim().length > 0),
+        .test(
+            'no-empty-spaces',
+            'Password cannot be just spaces',
+            (value) => value.trim().length > 0,
+        ),
     confirmPassword: Yup.string()
         .transform((value) => value.trim())
         .oneOf([Yup.ref('password')], 'Your passwords do not match')
-        .test('no-empty-spaces', 'Password cannot be just spaces',
-            value => value.trim().length > 0),
+        .test(
+            'no-empty-spaces',
+            'Password cannot be just spaces',
+            (value) => value.trim().length > 0,
+        ),
 })
 
 const SignUpForm = (props: SignUpFormProps) => {
@@ -55,7 +64,7 @@ const SignUpForm = (props: SignUpFormProps) => {
 
     const onSignUp = async (
         values: SignUpFormSchema,
-        setSubmitting: (isSubmitting: boolean) => void
+        setSubmitting: (isSubmitting: boolean) => void,
     ) => {
         setSubmitting(true)
         try {
@@ -66,7 +75,10 @@ const SignUpForm = (props: SignUpFormProps) => {
                 password: values.password.trim(),
             }
 
-            const { data } = await httpClient.post(endpoints.auth.signup(), trimmedValues)
+            const { data } = await httpClient.post(
+                endpoints.auth.signup(),
+                trimmedValues,
+            )
 
             toast.push(
                 <Notification title="success" type="success">
@@ -74,7 +86,7 @@ const SignUpForm = (props: SignUpFormProps) => {
                 </Notification>,
                 {
                     placement: 'top-end',
-                }
+                },
             )
 
             navigate(signInUrl)
@@ -82,21 +94,21 @@ const SignUpForm = (props: SignUpFormProps) => {
             const err = error as AxiosError
             if (err.response?.status === 400) {
                 toast.push(
-                    <Notification title="error" type="danger">
+                    <Notification title="Error" closable={true} type="danger">
                         Email already exists
                     </Notification>,
                     {
                         placement: 'top-end',
-                    }
+                    },
                 )
             } else {
                 toast.push(
-                    <Notification title="error" type="danger">
+                    <Notification title="Error" closable={true} type="danger">
                         Something went wrong! Please try again.
                     </Notification>,
                     {
                         placement: 'top-end',
-                    }
+                    },
                 )
             }
         }
@@ -126,7 +138,13 @@ const SignUpForm = (props: SignUpFormProps) => {
                     }
                 }}
             >
-                {({ touched, errors, isSubmitting, handleChange, setFieldValue }) => (
+                {({
+                    touched,
+                    errors,
+                    isSubmitting,
+                    handleChange,
+                    setFieldValue,
+                }) => (
                     <Form>
                         <FormContainer>
                             <FormItem
@@ -140,9 +158,11 @@ const SignUpForm = (props: SignUpFormProps) => {
                                     name="name"
                                     placeholder="Name"
                                     component={Input}
-                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                                        const value = e.target.value;
-                                        setFieldValue('name', value);
+                                    onChange={(
+                                        e: React.ChangeEvent<HTMLInputElement>,
+                                    ) => {
+                                        const value = e.target.value
+                                        setFieldValue('name', value)
                                     }}
                                 />
                             </FormItem>
@@ -157,9 +177,11 @@ const SignUpForm = (props: SignUpFormProps) => {
                                     name="email"
                                     placeholder="Email"
                                     component={Input}
-                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                                        const value = e.target.value;
-                                        setFieldValue('email', value);
+                                    onChange={(
+                                        e: React.ChangeEvent<HTMLInputElement>,
+                                    ) => {
+                                        const value = e.target.value
+                                        setFieldValue('email', value)
                                     }}
                                 />
                             </FormItem>
@@ -173,9 +195,11 @@ const SignUpForm = (props: SignUpFormProps) => {
                                     name="password"
                                     placeholder="Password"
                                     component={PasswordInput}
-                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                                        const value = e.target.value;
-                                        setFieldValue('password', value);
+                                    onChange={(
+                                        e: React.ChangeEvent<HTMLInputElement>,
+                                    ) => {
+                                        const value = e.target.value
+                                        setFieldValue('password', value)
                                     }}
                                 />
                             </FormItem>
@@ -192,9 +216,11 @@ const SignUpForm = (props: SignUpFormProps) => {
                                     name="confirmPassword"
                                     placeholder="Confirm Password"
                                     component={PasswordInput}
-                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                                        const value = e.target.value;
-                                        setFieldValue('confirmPassword', value);
+                                    onChange={(
+                                        e: React.ChangeEvent<HTMLInputElement>,
+                                    ) => {
+                                        const value = e.target.value
+                                        setFieldValue('confirmPassword', value)
                                     }}
                                 />
                             </FormItem>

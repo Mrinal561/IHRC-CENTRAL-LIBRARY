@@ -76,7 +76,7 @@
 //                     className="gap-2"
 //                     onClick={() => {
 //                         dispatch(setIsAuthenticated(false))
-//                         Cookies.remove('token')
+//                         Cookies.remove('central_token')
 //                     }}
 //                 >
 //                     <span className="text-xl opacity-50">
@@ -92,7 +92,6 @@
 // const UserDropdown = withHeaderItem(_UserDropdown)
 
 // export default UserDropdown
-
 
 import Avatar from '@/components/ui/Avatar'
 import Dropdown from '@/components/ui/Dropdown'
@@ -120,7 +119,7 @@ const _UserDropdown = ({ className }: CommonProps) => {
     const [userData, setUserData] = useState({
         name: '',
         email: '',
-        type: ''
+        type: '',
     })
 
     useEffect(() => {
@@ -131,7 +130,7 @@ const _UserDropdown = ({ className }: CommonProps) => {
                     setUserData({
                         name: response.payload.name || '',
                         email: response.payload.email || '',
-                        type: response.payload.type || ''
+                        type: response.payload.type || '',
                     })
                 }
             } catch (error) {
@@ -194,7 +193,7 @@ const _UserDropdown = ({ className }: CommonProps) => {
                     className="gap-2"
                     onClick={() => {
                         dispatch(setIsAuthenticated(false))
-                        Cookies.remove('token')
+                        Cookies.remove('central_token')
                     }}
                 >
                     <span className="text-xl opacity-50">

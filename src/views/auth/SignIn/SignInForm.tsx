@@ -72,7 +72,7 @@ const SignInForm = (props: SignInFormProps) => {
 
             console.log(data)
 
-            Cookies.set('token', data.access_token, { path: '/' })
+            Cookies.set('central_token', data.access_token, { path: '/' })
 
             dispatch(fetchAuthUser()).then(({ payload }) => {
                 if (payload) {
@@ -118,7 +118,7 @@ const SignInForm = (props: SignInFormProps) => {
             const err = error as AxiosError
             if (err.response?.status == 401) {
                 toast.push(
-                    <Notification title="Error" type="danger">
+                    <Notification title="Error" closable={true} type="danger">
                         Invalid email or password{' '}
                     </Notification>,
                     {
@@ -127,8 +127,8 @@ const SignInForm = (props: SignInFormProps) => {
                 )
             } else {
                 toast.push(
-                    <Notification title="Error" type="danger">
-                     {error.response.data.message}
+                    <Notification title="Error" closable={true} type="danger">
+                        {error.response.data.message}
                     </Notification>,
                     {
                         placement: 'top-end',
