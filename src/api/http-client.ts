@@ -30,7 +30,7 @@ httpClient.interceptors.response.use(
         console.log(error)
         if (
             (error.response?.status == 401 &&
-                !error.request.responseURL.includes('companyadmin/profile')) ||
+                !error.request.responseURL.includes('superadmin/profile')) ||
             error.response?.status === 403
         ) {
             console.log('okkk')
