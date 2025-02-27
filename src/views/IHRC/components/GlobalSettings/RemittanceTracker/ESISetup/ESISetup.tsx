@@ -1306,7 +1306,7 @@ const ESIConfiguration = () => {
                                 Cancel
                             </Button>
                             <Button variant="solid" onClick={handleSubmit}>
-                                Save Changes
+                                Confirm
                             </Button>
                         </>
                     )}

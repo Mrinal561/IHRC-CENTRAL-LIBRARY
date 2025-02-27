@@ -715,7 +715,7 @@ useEffect(() => {
             <label className="text-gray-600 mb-2 block">State</label>
             <OutlinedSelect
              disabled={true}
-              label="Select State"
+              label="State"
               options={states}
               value={selectedState}
               onChange={setSelectedState}

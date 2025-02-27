@@ -17,6 +17,7 @@ import { fetchDetail } from '@/store/slices/common/commonSlice';
 import * as yup from 'yup';
 import dayjs from 'dayjs';
 import SimpleDatePicker from '@/components/ui/OutlinedInput/SimpleDatePicker';
+import OutlinedInput from '@/components/ui/OutlinedInput';
 
 
 const formatDateForSubmission = (date) => {
@@ -154,6 +155,7 @@ const LWFTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger, searc
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [states, setStates] = useState([]);
   const [selectedState, setSelectedState] = useState(null);
+  const [selectedStateName, setSelectedStateName] = useState('');
   const [frequency, setFrequency] = useState('');
   const [isActive, setIsActive] = useState(false);
   const [validationErrors, setValidationErrors] = useState({
@@ -220,7 +222,8 @@ const LWFTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger, searc
       
       setIsDialogOpen(true);
       setSelectedStateId(detailData.id);
-      setSelectedState(states.find(state => state.value === String(detailData.id)));
+      // setSelectedState(states.find(state => state.value === String(detailData.id)));
+      setSelectedStateName(detailData.name); 
       setFrequency(detailData.lwf_frequency);
       setIsActive(detailData.lwf_active);
       setPaymentDueDates({
@@ -579,12 +582,13 @@ const handleConfirm = async () => {
           <div className="flex gap-4">
             <div className="w-full">
               <label className="text-gray-600 mb-2 block">State</label>
-              <OutlinedSelect
-               disabled={true}
-                label="Select State"
-                options={states}
-                value={selectedState}
-                onChange={setSelectedState}
+              <OutlinedInput
+                //  disabled={true}
+                label="State"
+                // options={states}
+                value={selectedStateName} onChange={function (value: string): void {
+                  throw new Error('Function not implemented.');
+                } }                // onChange={setSelectedState}
               />
             </div>
               <div className="w-full">
