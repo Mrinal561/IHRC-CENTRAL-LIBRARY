@@ -222,8 +222,8 @@ const LWFTable = ({ tableLoading, setTableLoading, onEdit, refreshTrigger, searc
       
       setIsDialogOpen(true);
       setSelectedStateId(detailData.id);
-      // setSelectedState(states.find(state => state.value === String(detailData.id)));
-      setSelectedStateName(detailData.name); 
+      setSelectedState(states.find(state => state.value === String(detailData.id)));
+      // setSelectedStateName(detailData.name); 
       setFrequency(detailData.lwf_frequency);
       setIsActive(detailData.lwf_active);
       setPaymentDueDates({
@@ -308,7 +308,7 @@ useEffect(() => {
 }, [frequency])
 
 const handleConfirm = async () => {
-  if (!selectedState || !frequency || isActive === null) {
+  if (!selectedState || isActive === null) {
     showErrorNotification('Please fill all required fields');
     return;
   }
@@ -582,13 +582,15 @@ const handleConfirm = async () => {
           <div className="flex gap-4">
             <div className="w-full">
               <label className="text-gray-600 mb-2 block">State</label>
-              <OutlinedInput
-                //  disabled={true}
+              <OutlinedSelect
+                 disabled={true}
                 label="State"
-                // options={states}
-                value={selectedStateName} onChange={function (value: string): void {
-                  throw new Error('Function not implemented.');
-                } }                // onChange={setSelectedState}
+                options={states}
+                // value={selectedStateName} onChange={function (value: string): void {
+                //   throw new Error('Function not implemented.');
+                // } }                // onChange={setSelectedState}
+                value={selectedState}
+              onChange={setSelectedState}
               />
             </div>
               <div className="w-full">
