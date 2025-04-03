@@ -119,6 +119,14 @@ export const protectedRoutes = [
         authority: [],
     },
     {
+        key: 'groupMenu.collapse.item9',
+        path: '/return-setup',
+        component: lazy(() =>
+            import('@/views/IHRC/components/GlobalSettings/ReturnSetup/ReturnSetup')
+        ),
+        authority: [],
+    },
+    {
         key: 'customChecklist.customChecklistForm',
         path: '/add-compliance-form',
         component: lazy(
@@ -161,6 +169,25 @@ export const protectedRoutes = [
             () =>
                 import(
                     '@/views/IHRC/components/GlobalSettings/Compliance/components/ComplianceDetail'
+                ),
+        ),
+        authority: [],
+    },
+    {
+        key: 'returnSetup.add',
+        path: '/add-return-setup',
+        component: lazy(() =>
+            import('@/views/IHRC/components/GlobalSettings/ReturnSetup/components/ReturnSetupAddForm')
+        ),
+        authority: [],
+    },
+    {
+        key: 'returnSetup.edit',
+        path: '/edit-return-setup',
+        component: lazy(
+            () =>
+                import(
+                    '@/views/IHRC/components/GlobalSettings/ReturnSetup/components/ReturnSetupEditForm'
                 ),
         ),
         authority: [],

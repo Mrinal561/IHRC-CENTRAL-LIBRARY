@@ -122,3 +122,11 @@
   z-index: 9999 !important;
 }
 
+
+.custom-logo img{
+  max-width: 190px;
+  margin: 0 auto;
+  padding: 10px;
+  background-color: #fff;
+  border-radius: 5px;
+}
