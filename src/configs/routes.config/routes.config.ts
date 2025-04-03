@@ -119,6 +119,22 @@ export const protectedRoutes = [
         authority: [],
     },
     {
+        key: 'groupMenu.collapse.item10',
+        path: '/audit-tracker',
+        component: lazy(() =>
+            import('@/views/IHRC/components/GlobalSettings/AuditTracker/AuditTracker')
+        ),
+        authority: [],
+    },
+    {
+        key: 'complianceAddForm',
+        path: '/add-compliance',
+        component: lazy(() =>
+            import('@/views/IHRC/components/GlobalSettings/AuditTracker/components/ComplianceAddForm')
+        ),
+        authority: [],
+    },
+    {
         key: 'customChecklist.customChecklistForm',
         path: '/add-compliance-form',
         component: lazy(

@@ -108,6 +108,16 @@ const navigationConfig: NavigationTree[] = [
                 authority: [],
                 subMenu: [],
             },
+            {
+                key: 'groupMenu.collapse.item10',
+                path: '/audit-tracker',
+                title: 'Audit Tracker',
+                translateKey: 'nav.groupMenu.collapse.item10',
+                icon: '',
+                type: NAV_ITEM_TYPE_ITEM,
+                authority: [],
+                subMenu: [],
+            },
             // {
             //     key: 'groupMenu.collapse.item8',
             //     path: '/external-user',
