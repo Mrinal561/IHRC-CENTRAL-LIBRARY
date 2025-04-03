@@ -5,6 +5,7 @@ import React from 'react'
 import { HiDownload, HiPlusCircle } from 'react-icons/hi'
 import { useNavigate } from 'react-router-dom'
 import BulkUploadCompliance from './components/BulkUploadCompliance'
+import AuditTrackerTable from './components/AuditTrackerTable'
 
 const AuditTracker = () => {
   const navigate = useNavigate()
@@ -33,6 +34,9 @@ const AuditTracker = () => {
                     </Button>
                 </div>
             </div>
+                <div>
+                  <AuditTrackerTable />
+                </div>
     </AdaptableCard>
   )
 }
