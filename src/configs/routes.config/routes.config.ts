@@ -130,6 +130,17 @@ export const protectedRoutes = [
         authority: [],
     },
     {
+        key: 'register',
+        path: '/register',
+        component: lazy(
+            () =>
+                import(
+                    '@/views/IHRC/components/GlobalSettings/Register/Register'
+                ),
+        ),
+        authority: [],
+    },
+    {
         key: 'permission.details',
         path: `/permission`,
         component: lazy(() => import('@/views/IHRC/components/GlobalSettings/Compliance/components/Permission')),

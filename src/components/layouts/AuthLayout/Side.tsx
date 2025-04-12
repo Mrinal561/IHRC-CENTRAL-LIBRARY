@@ -12,9 +12,9 @@ const Side = ({ children, content, ...rest }: SideProps) => {
     return (
         <div className="grid lg:grid-cols-3 h-full">
             <div
-                className="bg-no-repeat bg-cover py-6 px-16 flex-col justify-between hidden lg:flex"
+                className="bg-no-repeat custom-logo  bg-cover py-6 px-16 flex-col justify-between hidden lg:flex"
                 style={{
-                    backgroundImage: `url('/ihrc-library-ui/img/others/auth-side-bg.jpg')`,
+                    backgroundImage: `url('/img/others/auth-side-bg.jpg')`,
                 }}
             >
                 <Logo mode="dark" />

@@ -108,6 +108,16 @@ const navigationConfig: NavigationTree[] = [
                 authority: [],
                 subMenu: [],
             },
+            {
+                key: 'groupMenu.collapse.item14',
+                path: '/register',
+                title: 'Register Setup',
+                translateKey: 'nav.groupMenu.collapse.item14',
+                icon: '',
+                type: NAV_ITEM_TYPE_ITEM,
+                authority: [],
+                subMenu: [],
+            },
             // {
             //     key: 'groupMenu.collapse.item8',
             //     path: '/external-user',
