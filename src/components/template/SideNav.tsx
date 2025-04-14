@@ -110,7 +110,7 @@ const SideNav = () => {
                     )}
                 >
                     <div className="side-nav-content-content h-full flex flex-col ">
-                        <div className="side-nav-header">
+                        <div className="side-nav-header py-4">
                             <Logo
                                 mode={logoMode()}
                                 type={!sideNavCollapse ? 'streamline' : 'full'}
