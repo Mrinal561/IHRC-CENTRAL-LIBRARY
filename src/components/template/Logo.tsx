@@ -12,6 +12,7 @@ interface LogoProps extends CommonProps {
 
 const LOGO_SRC_PATH = '/img/logo/logo'
 
+
 const Logo = (props: LogoProps) => {
     const {
         type = 'full',
