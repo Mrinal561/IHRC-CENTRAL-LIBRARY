@@ -22,7 +22,9 @@
                 "item5": "Register Template",
                 "item6": "Role Configuration",
                 "item7": "Company Admin",
-                "item8": "External User"
+                "item8": "External User",
+                "item11": "State",
+                "item12": "POSH"
             }
         }
     }
