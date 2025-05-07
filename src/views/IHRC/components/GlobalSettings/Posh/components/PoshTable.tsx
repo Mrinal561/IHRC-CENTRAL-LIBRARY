@@ -1,93 +1,104 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import DataTable from '@/components/shared/DataTable';
 import { Button, Tooltip } from '@/components/ui';
 import { MdEdit } from 'react-icons/md';
+import httpClient from '@/api/http-client';
+import { endpoints } from '@/api/endpoint';
 
 interface PoshData {
     id: string;
-    state: string;
-    district: string;
-    authorityName: string;
-    authorityAddress: string;
+    state_name: string;
+    district_name: string;
+    authority_name: string;
+    authority_address: string;
 }
 
 interface PoshTableProps {
-    loading?: boolean;
     onEdit: (id: string) => void;
+    searchTerm: string;
+    pageIndex: number;
+    pageSize: number;
+    onPaginationChange: (page: number) => void;
+    onSelectChange: (pageSize: number) => void;
+    timestamp?: number;
 }
 
-const PoshTable = ({ loading, onEdit }: PoshTableProps) => {
-    // Dummy data based on the provided example
-    const [poshTableData, setPoshTableData] = useState<PoshData[]>([
-        {
-            id: '1',
-            state: 'UTTARAKHAND',
-            district: 'DEHRADUN',
-            authorityName: 'Collector & District Magistrate Office',
-            authorityAddress: '15-17, Nardev Shastri Marg, Race Course, Dehradun, Uttarakhand 248001'
-        },
-        {
-            id: '2',
-            state: 'MAHARASHTRA',
-            district: 'MUMBAI',
-            authorityName: 'Collector Office Mumbai',
-            authorityAddress: 'Mantralaya, Mumbai, Maharashtra 400032'
-        },
-        {
-            id: '3',
-            state: 'DELHI',
-            district: 'NEW DELHI',
-            authorityName: 'District Magistrate Office',
-            authorityAddress: '5, Sham Nath Marg, Civil Lines, Delhi 110054'
-        },
-        {
-            id: '4',
-            state: 'KARNATAKA',
-            district: 'BANGALORE',
-            authorityName: 'Bangalore Urban DC Office',
-            authorityAddress: 'Dr. Ambedkar Veedhi, Bengaluru, Karnataka 560001'
-        }
-    ]);
+const PoshTable = ({ 
+    onEdit, 
+    searchTerm,
+    pageIndex,
+    pageSize,
+    onPaginationChange,
+    onSelectChange,
+    timestamp 
+}: PoshTableProps) => {
+    const [loading, setLoading] = useState(true);
+    const [poshTableData, setPoshTableData] = useState<PoshData[]>([]);
+    const [totalResults, setTotalResults] = useState(0);
 
+    useEffect(() => {
+        const fetchPoshData = async () => {
+            try {
+                setLoading(true);
+                const response = await httpClient.get(endpoints.posh.list(), {
+                    params: {
+                        page: pageIndex,
+                        page_size: pageSize,
+                        search: searchTerm
+                    }
+                });
+                
+                setPoshTableData(response.data.data || []);
+                setTotalResults(response.data.paginate_data?.totalResults || 0);
+            } catch (error) {
+                console.error('Error fetching POSH data:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+    
+        fetchPoshData();
+        // Add tableData.timestamp to dependency array if passed as prop
+    }, [pageIndex, pageSize, searchTerm, timestamp]);
     const columns = useMemo(
         () => [
             {
                 header: 'State',
                 enableSorting: false,
-                accessorKey: 'state',
+                accessorKey: 'state_name',
                 cell: ({ row }) => (
                     <div className="w-40 truncate">
-                        {row.original.state}
+                        {row.original.state_name}
                     </div>
                 ),
             },
             {
                 header: 'District',
                 enableSorting: false,
-                accessorKey: 'district',
+                accessorKey: 'district_name',
                 cell: ({ row }) => (
                     <div className="w-40 truncate">
-                        {row.original.district}
+                        {row.original.district_name}
                     </div>
                 ),
             },
             {
                 header: 'Authority Name',
                 enableSorting: false,
-                accessorKey: 'authorityName',
+                accessorKey: 'authority_name',
                 cell: ({ row }) => (
                     <div className="w-40 truncate">
-                        {row.original.authorityName}
+                        {row.original.authority_name}
                     </div>
                 ),
             },
             {
                 header: 'Authority Address',
                 enableSorting: false,
-                accessorKey: 'authorityAddress',
+                accessorKey: 'authority_address',
                 cell: ({ row }) => (
                     <div className="w-60 truncate">
-                        {row.original.authorityAddress}
+                        {row.original.authority_address}
                     </div>
                 ),
             },
@@ -108,24 +119,6 @@ const PoshTable = ({ loading, onEdit }: PoshTableProps) => {
         [onEdit]
     );
 
-    const [tableData, setTableData] = useState({
-        total: 4,
-        pageIndex: 1,
-        pageSize: 10,
-    });
-
-    const onPaginationChange = (page: number) => {
-        setTableData(prev => ({ ...prev, pageIndex: page }));
-    };
-
-    const onSelectChange = (value: number) => {
-        setTableData(prev => ({
-            ...prev,
-            pageSize: Number(value),
-            pageIndex: 1,
-        }))
-    };
-
     return (
         <div className="relative">
             <DataTable
@@ -133,10 +126,12 @@ const PoshTable = ({ loading, onEdit }: PoshTableProps) => {
                 data={poshTableData}
                 loading={loading}
                 stickyHeader={true}
+                stickyFirstColumn={true}
+                stickyLastColumn={true}                
                 pagingData={{
-                    total: tableData.total,
-                    pageIndex: tableData.pageIndex,
-                    pageSize: tableData.pageSize,
+                    total: totalResults,
+                    pageIndex: pageIndex,
+                    pageSize: pageSize,
                 }}
                 onPaginationChange={onPaginationChange}
                 onSelectChange={onSelectChange}

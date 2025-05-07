@@ -1,138 +1,99 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import DataTable from '@/components/shared/DataTable';
-import { format } from 'date-fns';
-import { Button, Tooltip } from '@/components/ui';
-import { MdEdit } from 'react-icons/md';
-import { AppDispatch } from '@/store'
-import { useDispatch } from 'react-redux';
-import { fetchStates } from '@/store/slices/state/stateSlice';
+import React, { useMemo } from 'react'
+import DataTable from '@/components/shared/DataTable'
+import { Button, Tooltip } from '@/components/ui'
+import { MdEdit } from 'react-icons/md'
 
-const StateTable = ({ tableLoading, setStateTableLoading, loading, onEdit }: any) => {
-    const dispatch = useDispatch<AppDispatch>()
-    const [stateTableData, setStateTableData] = useState([
-        {
-            id: '1',
-            name: 'Maharashtra',
-            district: 'Mumbai',
-            location: 'Andheri',
-          
-        },
-        {
-            id: '2',
-            name: 'Delhi',
-            district: 'New Delhi',
-            location: 'Connaught Place',
-           
-        }
-    ])
+interface StateDistrictPair {
+    state_id: number;
+    state_name: string;
+    district_id: number;
+    district_name: string;
+}
 
-    const formatDate = (date) => {
-        if (!date) return '-';
-        return format(new Date(date), 'MMM dd, yyyy');
-    };
+interface PaginationData {
+    page: number;
+    limit: number;
+    totalPages: number;
+    totalResults: number;
+}
 
-    const getFrequencyLabel = (value) => {
-        const labels = {
-            'yearly': 'Yearly',
-            'half_yearly': 'Half Yearly',
-            'monthly': 'Monthly'
-        };
-        return labels[value] || value;
-    };
+interface StateTableProps {
+    tableLoading: boolean;
+    setStateTableLoading: (loading: boolean) => void;
+    loading: boolean;
+    onEdit: (stateId: number, districtId: number) => void;
+    stateDistricts: StateDistrictPair[];
+    paginationData: PaginationData;
+    onPaginationChange: (page: number) => void;
+    onPageSizeChange: (pageSize: number) => void;
+}
 
-    const getPaymentModeLabel = (value) => {
-        return value === 'online' ? 'Online' : 'Offline';
-    };
+const StateTable = ({ 
+    tableLoading, 
+    loading, 
+    onEdit,
+    stateDistricts,
+    paginationData,
+    onPaginationChange,
+    onPageSizeChange
+}: StateTableProps) => {
 
     const columns = useMemo(
         () => [
             {
                 header: 'State',
                 enableSorting: false,
-
-                accessorKey: 'name',
+                accessorKey: 'state_name',
                 cell: ({ row }) => (
                     <div className="w-40 truncate">
-                        {row.original.name}
+                        {row.original.state_name}
                     </div>
                 ),
             },
             {
                 header: 'District',
                 enableSorting: false,
-
-                accessorKey: 'district',
+                accessorKey: 'district_name',
                 cell: ({ row }) => (
                     <div className="w-40 truncate">
-                        {row.original.district}
+                        {row.original.district_name}
                     </div>
                 ),
             },
-            // {
-            //     header: 'Location',
-            //     enableSorting: false,
-
-            //     accessorKey: 'location',
-            //     cell: ({ row }) => (
-            //         <div className="w-40 truncate">
-            //             {row.original.location}
-            //         </div>
-            //     ),
-            // },
-          
             {
                 header: 'Actions',
                 id: 'actions',
                 cell: ({ row }) => (
-                        <Tooltip title="Edit" placement="top">
-                            <Button
-                                size="sm"
-                                icon={<MdEdit />}
-                                onClick={() => onEdit(row.original.id)}
-                            />
-                        </Tooltip>
+                    <Tooltip title="Edit" placement="top">
+                        <Button
+                            size="sm"
+                            icon={<MdEdit />}
+                            onClick={() => onEdit(row.original.state_id, row.original.district_id)}
+                        />
+                    </Tooltip>
                 ),
             },
         ],
         [onEdit]
-    );
-
-    const [tableData, setTableData] = useState({
-        total: 2,
-        pageIndex: 1,
-        pageSize: 10,
-    });
-
-    const onPaginationChange = (page: number) => {
-        setTableData(prev => ({ ...prev, pageIndex: page }));
-    };
-
-    const onSelectChange = (value: number) => {
-        setTableData(prev => ({
-            ...prev,
-            pageSize: Number(value),
-            pageIndex: 1,
-        }))
-    };
+    )
 
     return (
         <div className="relative">
             <DataTable
                 columns={columns}
-                data={stateTableData}
-                loading={loading}
+                data={stateDistricts}
+                loading={loading || tableLoading}
                 stickyHeader={true}
                 pagingData={{
-                    total: tableData.total,
-                    pageIndex: tableData.pageIndex,
-                    pageSize: tableData.pageSize,
+                    total: paginationData.totalResults,
+                    pageIndex: paginationData.page,
+                    pageSize: paginationData.limit,
                 }}
                 onPaginationChange={onPaginationChange}
-                onSelectChange={onSelectChange}
-                selectable={true}
+                onSelectChange={onPageSizeChange}
             />
         </div>
-    );
-};
+    )
+}
 
-export default StateTable;
+export default StateTable

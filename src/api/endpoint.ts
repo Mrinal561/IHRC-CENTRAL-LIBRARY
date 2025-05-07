@@ -15,9 +15,16 @@ export const endpoints = {
         getById: (id: string) => api(`superadmin/state/${id}`),
         create: () => api('superadmin/state'),
         update: (id: string) => api(`superadmin/state/${id}`),
+        createStateDistrict: () => api('superadmin/state/config/state-district'),
+        getStateDistrict: () => api('superadmin/state/config/list/state-districts'),
+        downloadTemplate: () => api('superadmin/state/config/template/state-district'),
+        bulkCreate: () => api('superadmin/state/config/statedistrict-bulk-upload'),
+        downloadData: () => api('superadmin/state/config/export-state-district-data'),
+        updateStateDistrict: () => api('superadmin/state/config/state-district/update')
     },
     district: {
         getAll: () => api('superadmin/district'),
+        getAllDistrict: () => api('district'),        
         getById: (id: string) => api(`superadmin/district/${id}`),
         create: () => api('superadmin/district'),
         update: (id: string) => api(`superadmin/district/${id}`),
@@ -87,7 +94,15 @@ export const endpoints = {
     delete: (id:any) => api(`superadmin/externaluser/external-user/${id}`),
     update:(id:any)=> api(`superadmin/externaluser/external-user/${id}`),
     create: (id:any) => api(`superadmin/externaluser/external-user`)
-
+   },
+   posh: {
+    create: () => api('posh'),
+    update: (id:any) => api(`posh/${id}`),
+    bulkUpload: () => api('posh/bulk-upload'),
+    downloadData: () => api('posh/export'),
+    downloadTemplate: () => api('posh/template'),
+    list: () => api('posh'),
+    detail: (id: any) => api(`posh/${id}`)
    }
     
 

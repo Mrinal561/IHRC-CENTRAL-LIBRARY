@@ -1,33 +1,61 @@
 import React, { useState } from 'react';
 import { Button, Dialog, Input, Notification, toast } from '@/components/ui';
 import { HiDownload, HiUpload } from 'react-icons/hi';
+import httpClient from '@/api/http-client';
+import { endpoints } from '@/api/endpoint';
 
-const documentPath = "../store/AllMappedCompliancesDetails.xls";
 
 const BulkUpload = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [remark, setRemark] = useState('');
-  const [file, setFile] = useState(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleUploadClick = () => {
     setIsDialogOpen(true);
   };
 
-  const handleConfirm = () => {
-    setIsDialogOpen(false);
-    // Here you would typically handle the file upload and remark submission
-    // For this example, we'll just show a success notification
-    toast.push(
-      <Notification
-        title="Success"
-        type="success"
-      >
-        Upload successful!
-      </Notification>,
-      {
-        placement: 'top-end',
+  const handleConfirm = async () => {
+    if (!file) {
+      toast.push(
+        <Notification title="Error" type="error">
+          Please select a file to upload
+        </Notification>
+      );
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      if (remark) {
+        formData.append('remark', remark);
       }
-    );
+
+      await httpClient.post(endpoints.state.bulkCreate(formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      }));
+
+      toast.push(
+        <Notification title="Success" type="success">
+          Bulk upload successful!
+        </Notification>
+      );
+      setIsDialogOpen(false);
+      setRemark('');
+      setFile(null);
+    } catch (error: any) {
+      toast.push(
+        <Notification title="Error" type="error">
+          {error.response?.data?.message || 'Upload failed'}
+        </Notification>
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleCancel = () => {
@@ -36,27 +64,32 @@ const BulkUpload = () => {
     setFile(null);
   };
 
-  const handleDownload = (e) => {
+  const handleDownloadTemplate = async (e: React.MouseEvent) => {
     e.preventDefault();
-    // Implement the download functionality here
-    // For example, you could use the `fetch` API to download the file
-    fetch(documentPath)
-      .then(response => response.blob())
-      .then(blob => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = url;
-        a.download = 'AllMappedCompliancesDetails.xls';
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-      })
-      .catch(() => console.error('Download failed'));
+    try {
+      const response = await httpClient.get(endpoints.state.downloadTemplate(),{
+        responseType: 'blob'
+      });
+      // Assuming the API returns a blob for download
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'State_District_Template.xlsx');
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);    
+    } catch (error) {
+      toast.push(
+        <Notification title="Error" type="error">
+          Failed to download template
+        </Notification>
+      );
+    }
   };
 
-  const handleFileChange = (event) => {
-    if (event.target.files) {
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files[0]) {
       setFile(event.target.files[0]);
     }
   };
@@ -77,17 +110,22 @@ const BulkUpload = () => {
         onClose={handleCancel}
         width={450}
       >
-        <h5 className="mb-4"> Add States</h5>
+        <h5 className="mb-4">Bulk Upload States/Districts</h5>
         <div className="my-4 flex gap-2 items-center">
           <p>Download Bulk Upload Format</p>
-          <a href={documentPath} onClick={handleDownload} className="text-blue-600 hover:underline">
-            <Button size="xs" icon={<HiDownload />} >Download</Button>
-          </a>
+          <Button 
+            size="xs" 
+            icon={<HiDownload />} 
+            onClick={handleDownloadTemplate}
+          >
+            Download Template
+          </Button>
         </div>
         <div className="flex flex-col gap-2">
-          <p>Upload State File:</p>
+          <p>Upload State/District File:</p>
           <Input
             type="file"
+            accept=".xlsx,.xls,.csv"
             onChange={handleFileChange}
             className="mb-4"
           />
@@ -112,6 +150,7 @@ const BulkUpload = () => {
             variant="solid"
             size="sm"
             onClick={handleConfirm}
+            loading={isLoading}
           >
             Confirm
           </Button>
