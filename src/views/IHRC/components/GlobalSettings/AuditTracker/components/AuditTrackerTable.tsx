@@ -168,12 +168,12 @@ const AuditTrackerTable = () => {
 
     const columns = useMemo(
         () => [
-            {
-                header: 'Country',
-                enableSorting: false,
-                accessorKey: 'country',
-                cell: ({ row }) => <div className="w-32">{row.original.country}</div>
-            },
+            // {
+            //     header: 'Country',
+            //     enableSorting: false,
+            //     accessorKey: 'country',
+            //     cell: ({ row }) => <div className="w-32">{row.original.country}</div>
+            // },
             {
                 header: 'Function',
                 enableSorting: false,
