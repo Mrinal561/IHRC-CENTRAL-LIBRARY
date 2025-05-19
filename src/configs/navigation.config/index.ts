@@ -27,6 +27,16 @@ const navigationConfig: NavigationTree[] = [
         authority: [],
         subMenu: [
             {
+                key: 'groupMenu.collapse.item11',
+                path: '/state-manager',
+                title: 'State',
+                translateKey: 'nav.groupMenu.collapse.item11',
+                icon: '',
+                type: NAV_ITEM_TYPE_ITEM,
+                authority: [],
+                subMenu: [],
+            },
+            {
                 key: 'groupMenu.collapse.collapse.remittanceTracker.collapse',
                 path: '/remittance-tracker',
                 title: 'Remittance Tracker',
@@ -113,6 +123,16 @@ const navigationConfig: NavigationTree[] = [
                 path: '/return-setup',
                 title: 'Return Setup',
                 translateKey: 'nav.groupMenu.collapse.item9',
+                icon: '',
+                type: NAV_ITEM_TYPE_ITEM,
+                authority: [],
+                subMenu: [],
+    },
+  {
+                key: 'groupMenu.collapse.item12',
+                path: '/posh',
+                title: 'POSH',
+                translateKey: 'nav.groupMenu.collapse.item12',
                 icon: '',
                 type: NAV_ITEM_TYPE_ITEM,
                 authority: [],

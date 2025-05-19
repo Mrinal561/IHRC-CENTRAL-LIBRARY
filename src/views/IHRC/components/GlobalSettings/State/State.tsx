@@ -1,75 +1,62 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { Button, Dialog, Notification, toast } from '@/components/ui'
-import { HiPlusCircle } from 'react-icons/hi'
+import { HiDownload, HiPlusCircle } from 'react-icons/hi'
 import AdaptableCard from '@/components/shared/AdaptableCard'
 import OutlinedInput from '@/components/ui/OutlinedInput'
-import OutlinedSelect from '@/components/ui/Outlined/Outlined'
-import DatePicker from '@/components/ui/DatePicker'
 import BulkUpload from './components/BulkUpload'
 import StateTable from './components/StateTable'
 import {
-    fetchStates,
+    fetchStateDistricts,
     createState,
-    updateState,
+    updateStateAndDistrict,
     clearError,
-} from '@/store/slices/state/stateSlice'
+} from '@/store/slices/state/stateDistrictSlice'
 import { AppDispatch, RootState } from '@/store'
-import { transformStatePayload } from '@/@types/stateTransformer'
+import httpClient from '@/api/http-client'
+import { endpoints } from '@/api/endpoint'
 
-const frequencyOptions = [
-    { value: 'yearly', label: 'Yearly' },
-    { value: 'half_yearly', label: 'Half Yearly' },
-    { value: 'monthly', label: 'Monthly' },
-]
-
-const paymentOptions = [
-    { value: 'online', label: 'Online' },
-    { value: 'offline', label: 'Offline' },
-]
-
-const initialStateData = {
-    name: '',
-    ptec_frequency: '',
-    ptrc_frequency: '',
-    lwf_frequency: '',
-    paymentFrequency: '',
-    ptEcFirstDueDate: null,
-    ptEcLastDueDate: null,
-    ptRcFirstDueDate: null,
-    ptRcLastDueDate: null,
-    lwfFirstDueDate: null,
-    lwfLastDueDate: null,
+interface StateDistrictFormData {
+    state_name: string;
+    district_name: string;
 }
 
 const State = () => {
     const dispatch = useDispatch<AppDispatch>()
-    const { states, loading, error } = useSelector(
-        (state: RootState) => state.state,
-    )
+    const { stateDistricts, loading, error, pagination } = useSelector(
+        (state: RootState) => state.stateDistrict 
+    );
+    
     const [stateTableLoading, setStateTableLoading] = useState(false)
-
     const [isDialogOpen, setIsDialogOpen] = useState(false)
     const [isEditMode, setIsEditMode] = useState(false)
-    const [editingId, setEditingId] = useState<string | null>(null)
+    const [currentStateDistrict, setCurrentStateDistrict] = useState<{
+        state_id: number;
+        district_id: number;
+    } | null>(null)
+    const [formData, setFormData] = useState<StateDistrictFormData>({
+        state_name: '',
+        district_name: ''
+    })
+    const [searchTerm, setSearchTerm] = useState('');
 
-    const [currentStateId, setCurrentStateId] = useState(null)
-    const [stateData, setStateData] = useState(initialStateData)
-    const [stateTableData, setStateTableData] = useState([])
+
+    const fetchData = useCallback(() => {
+        dispatch(fetchStateDistricts({
+            page: pagination.page,
+            page_size: pagination.limit.toString(),
+            search: searchTerm
+        }));
+    }, [dispatch, pagination.page, pagination.limit, searchTerm]);
 
     useEffect(() => {
-        fetchStateData()
-    }, [])
-
-    const fetchStateData = async () => {
-        const { payload: data } = await dispatch(fetchStates())
-        setStateTableData(data.data)
-    }
+        fetchData()
+    }, [fetchData])
 
     useEffect(() => {
         if (error) {
             toast.push(
-                <Notification title="Error" closable={true} type="danger">
+                <Notification title="Error" closable={true} type="error">
                     {error}
                 </Notification>,
             )
@@ -77,147 +64,138 @@ const State = () => {
         }
     }, [error, dispatch])
 
-    const handleEdit = (stateToEdit) => {
-        setIsEditMode(true)
-        setCurrentStateId(stateToEdit.id)
-        console.log(stateToEdit)
-        setStateData({
-            name: stateToEdit.name,
-            ptec_frequency: stateToEdit.ptec_frequency,
-            ptrc_frequency: stateToEdit.ptrc_frequency,
-            lwf_frequency: stateToEdit.lwf_frequency,
-            paymentFrequency: stateToEdit.payment_mode,
-            ptEcFirstDueDate:
-                stateToEdit.ptec_payment_due_date?.first_date || null,
-            ptEcLastDueDate:
-                stateToEdit.ptec_payment_due_date?.last_date || null,
-            ptRcFirstDueDate:
-                stateToEdit.ptrc_payment_due_date?.first_date || null,
-            ptRcLastDueDate:
-                stateToEdit.ptrc_payment_due_date?.last_date || null,
-            lwfFirstDueDate:
-                stateToEdit.lwf_payment_due_date?.first_date || null,
-            lwfLastDueDate: stateToEdit.lwf_payment_due_date?.last_date || null,
-        })
-        setIsDialogOpen(true)
+    const handleEdit = (stateId: number, districtId: number) => {
+        const stateDistrictToEdit = stateDistricts.find(
+            sd => sd.state_id === stateId && sd.district_id === districtId
+        )
+        if (stateDistrictToEdit) {
+            setIsEditMode(true)
+            setCurrentStateDistrict({
+                state_id: stateId,
+                district_id: districtId
+            })
+            setFormData({
+                state_name: stateDistrictToEdit.state_name,
+                district_name: stateDistrictToEdit.district_name
+            })
+            setIsDialogOpen(true)
+        }
     }
 
-    const handleInputChange = (
-        name: string,
-        value: string | Date | null | React.ChangeEvent<HTMLInputElement>,
-    ) => {
-        if (value === null) {
-            setStateData((prev) => ({ ...prev, [name]: null }))
-        } else if (typeof value === 'object' && 'target' in value) {
-            setStateData((prev) => ({ ...prev, [name]: value.target.value }))
-        } else {
-            setStateData((prev) => {
-                const updated = { ...prev, [name]: value }
-                if (name.includes('Frequency')) {
-                    const lastDueDateField = name.replace(
-                        'Frequency',
-                        'LastDueDate',
-                    )
-                    if (value === 'yearly' || value === 'monthly') {
-                        updated[lastDueDateField] = null
-                    }
-                }
-                return updated
-            })
-        }
+    const handleInputChange = (field: keyof StateDistrictFormData, value: string) => {
+        setFormData(prev => ({
+            ...prev,
+            [field]: value
+        }))
     }
 
     const handleDialogClose = () => {
         setIsDialogOpen(false)
         setIsEditMode(false)
-        setCurrentStateId(null)
-        setStateData(initialStateData)
+        setCurrentStateDistrict(null)
+        setFormData({
+            state_name: '',
+            district_name: ''
+        })
+    }
+
+    const handleDownloadData = async () => {
+        try {
+            const response = await httpClient.get(endpoints.state.downloadData(), {
+                responseType: 'blob'
+              });
+            // Assuming the API returns a blob for download
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', 'State_District_Data.xlsx');
+            document.body.appendChild(link);
+            link.click();
+            link.parentNode?.removeChild(link);
+            window.URL.revokeObjectURL(url); 
+        } catch (error) {
+            toast.push(
+                <Notification title="Error" type="error">
+                    Failed to download data
+                </Notification>
+            );
+        }
+    };
+
+    const handlePaginationChange = (page: number) => {
+        dispatch(fetchStateDistricts({
+            page,
+            page_size: pagination.limit.toString(),
+            search: searchTerm
+
+        }))
+    }
+
+    const handlePageSizeChange = (pageSize: number) => {
+        dispatch(fetchStateDistricts({
+            page: 1,
+            page_size: pageSize.toString(),
+            search: searchTerm
+
+        }))
     }
 
     const handleConfirm = async () => {
         try {
-            const transformedData = transformStatePayload(stateData)
-            if (isEditMode && editingId) {
+            if (isEditMode && currentStateDistrict) {
                 await dispatch(
-                    updateState({ id: currentStateId, data: transformedData }),
-                )
-
-                handleDialogClose()
-                setStateTableLoading(true)
-
-                // await dispatch()
+                    updateStateAndDistrict({ 
+                        stateId: currentStateDistrict.state_id,
+                        newStateName: formData.state_name,
+                        districtId: currentStateDistrict.district_id,
+                        newDistrictName: formData.district_name
+                    })
+                ).unwrap()
+                
                 toast.push(
                     <Notification title="Success" type="success">
-                        State updated successfully!
+                        State/District updated successfully!
                     </Notification>,
                 )
             } else {
-                await dispatch(createState(transformedData)).unwrap()
-                handleDialogClose()
-                setStateTableLoading(true)
+                await dispatch(createState({
+                    stateName: formData.state_name,
+                    districtName: formData.district_name
+                })).unwrap()
+                
                 toast.push(
                     <Notification title="Success" type="success">
-                        State created successfully!
+                        State/District created successfully!
                     </Notification>,
                 )
             }
+            handleDialogClose()
+            fetchData()
         } catch (error) {
-            // Error handling is done in the useEffect above
+            console.error('Error:', error)
         }
     }
-
-    const FrequencyRow = ({
-        title,
-        frequencyName,
-        firstDateName,
-        lastDateName,
-        frequency,
-    }) => (
-        <div className="flex gap-4">
-            <div className="w-1/3">
-                <label className="text-gray-600 mb-2 block">{title}</label>
-                <OutlinedSelect
-                    label="Frequency"
-                    options={frequencyOptions}
-                    value={frequency}
-                    onChange={(value) =>
-                        handleInputChange(frequencyName, value)
-                    }
-                />
-            </div>
-            <div className="w-1/3">
-                <label className="text-gray-600 mb-2 block">
-                    First Due Date
-                </label>
-                <DatePicker
-                    className="w-full"
-                    placeholder="Select date"
-                    value={stateData[firstDateName]}
-                    onChange={(date) => handleInputChange(firstDateName, date)}
-                />
-            </div>
-            <div className="w-1/3">
-                <label className="text-gray-600 mb-2 block">
-                    Last Due Date
-                </label>
-                <DatePicker
-                    className="w-full"
-                    placeholder="Select date"
-                    value={stateData[lastDateName]}
-                    onChange={(date) => handleInputChange(lastDateName, date)}
-                    disabled={frequency !== 'half_yearly'}
-                />
-            </div>
-        </div>
-    )
 
     return (
         <AdaptableCard className="h-full" bodyClass="h-full">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6">
                 <div className="mb-4 lg:mb-0">
-                    <h3 className="text-2xl font-bold">State Manager</h3>
+                    <h3 className="text-2xl font-bold">State/District Manager</h3>
                 </div>
                 <div className="flex gap-2">
+                <OutlinedInput
+                        label="Search by state name..."
+                        value={searchTerm}
+                        onChange={(value) => setSearchTerm(value)}
+                    />
+                    <Button
+                        variant="solid"
+                        size="sm"
+                        icon={<HiDownload />}
+                        onClick={handleDownloadData}
+                    >
+                        Download Data
+                    </Button>
                     <BulkUpload />
                     <Button
                         variant="solid"
@@ -225,7 +203,7 @@ const State = () => {
                         icon={<HiPlusCircle />}
                         onClick={() => setIsDialogOpen(true)}
                     >
-                        Add State
+                        Add State/District
                     </Button>
                 </div>
             </div>
@@ -233,69 +211,42 @@ const State = () => {
             <StateTable
                 tableLoading={stateTableLoading}
                 setStateTableLoading={setStateTableLoading}
-                stateData={stateTableData}
                 loading={loading}
                 onEdit={handleEdit}
+                stateDistricts={stateDistricts}
+                paginationData={pagination}
+                onPaginationChange={handlePaginationChange}
+                onPageSizeChange={handlePageSizeChange}
             />
 
             <Dialog
                 isOpen={isDialogOpen}
                 onClose={handleDialogClose}
                 onRequestClose={handleDialogClose}
+                width={500}
             >
                 <h5 className="mb-6">
-                    {isEditMode ? 'Edit State' : 'Add State'}
+                    {isEditMode ? 'Edit State/District' : 'Add New State/District'}
                 </h5>
-                <div className="flex flex-col gap-6">
-                    <div className="flex gap-4">
-                        <div className="w-1/2">
-                            <label className="text-gray-600 mb-2 block">
-                                State Name
-                            </label>
+                <div className="grid grid-cols-1 gap-6">
+                    <div className="flex flex-col gap-4">
+                        <div className="w-full">
+                            <label className="text-gray-600 mb-2 block">State Name</label>
                             <OutlinedInput
-                                label="Enter state name"
-                                value={stateData.name}
-                                onChange={(e) => handleInputChange('name', e)}
+                                value={formData.state_name}
+                                onChange={(value) => handleInputChange('state_name', value)} 
+                                label='Enter State Name'
                             />
                         </div>
-                        <div className="w-1/2">
-                            <label className="text-gray-600 mb-2 block">
-                                Payment Mode
-                            </label>
-                            <OutlinedSelect
-                                label="Select payment mode"
-                                options={paymentOptions}
-                                value={stateData.paymentFrequency}
-                                onChange={(value) =>
-                                    handleInputChange('paymentFrequency', value)
-                                }
+                        <div className="w-full">
+                            <label className="text-gray-600 mb-2 block">District Name</label>
+                            <OutlinedInput
+                                value={formData.district_name}
+                                onChange={(value) => handleInputChange('district_name', value)} 
+                                label='Enter District Name'
                             />
                         </div>
                     </div>
-
-                    <FrequencyRow
-                        title="PT EC Frequency"
-                        frequencyName="ptec_frequency"
-                        firstDateName="ptEcFirstDueDate"
-                        lastDateName="ptEcLastDueDate"
-                        frequency={stateData.ptec_frequency}
-                    />
-
-                    <FrequencyRow
-                        title="PT RC Frequency"
-                        frequencyName="ptrc_frequency"
-                        firstDateName="ptRcFirstDueDate"
-                        lastDateName="ptRcLastDueDate"
-                        frequency={stateData.ptrc_frequency}
-                    />
-
-                    <FrequencyRow
-                        title="LWF Frequency"
-                        frequencyName="lwf_frequency"
-                        firstDateName="lwfFirstDueDate"
-                        lastDateName="lwfLastDueDate"
-                        frequency={stateData.lwf_frequency}
-                    />
                 </div>
 
                 <div className="flex justify-end gap-2 mt-6">
@@ -303,7 +254,7 @@ const State = () => {
                         Cancel
                     </Button>
                     <Button variant="solid" onClick={handleConfirm}>
-                        {isEditMode ? 'Update' : 'Confirm'}
+                        Confirm
                     </Button>
                 </div>
             </Dialog>
@@ -312,287 +263,3 @@ const State = () => {
 }
 
 export default State
-
-// import React, { useState, useEffect } from 'react';
-// import { useDispatch, useSelector } from 'react-redux';
-// import { Button, Dialog, Notification, toast } from '@/components/ui';
-// import { HiPlusCircle } from 'react-icons/hi';
-// import AdaptableCard from '@/components/shared/AdaptableCard';
-// import OutlinedInput from '@/components/ui/OutlinedInput';
-// import OutlinedSelect from '@/components/ui/Outlined/Outlined';
-// import DatePicker from '@/components/ui/DatePicker';
-// import BulkUpload from './components/BulkUpload';
-// import StateTable from './components/StateTable';
-// import {
-//   fetchStates,
-//   createState,
-//   updateState,
-//   clearError
-// } from '@/store/slices/state/stateSlice';
-// import { AppDispatch, RootState } from '@/store';
-// import { transformStatePayload } from '@/@types/stateTransformer';
-
-// const frequencyOptions = [
-//   { value: 'yearly', label: 'Yearly' },
-//   { value: 'half_yearly', label: 'Half Yearly' },
-//   { value: 'monthly', label: 'Monthly' },
-// ];
-
-// const paymentOptions = [
-//   { value: 'online', label: 'Online' },
-//   { value: 'offline', label: 'Offline' },
-// ];
-
-// const initialStateData = {
-//   name: '',
-//   ptec_frequency: '',
-//   ptrc_frequency: '',
-//   lwf_frequency: '',
-//   paymentFrequency: '',
-//   ptEcFirstDueDate: null,
-//   ptEcLastDueDate: null,
-//   ptRcFirstDueDate: null,
-//   ptRcLastDueDate: null,
-//   lwfFirstDueDate: null,
-//   lwfLastDueDate: null,
-// };
-
-// const State = () => {
-//   const dispatch = useDispatch<AppDispatch>();
-//   const { states, loading, error } = useSelector((state: RootState) => state.state);
-//   const [tableKey, setTableKey] = useState(0);
-//   const [pfTableLoading, setPfTableLoading] = useState(false)
-
-//   const [isDialogOpen, setIsDialogOpen] = useState(false);
-//   const [isEditMode, setIsEditMode] = useState(false);
-//   const [editingId, setEditingId] = useState<string | null>(null);
-//   const [currentStateId, setCurrentStateId] = useState(null);
-//   const [stateData, setStateData] = useState(initialStateData);
-
-//   useEffect(() => {
-//     if (error) {
-//       toast.push(
-//         <Notification title="Error" closable={true} type="danger">
-//           {error}
-//         </Notification>
-//       );
-//       dispatch(clearError());
-//     }
-//   }, [error, dispatch]);
-
-//   const handleEdit = (stateToEdit) => {
-//     setIsEditMode(true);
-//     setCurrentStateId(stateToEdit.id);
-//     setStateData({
-//       name: stateToEdit.name,
-//       ptec_frequency: stateToEdit.ptec_frequency,
-//       ptrc_frequency: stateToEdit.ptrc_frequency,
-//       lwf_frequency: stateToEdit.lwf_frequency,
-//       paymentFrequency: stateToEdit.payment_mode,
-//       ptEcFirstDueDate: stateToEdit.ptec_payment_due_date?.first_date || null,
-//       ptEcLastDueDate: stateToEdit.ptec_payment_due_date?.last_date || null,
-//       ptRcFirstDueDate: stateToEdit.ptrc_payment_due_date?.first_date || null,
-//       ptRcLastDueDate: stateToEdit.ptrc_payment_due_date?.last_date || null,
-//       lwfFirstDueDate: stateToEdit.lwf_payment_due_date?.first_date || null,
-//       lwfLastDueDate: stateToEdit.lwf_payment_due_date?.last_date || null,
-//     });
-//     setIsDialogOpen(true);
-//   };
-
-//   const handleInputChange = (name: string, value: string | Date | null | React.ChangeEvent<HTMLInputElement>) => {
-//     if (value === null) {
-//       setStateData(prev => ({ ...prev, [name]: null }));
-//     } else if (typeof value === 'object' && 'target' in value) {
-//       setStateData(prev => ({ ...prev, [name]: value.target.value }));
-//     } else {
-//       setStateData(prev => {
-//         const updated = { ...prev, [name]: value };
-//         if (name.includes('Frequency')) {
-//           const lastDueDateField = name.replace('Frequency', 'LastDueDate');
-//           if (value === 'yearly' || value === 'monthly') {
-//             updated[lastDueDateField] = null;
-//           }
-//         }
-//         return updated;
-//       });
-//     }
-//   };
-
-//   const handleDialogClose = () => {
-//     setIsDialogOpen(false);
-//     setIsEditMode(false);
-//     setCurrentStateId(null);
-//     setStateData(initialStateData);
-//   };
-
-//   const handleConfirm = async () => {
-//     try {
-//       const transformedData = transformStatePayload(stateData);
-//       if (isEditMode && currentStateId) {
-//         await dispatch(updateState({ id: currentStateId, data: transformedData }));
-//         handleDialogClose();
-//         setPfTableLoading(true)
-
-//         toast.push(
-//           <Notification title="Success" type="success">
-//             State updated successfully!
-//           </Notification>
-//         );
-
-//       } else {
-//         await dispatch(createState(transformedData)).unwrap();
-//         handleDialogClose();
-//         setPfTableLoading(true)
-//         toast.push(
-//           <Notification title="Success" type="success">
-//             State created successfully!
-//           </Notification>
-//         );
-//       }
-//       setTableKey(prev => prev + 1);
-//     } catch (error) {
-//       // Error handling is done in the useEffect above
-//       console.log(error)
-//       toast.push(
-//         <Notification title="Error" closable={true} type="danger">
-//             Failed to {isEditMode ? 'update' : 'add'} state
-//         </Notification>,
-//     )
-//     }
-//   };
-
-//   const FrequencyRow = ({
-//     title,
-//     frequencyName,
-//     firstDateName,
-//     lastDateName,
-//     frequency,
-//   }) => (
-//     <div className="flex gap-4">
-//       <div className="w-1/3">
-//         <label className="text-gray-600 mb-2 block">{title}</label>
-//         <OutlinedSelect
-//           label="Frequency"
-//           options={frequencyOptions}
-//           value={frequency}
-//           onChange={(value) => handleInputChange(frequencyName, value)}
-//         />
-//       </div>
-//       <div className="w-1/3">
-//         <label className="text-gray-600 mb-2 block">First Due Date</label>
-//         <DatePicker
-//           className="w-full"
-//           placeholder="Select date"
-//           value={stateData[firstDateName]}
-//           onChange={(date) => handleInputChange(firstDateName, date)}
-//         />
-//       </div>
-//       <div className="w-1/3">
-//         <label className="text-gray-600 mb-2 block">Last Due Date</label>
-//         <DatePicker
-//           className="w-full"
-//           placeholder="Select date"
-//           value={stateData[lastDateName]}
-//           onChange={(date) => handleInputChange(lastDateName, date)}
-//           disabled={frequency !== 'half_yearly'}
-//         />
-//       </div>
-//     </div>
-//   );
-
-//   return (
-//     <AdaptableCard className="h-full" bodyClass="h-full">
-//       <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6">
-//         <div className="mb-4 lg:mb-0">
-//           <h3 className="text-2xl font-bold">State Manager</h3>
-//         </div>
-//         <div className="flex gap-2">
-//           <BulkUpload />
-//           <Button
-//             variant="solid"
-//             size="sm"
-//             icon={<HiPlusCircle />}
-//             onClick={() => setIsDialogOpen(true)}
-//           >
-//             Add State
-//           </Button>
-//         </div>
-//       </div>
-
-//       <StateTable
-//       tableLoading={pfTableLoading}
-//       setPfTableLoading={setPfTableLoading}
-//         key={tableKey}
-//         loading={loading}
-//         onEdit={handleEdit}
-//       />
-
-//       <Dialog
-//         isOpen={isDialogOpen}
-//         onClose={handleDialogClose}
-//         onRequestClose={handleDialogClose}
-//       >
-//         <h5 className="mb-6">{isEditMode ? 'Edit State' : 'Add State'}</h5>
-//         <div className="flex flex-col gap-6">
-//           <div className="flex gap-4">
-//             <div className="w-1/2">
-//               <label className="text-gray-600 mb-2 block">State Name</label>
-//               <OutlinedInput
-//                 label="Enter state name"
-//                 value={stateData.name}
-//                 onChange={(e) => handleInputChange('name', e)}
-//               />
-//             </div>
-//             <div className="w-1/2">
-//               <label className="text-gray-600 mb-2 block">Payment Mode</label>
-//               <OutlinedSelect
-//                 label="Select payment mode"
-//                 options={paymentOptions}
-//                 value={stateData.paymentFrequency}
-//                 onChange={(value) => handleInputChange('paymentFrequency', value)}
-//               />
-//             </div>
-//           </div>
-
-//           <FrequencyRow
-//             title="PT EC Frequency"
-//             frequencyName="ptec_frequency"
-//             firstDateName="ptEcFirstDueDate"
-//             lastDateName="ptEcLastDueDate"
-//             frequency={stateData.ptec_frequency}
-//           />
-
-//           <FrequencyRow
-//             title="PT RC Frequency"
-//             frequencyName="ptrc_frequency"
-//             firstDateName="ptRcFirstDueDate"
-//             lastDateName="ptRcLastDueDate"
-//             frequency={stateData.ptrc_frequency}
-//           />
-
-//           <FrequencyRow
-//             title="LWF Frequency"
-//             frequencyName="lwf_frequency"
-//             firstDateName="lwfFirstDueDate"
-//             lastDateName="lwfLastDueDate"
-//             frequency={stateData.lwf_frequency}
-//           />
-//         </div>
-
-//         <div className="flex justify-end gap-2 mt-6">
-//           <Button
-//             variant="plain"
-//             onClick={handleDialogClose}
-//           >
-//             Cancel
-//           </Button>
-//           <Button variant="solid" onClick={handleConfirm}>
-//             {isEditMode ? 'Update' : 'Confirm'}
-//           </Button>
-//         </div>
-//       </Dialog>
-//     </AdaptableCard>
-//   );
-// };
-
-// export default State;

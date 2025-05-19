@@ -321,7 +321,7 @@ const CompanyAdmin = () => {
             const isFormValid = await validateForm()
             if (!isFormValid) {
                 toast.push(
-                    <Notification title="Danger" type="danger">
+                    <Notification title="Danger" type="error">
                         Please fix the validation errors
                     </Notification>,
                 )

@@ -83,6 +83,28 @@ export const protectedRoutes = [
         ),
         authority: [],
     },
+    {
+        key: 'groupMenu.collapse.item11',
+        path: '/state-manager',
+        component: lazy(
+            () =>
+                import(
+                    '@/views/IHRC/components/GlobalSettings/State/State'
+                ),
+        ),
+        authority: [],
+    },
+    {
+        key: 'addState',
+        path: '/add-state',
+        component: lazy(
+            () =>
+                import(
+                    '@/views/IHRC/components/GlobalSettings/State/components/AddStateForm'
+                ),
+        ),
+        authority: [],
+    },
     // {
     //     key: 'groupMenu.collapse.item4',
     //     path: '/pf-configuration',
@@ -91,6 +113,17 @@ export const protectedRoutes = [
     //     ),
     //     authority: [],
     // },
+    {
+        key: 'groupMenu.collapse.item12',
+        path: '/posh',
+        component: lazy(
+            () =>
+                import(
+                    '@/views/IHRC/components/GlobalSettings/Posh/Posh'
+                ),
+        ),
+        authority: [],
+    },
     {
         key: 'groupMenu.collapse.item5',
         path: '/register-template',
