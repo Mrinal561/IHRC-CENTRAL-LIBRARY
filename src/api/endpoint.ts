@@ -103,6 +103,15 @@ export const endpoints = {
     downloadTemplate: () => api('posh/template'),
     list: () => api('posh'),
     detail: (id: any) => api(`posh/${id}`)
+   },
+   return: {
+    create: () => api('return-superadmin/create'),
+    bulkUpload: () => api('return-superadmin/bulk-upload'),
+    downloadData: () => api('return-superadmin/export'),
+    downloadTemplate: () => api('return-superadmin/template'),
+    list: () => api('/return-superadmin/'),
+    detail: (id: any) => api(`return-superadmin//${id}`),
+    returnList: () => api('return-superadmin/act-name')
    }
     
 

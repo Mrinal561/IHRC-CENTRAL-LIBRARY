@@ -1,19 +1,89 @@
-import { Button, Dialog, Input } from '@/components/ui'
+import { endpoints } from '@/api/endpoint';
+import httpClient from '@/api/http-client';
+import { Button, Dialog, Input, toast, Notification } from '@/components/ui'
 import React, { useState } from 'react'
 import { HiDownload, HiUpload } from 'react-icons/hi'
 
-const ReturnBulkUpload = () => {
+
+interface ReturnBulkUploadProps {
+    onSuccess: () => void;
+}
+
+const ReturnBulkUpload = ({ onSuccess }: ReturnBulkUploadProps) => {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [loading, setLoading] = useState(false);
 
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files.length > 0) {
+            setSelectedFile(e.target.files[0]);
+        }
+    };
 
-    const handleUploadClick = () => {
-        setIsDialogOpen(true)
-    }
+    const handleUpload = async () => {
+        if (!selectedFile) {
+            toast.push(
+                <Notification title="Error" type="error">
+                    Please select a file to upload
+                </Notification>
+            );
+            return;
+        }
 
+        const formData = new FormData();
+        formData.append('file', selectedFile);
 
-    const handleCancel = () => {
-        setIsDialogOpen(false)
-    }
+        try {
+            setLoading(true);
+            await httpClient.post(endpoints.return.bulkUpload(), formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            
+            toast.push(
+                <Notification title="Success" type="success">
+                    Bulk upload successful
+                </Notification>
+            );
+            setIsDialogOpen(false);
+            setSelectedFile(null);
+            onSuccess(); // Refresh the table data
+        } catch (error: any) {
+            console.error('Upload error:', error);
+            toast.push(
+                <Notification title="Error" type="error">
+                    {error.response?.data?.message || 'Upload failed'}
+                </Notification>
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDownloadTemplate = async () => {
+        try {
+            const response = await httpClient.get(endpoints.return.downloadTemplate(), {
+                responseType: 'blob'
+            });
+            
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', 'ReturnSetupTemplate.xlsx');
+            document.body.appendChild(link);
+            link.click();
+            link.parentNode?.removeChild(link);
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error('Template download error:', error);
+            toast.push(
+                <Notification title="Error" type="error">
+                    Failed to download template
+                </Notification>
+            );
+        }
+    };
 
   return (
     <div>
@@ -21,14 +91,14 @@ const ReturnBulkUpload = () => {
         variant="solid"
         size='sm'
         icon={<HiUpload />}
-        onClick={handleUploadClick}
+                onClick={() => setIsDialogOpen(true)}
         >
             Bulk Upload
         </Button>
 
         <Dialog
         isOpen={isDialogOpen}
-        onClose={handleCancel}
+                onClose={() => setIsDialogOpen(false)}
         width={450}
         shouldCloseOnOverlayClick={false}
         >
@@ -39,7 +109,9 @@ const ReturnBulkUpload = () => {
                         // onClick={handleDownload}
                         className="text-blue-600 hover:underline"
                     >
-                        <Button size="xs" icon={<HiDownload />}>
+                        <Button size="xs" icon={<HiDownload />}                             
+                        onClick={handleDownloadTemplate}
+>
                             Download
                         </Button>
                     </a>
@@ -64,7 +136,7 @@ const ReturnBulkUpload = () => {
                     <Button
                         size="sm"
                         className="mr-2"
-                        onClick={handleCancel}
+                        onClick={() => setIsDialogOpen(false)}
                         // disabled={isUploading}
                     >
                         Cancel
@@ -72,6 +144,8 @@ const ReturnBulkUpload = () => {
                     <Button
                         variant="solid"
                         size="sm"
+                         onClick={handleUpload} 
+                        loading={loading}
                         // onClick={handleConfirm}
                         // loading={isUploading}
                     >
@@ -84,3 +158,4 @@ const ReturnBulkUpload = () => {
 }
 
 export default ReturnBulkUpload
+

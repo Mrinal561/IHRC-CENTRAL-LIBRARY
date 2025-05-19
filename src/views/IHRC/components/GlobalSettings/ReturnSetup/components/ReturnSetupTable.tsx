@@ -1,96 +1,144 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Button, Dialog, Tooltip } from '@/components/ui';
 import { useNavigate } from 'react-router-dom';
 import { MdEdit } from 'react-icons/md';
-import { FiTrash, FiXCircle } from 'react-icons/fi';
 import { DataTable } from '@/components/shared';
 import { HiOutlineViewGrid } from 'react-icons/hi';
 import { IoMdCheckmarkCircleOutline } from 'react-icons/io';
+import { FiXCircle } from 'react-icons/fi';
+import httpClient from '@/api/http-client';
+import { endpoints } from '@/api/endpoint';
 
-const ReturnSetupTable = () => {
+interface ReturnSetupData {
+    id: string | number;
+    act_name: string;
+    return_name: string;
+    state_name: string;
+    return_applicable: boolean;
+    return_applicable_at: string;
+    frequency: string;
+    first_due_date: string;
+    second_due_date: string;
+    third_due_date: string;
+    last_due_date: string;
+    bi_annual_date: string;
+    is_active: boolean;
+}
+
+interface ReturnSetupTableProps {
+    searchTerm: string;
+    searchBy: string;
+    pageIndex: number;
+    pageSize: number;
+    onPaginationChange: (page: number) => void;
+    onSelectChange: (pageSize: number) => void;
+    timestamp?: number;
+}
+
+// Capitalization helper function
+const capitalize = (str: string) => {
+    if (!str) return str;
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+};
+
+const ReturnSetupTable = ({
+    searchTerm,
+    searchBy,
+    pageIndex,
+    pageSize,
+    onPaginationChange,
+    onSelectChange,
+    timestamp
+}: ReturnSetupTableProps) => {
     const navigate = useNavigate();
 
     const [loading, setLoading] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const [tableData, setTableData] = useState({
-        total: 0,
-        pageIndex: 1,
-        pageSize: 10,
-    });
+    const [selectedReturnId, setSelectedReturnId] = useState<string | number | null>(null);
+    const [actionType, setActionType] = useState<'enable' | 'disable' | null>(null);
+    const [returnSetupData, setReturnSetupData] = useState<ReturnSetupData[]>([]);
+    const [totalResults, setTotalResults] = useState(0);
 
-    // Dummy data for the table
-    const dummyData = [
-        {
-            id: 1,
-            act_name: 'Sexual Harassment of Women at Workplace (Prevention, Prohibition and Redressal) Act, 2013',
-            return_name: 'Annual Report',
-            state: 'Central',
-            return_applicability: 'Yes',
-            return_applicable_at: 'Branch',
-            frequency: 'Monthly',
-            first_due_date: '15th',
-            second_due_date: '-',
-            third_due_date: '-',
-            last_due_date: '-',
-            bi_annual_date: '2029'
-        },
-        {
-            id: 2,
-            act_name: 'Payment of Bonus Act 1965',
-            return_name: 'Bonus Payment Report',
-            state: 'Maharashtra',
-            return_applicability: 'Yes',
-            return_applicable_at: 'Central',
-            frequency: 'Yearly',
-            first_due_date: 'Jan 31st',
-            second_due_date: '-',
-            third_due_date: '-',
-            last_due_date: '-',
-            bi_annual_date: '2027'
-        },
-        {
-            id: 3,
-            act_name: 'Maternity Benefit Act 1961',
-            return_name: 'Maternity Benefit Report',
-            state: 'Karnataka',
-            return_applicability: 'Yes',
-            return_applicable_at: 'Corporate',
-            frequency: 'Quarterly',
-            first_due_date: 'Jun 30th',
-            second_due_date: 'Sep 30th',
-            third_due_date: 'Dec 31st',
-            last_due_date: 'Mar 31st',
-            bi_annual_date: '-'
-        },
-        {
-            id: 4,
-            act_name: 'Minimum Wages Act, 1948',
-            return_name: 'Wages Compliance Report',
-            state: 'Tamil Nadu',
-            return_applicability: 'No',
-            return_applicable_at: 'Branch',
-            frequency: 'Half Yearly',
-            first_due_date: 'Sep 30th',
-            second_due_date: '-',
-            third_due_date: '-',
-            last_due_date: 'Mar 31st',
-            bi_annual_date: '2025'
-        },
-        {
-            id: 5,
-            act_name: 'Factories Act 1948',
-            return_name: 'Factory Safety Report',
-            state: 'Gujarat',
-            return_applicability: 'Yes',
-            return_applicable_at: 'State',
-            frequency: 'Bi Annual',
-            first_due_date: 'Mar 31st',
-            second_due_date: '-',
-            third_due_date: '-',
-            last_due_date: '-',
-            bi_annual_date: '2023'
-        },
-    ];
+    useEffect(() => {
+        const fetchReturnSetupData = async () => {
+            try {
+                setLoading(true);
+                const response = await httpClient.get(endpoints.return.list(), {
+                    params: {
+                        page: pageIndex,
+                        page_size: pageSize,
+                        search: searchTerm,
+                        search_by: searchBy
+                    }
+                });
+                
+                // Transform the data to match table structure
+                const transformedData = response.data.data.map((item: any) => ({
+                    ...item,
+                    state: item.state_name || 'Central',
+                    return_applicability: item.return_applicable ? 'Yes' : 'No',
+                    first_due_date: item.due_dates?.first_due_date || '-',
+                    second_due_date: item.due_dates?.second_due_date || '-',
+                    third_due_date: item.due_dates?.third_due_date || '-',
+                    last_due_date: item.due_dates?.last_due_date || '-',
+                    bi_annual_date: item.due_dates?.bi_annual_due_date || '-'
+                }));
+                
+                setReturnSetupData(transformedData || []);
+                setTotalResults(response.data.paginate_data?.totalResults || 0);
+            } catch (error) {
+                console.error('Error fetching return setup data:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+    
+        fetchReturnSetupData();
+    }, [pageIndex, pageSize, searchTerm, searchBy, timestamp]);
+
+    const handleEnableDisable = async () => {
+        if (!selectedReturnId || !actionType) return;
+        
+        try {
+            setLoading(true);
+            const endpoint = actionType === 'enable' 
+                ? endpoints.return.enable(selectedReturnId) 
+                : endpoints.return.disable(selectedReturnId);
+                
+            await httpClient.put(endpoint);
+            
+            // Refresh the data
+            const response = await httpClient.get(endpoints.return.list(), {
+                params: {
+                    page: pageIndex,
+                    page_size: pageSize,
+                    search: searchTerm,
+                    search_by: searchBy
+                }
+            });
+            
+            const transformedData = response.data.data.map((item: any) => ({
+                ...item,
+                state: item.state_name || 'Central',
+                return_applicability: item.return_applicable ? 'Yes' : 'No',
+                first_due_date: item.due_dates?.first_due_date || '-',
+                second_due_date: item.due_dates?.second_due_date || '-',
+                third_due_date: item.due_dates?.third_due_date || '-',
+                last_due_date: item.due_dates?.last_due_date || '-',
+                bi_annual_date: item.due_dates?.bi_annual_due_date || '-'
+            }));
+            
+            setReturnSetupData(transformedData || []);
+            setTotalResults(response.data.paginate_data?.totalResults || 0);
+        } catch (error) {
+            console.error(`Error ${actionType}ing return setup:`, error);
+        } finally {
+            setLoading(false);
+            setDeleteDialogOpen(false);
+            setSelectedReturnId(null);
+            setActionType(null);
+        }
+    };
 
     const columns = useMemo(
         () => [
@@ -98,17 +146,21 @@ const ReturnSetupTable = () => {
                 header: 'Act Name',
                 enableSorting: false,
                 accessorKey: 'act_name',
-                cell: ({ row }) => <Tooltip title={row.original.act_name}>
-                    <div className="w-52 truncate">{row.original.act_name}</div>
+                cell: ({ row }) => (
+                    <Tooltip title={row.original.act_name}>
+                        <div className="w-52 truncate">{row.original.act_name}</div>
                     </Tooltip>
+                )
             },
             {
                 header: 'Return Name',
                 enableSorting: false,
                 accessorKey: 'return_name',
-                cell: ({ row }) =><Tooltip title={row.original.return_name}>
-                <div className="w-52 truncate">{row.original.return_name}</div>
-                </Tooltip>
+                cell: ({ row }) => (
+                    <Tooltip title={row.original.return_name}>
+                        <div className="w-52 truncate">{row.original.return_name}</div>
+                    </Tooltip>
+                )
             },
             {
                 header: 'State',
@@ -126,13 +178,13 @@ const ReturnSetupTable = () => {
                 header: 'Return Applicable At',
                 enableSorting: false,
                 accessorKey: 'return_applicable_at',
-                cell: ({ row }) => <div className="w-40 truncate">{row.original.return_applicable_at}</div>,
+                cell: ({ row }) => <div className="w-40 truncate">{capitalize(row.original.return_applicable_at)}</div>,
             },
             {
                 header: 'Frequency',
                 enableSorting: false,
                 accessorKey: 'frequency',
-                cell: ({ row }) => <div className="w-40 truncate">{row.original.frequency}</div>,
+                cell: ({ row }) => <div className="w-40 truncate">{capitalize(row.original.frequency)}</div>,
             },
             {
                 header: 'First Due Date',
@@ -182,77 +234,74 @@ const ReturnSetupTable = () => {
                             />
                         </Tooltip>
 
-                        <Tooltip title="Enable">
-                            <Button
-                                size="sm"
-                                icon={<IoMdCheckmarkCircleOutline />}
-                                className="text-green-500"
-                                onClick={() => {
-                                    setDeleteDialogOpen(true);
-                                }}
-                            />
-                        </Tooltip>
-                        <Tooltip title="Disable">
-                            <Button
-                                size="sm"
-                                icon={<FiXCircle />}
-                                className="text-red-500"
-                                onClick={() => {
-                                    setDeleteDialogOpen(true);
-                                }}
-                            />
+                        <Tooltip title={row.original.is_active ? "Disable" : "Enable"}>
+                            {row.original.is_active ? (
+                                <Button
+                                    size="sm"
+                                    icon={<FiXCircle />}
+                                    className="text-red-500"
+                                    onClick={() => {
+                                        setSelectedReturnId(row.original.id);
+                                        setActionType('disable');
+                                        setDeleteDialogOpen(true);
+                                    }}
+                                />
+                            ) : (
+                                <Button
+                                    size="sm"
+                                    icon={<IoMdCheckmarkCircleOutline />}
+                                    className="text-green-500"
+                                    onClick={() => {
+                                        setSelectedReturnId(row.original.id);
+                                        setActionType('enable');
+                                        setDeleteDialogOpen(true);
+                                    }}
+                                />
+                            )}
                         </Tooltip>
                     </div>
                 ),
             },
         ],
-        []
+        [navigate]
     );
-
-    const onPaginationChange = (page: number) => {
-        console.log(tableData);
-    };
-
-    const onSelectChange = (value: number) => {
-        console.log(tableData);
-    };
 
     return (
         <div className='relative'>
-              {dummyData.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center h-96 text-gray-500 border rounded-xl">
-                            <HiOutlineViewGrid className="w-12 h-12 mb-4 text-gray-300" />
-                            <p className="text-center">
-                    No Data Available
-                            </p>
-                  </div>
-                        ) : (
-            <DataTable
-                columns={columns}
-                data={dummyData}
-                loading={loading}
-                skeletonAvatarColumns={[0]}
-                skeletonAvatarProps={{ className: 'rounded-md' }}
-                pagingData={{
-                    total: tableData.total,
-                    pageIndex: tableData.pageIndex,
-                    pageSize: tableData.pageSize,
-                }}
-                onPaginationChange={onPaginationChange}
-                onSelectChange={onSelectChange}
-                stickyHeader={true}
-                stickyFirstColumn={true}
-                stickyLastColumn={true}
-            />
-        )}
+            {returnSetupData.length === 0 && !loading ? (
+                <div className="flex flex-col items-center justify-center h-96 text-gray-500 border rounded-xl">
+                    <HiOutlineViewGrid className="w-12 h-12 mb-4 text-gray-300" />
+                    <p className="text-center">
+                        No Data Available
+                    </p>
+                </div>
+            ) : (
+                <DataTable
+                    columns={columns}
+                    data={returnSetupData}
+                    loading={loading}
+                    skeletonAvatarColumns={[0]}
+                    skeletonAvatarProps={{ className: 'rounded-md' }}
+                    pagingData={{
+                        total: totalResults,
+                        pageIndex: pageIndex,
+                        pageSize: pageSize,
+                    }}
+                    onPaginationChange={onPaginationChange}
+                    onSelectChange={onSelectChange}
+                    stickyHeader={true}
+                    stickyFirstColumn={true}
+                    stickyLastColumn={true}
+                />
+            )}
 
             <Dialog
                 isOpen={deleteDialogOpen}
                 onClose={() => setDeleteDialogOpen(false)}
                 shouldCloseOnOverlayClick={false}
             >
-                <h5 className="mb-4">Confirm Deletion</h5>
-                <p>Are you sure you want to delete this Return Setup?</p>
+                <h5 className="mb-4">Confirm {actionType === 'enable' ? 'Enable' : 'Disable'}</h5>
+                <p>Are you sure you want to {actionType === 'enable' ? 'enable' : 'disable'} this Return Setup?</p>
                 <div className="text-right mt-6">
                     <Button
                         className="ltr:mr-2 rtl:ml-2"
@@ -261,7 +310,11 @@ const ReturnSetupTable = () => {
                     >
                         Cancel
                     </Button>
-                    <Button variant="solid" onClick={undefined} loading={loading}>
+                    <Button 
+                        variant="solid" 
+                        onClick={handleEnableDisable} 
+                        loading={loading}
+                    >
                         Confirm
                     </Button>
                 </div>
