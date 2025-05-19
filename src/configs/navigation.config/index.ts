@@ -119,6 +119,16 @@ const navigationConfig: NavigationTree[] = [
                 subMenu: [],
             },
             {
+                key: 'groupMenu.collapse.item9',
+                path: '/return-setup',
+                title: 'Return Setup',
+                translateKey: 'nav.groupMenu.collapse.item9',
+                icon: '',
+                type: NAV_ITEM_TYPE_ITEM,
+                authority: [],
+                subMenu: [],
+    },
+  {
                 key: 'groupMenu.collapse.item12',
                 path: '/posh',
                 title: 'POSH',
