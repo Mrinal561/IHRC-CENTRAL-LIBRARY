@@ -35,7 +35,6 @@ interface ReturnSetupTableProps {
     timestamp?: number;
 }
 
-// Capitalization helper function
 const capitalize = (str: string) => {
     if (!str) return str;
     return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
@@ -72,7 +71,6 @@ const ReturnSetupTable = ({
                     }
                 });
                 
-                // Transform the data to match table structure
                 const transformedData = response.data.data.map((item: any) => ({
                     ...item,
                     state: item.state_name || 'Central',
@@ -96,42 +94,38 @@ const ReturnSetupTable = ({
         fetchReturnSetupData();
     }, [pageIndex, pageSize, searchTerm, searchBy, timestamp]);
 
-    const handleEnableDisable = async () => {
+    const handleStatusToggle = async () => {
         if (!selectedReturnId || !actionType) return;
         
         try {
             setLoading(true);
-            const endpoint = actionType === 'enable' 
-                ? endpoints.return.enable(selectedReturnId) 
-                : endpoints.return.disable(selectedReturnId);
-                
-            await httpClient.put(endpoint);
+            const is_active = actionType === 'enable';
             
-            // Refresh the data
-            const response = await httpClient.get(endpoints.return.list(), {
-                params: {
-                    page: pageIndex,
-                    page_size: pageSize,
-                    search: searchTerm,
-                    search_by: searchBy
-                }
-            });
+            // Optimistically update the UI
+            setReturnSetupData(prevData => 
+                prevData.map(item => 
+                    item.id === selectedReturnId 
+                        ? { ...item, is_active } 
+                        : item
+                )
+            );
             
-            const transformedData = response.data.data.map((item: any) => ({
-                ...item,
-                state: item.state_name || 'Central',
-                return_applicability: item.return_applicable ? 'Yes' : 'No',
-                first_due_date: item.due_dates?.first_due_date || '-',
-                second_due_date: item.due_dates?.second_due_date || '-',
-                third_due_date: item.due_dates?.third_due_date || '-',
-                last_due_date: item.due_dates?.last_due_date || '-',
-                bi_annual_date: item.due_dates?.bi_annual_due_date || '-'
-            }));
+            // Make the API call
+            await httpClient.put(
+                endpoints.return.statusToggle(selectedReturnId, is_active),
+                { is_active }
+            );
             
-            setReturnSetupData(transformedData || []);
-            setTotalResults(response.data.paginate_data?.totalResults || 0);
         } catch (error) {
-            console.error(`Error ${actionType}ing return setup:`, error);
+            // Revert on error
+            setReturnSetupData(prevData => 
+                prevData.map(item => 
+                    item.id === selectedReturnId 
+                        ? { ...item, is_active: !is_active } 
+                        : item
+                )
+            );
+            console.error('Error toggling return status:', error);
         } finally {
             setLoading(false);
             setDeleteDialogOpen(false);
@@ -217,6 +211,17 @@ const ReturnSetupTable = ({
                 cell: ({ row }) => <div className="w-40 truncate">{row.original.bi_annual_date}</div>,
             },
             {
+                header: 'Status',
+                enableSorting: false,
+                accessorKey: 'is_active',
+                cell: ({ row }) => (
+                    <div className="flex items-center">
+                        <span className={`inline-block w-3 h-3 rounded-full mr-2 ${row.original.is_active ? 'bg-green-500' : 'bg-red-500'}`} />
+                        {row.original.is_active ? 'Active' : 'Inactive'}
+                    </div>
+                ),
+            },
+            {
                 header: 'Actions',
                 id: 'actions',
                 cell: ({ row }) => (
@@ -224,40 +229,23 @@ const ReturnSetupTable = ({
                         <Tooltip title="Edit">
                             <Button
                                 size="sm"
-                                onClick={() =>
-                                    navigate('/edit-return-setup', {
-                                        state: { returnSetupId: row.original.id },
-                                    })
-                                }
+                                onClick={() => navigate(`/return-superadmin/edit/${row.original.id}`)}
                                 icon={<MdEdit />}
                                 className="text-blue-500"
                             />
                         </Tooltip>
 
                         <Tooltip title={row.original.is_active ? "Disable" : "Enable"}>
-                            {row.original.is_active ? (
-                                <Button
-                                    size="sm"
-                                    icon={<FiXCircle />}
-                                    className="text-red-500"
-                                    onClick={() => {
-                                        setSelectedReturnId(row.original.id);
-                                        setActionType('disable');
-                                        setDeleteDialogOpen(true);
-                                    }}
-                                />
-                            ) : (
-                                <Button
-                                    size="sm"
-                                    icon={<IoMdCheckmarkCircleOutline />}
-                                    className="text-green-500"
-                                    onClick={() => {
-                                        setSelectedReturnId(row.original.id);
-                                        setActionType('enable');
-                                        setDeleteDialogOpen(true);
-                                    }}
-                                />
-                            )}
+                            <Button
+                                size="sm"
+                                icon={row.original.is_active ? <FiXCircle /> : <IoMdCheckmarkCircleOutline />}
+                                className={row.original.is_active ? "text-red-500" : "text-green-500"}
+                                onClick={() => {
+                                    setSelectedReturnId(row.original.id);
+                                    setActionType(row.original.is_active ? 'disable' : 'enable');
+                                    setDeleteDialogOpen(true);
+                                }}
+                            />
                         </Tooltip>
                     </div>
                 ),
@@ -312,7 +300,7 @@ const ReturnSetupTable = ({
                     </Button>
                     <Button 
                         variant="solid" 
-                        onClick={handleEnableDisable} 
+                        onClick={handleStatusToggle} 
                         loading={loading}
                     >
                         Confirm
