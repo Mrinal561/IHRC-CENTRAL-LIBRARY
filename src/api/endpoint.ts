@@ -113,6 +113,7 @@ export const endpoints = {
     detail: (id: any) => api(`return-superadmin//${id}`),
     returnList: () => api('return-superadmin/act-name'),
     statusToggle: (id: any, is_active: boolean) => api(`return-superadmin/toggle-status/${id}`),
+    update: (id:any) => api(`return-superadmin/${id}`)
    }
     
 

@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { Button, Dialog, Tooltip } from '@/components/ui';
+import { Button, Dialog, toast, Tooltip, Notification } from '@/components/ui';
 import { useNavigate } from 'react-router-dom';
 import { MdEdit } from 'react-icons/md';
 import { DataTable } from '@/components/shared';
@@ -16,6 +16,7 @@ interface ReturnSetupData {
     state_name: string;
     return_applicable: boolean;
     return_applicable_at: string;
+    applicable: string;
     frequency: string;
     first_due_date: string;
     second_due_date: string;
@@ -32,12 +33,24 @@ interface ReturnSetupTableProps {
     pageSize: number;
     onPaginationChange: (page: number) => void;
     onSelectChange: (pageSize: number) => void;
-    timestamp?: number;
 }
 
 const capitalize = (str: string) => {
     if (!str) return str;
     return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+};
+
+const formatApplicable = (applicable: string) => {
+    switch (applicable) {
+        case 'CENTRAL':
+            return 'Central';
+        case 'STATE':
+            return 'State';
+        case 'ALL_STATES':
+            return 'All States';
+        default:
+            return applicable;
+    }
 };
 
 const ReturnSetupTable = ({
@@ -47,16 +60,15 @@ const ReturnSetupTable = ({
     pageSize,
     onPaginationChange,
     onSelectChange,
-    timestamp
 }: ReturnSetupTableProps) => {
     const navigate = useNavigate();
-
     const [loading, setLoading] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [selectedReturnId, setSelectedReturnId] = useState<string | number | null>(null);
     const [actionType, setActionType] = useState<'enable' | 'disable' | null>(null);
     const [returnSetupData, setReturnSetupData] = useState<ReturnSetupData[]>([]);
     const [totalResults, setTotalResults] = useState(0);
+    const [timestamp, setTimestamp] = useState(Date.now());
 
     useEffect(() => {
         const fetchReturnSetupData = async () => {
@@ -73,7 +85,7 @@ const ReturnSetupTable = ({
                 
                 const transformedData = response.data.data.map((item: any) => ({
                     ...item,
-                    state: item.state_name || 'Central',
+                    state: item.state_name || '--',
                     return_applicability: item.return_applicable ? 'Yes' : 'No',
                     first_due_date: item.due_dates?.first_due_date || '-',
                     second_due_date: item.due_dates?.second_due_date || '-',
@@ -101,31 +113,21 @@ const ReturnSetupTable = ({
             setLoading(true);
             const is_active = actionType === 'enable';
             
-            // Optimistically update the UI
-            setReturnSetupData(prevData => 
-                prevData.map(item => 
-                    item.id === selectedReturnId 
-                        ? { ...item, is_active } 
-                        : item
-                )
-            );
-            
-            // Make the API call
             await httpClient.put(
                 endpoints.return.statusToggle(selectedReturnId, is_active),
                 { is_active }
             );
             
+            // Refresh data by updating timestamp
+            setTimestamp(Date.now());
+            
         } catch (error) {
-            // Revert on error
-            setReturnSetupData(prevData => 
-                prevData.map(item => 
-                    item.id === selectedReturnId 
-                        ? { ...item, is_active: !is_active } 
-                        : item
-                )
-            );
             console.error('Error toggling return status:', error);
+            toast.push(
+                <Notification title="Error" type="error">
+                    Failed to update status. Please try again.
+                </Notification>
+            );
         } finally {
             setLoading(false);
             setDeleteDialogOpen(false);
@@ -155,6 +157,16 @@ const ReturnSetupTable = ({
                         <div className="w-52 truncate">{row.original.return_name}</div>
                     </Tooltip>
                 )
+            },
+            {
+                header: 'Applicable',
+                enableSorting: false,
+                accessorKey: 'applicable',
+                cell: ({ row }) => (
+                    <div className="w-40 truncate">
+                        {formatApplicable(row.original.applicable)}
+                    </div>
+                ),
             },
             {
                 header: 'State',
@@ -205,7 +217,7 @@ const ReturnSetupTable = ({
                 cell: ({ row }) => <div className="w-40 truncate">{row.original.last_due_date}</div>,
             },
             {
-                header: 'Bi Annual Due Date',
+                header: 'Biennial Due Date',
                 enableSorting: false,
                 accessorKey: 'bi_annual_date',
                 cell: ({ row }) => <div className="w-40 truncate">{row.original.bi_annual_date}</div>,
@@ -228,11 +240,15 @@ const ReturnSetupTable = ({
                     <div className="flex items-center gap-2">
                         <Tooltip title="Edit">
                             <Button
-                                size="sm"
-                                onClick={() => navigate(`/return-superadmin/edit/${row.original.id}`)}
-                                icon={<MdEdit />}
-                                className="text-blue-500"
-                            />
+  size="sm"
+  onClick={() => navigate('/edit-return-setup', {
+    state: { 
+      id: row.original.id,
+    }
+  })}
+  icon={<MdEdit />}
+  className="text-blue-500"
+/>
                         </Tooltip>
 
                         <Tooltip title={row.original.is_active ? "Disable" : "Enable"}>
@@ -249,7 +265,7 @@ const ReturnSetupTable = ({
                         </Tooltip>
                     </div>
                 ),
-            },
+            }
         ],
         [navigate]
     );
