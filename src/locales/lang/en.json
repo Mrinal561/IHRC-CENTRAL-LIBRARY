@@ -17,7 +17,6 @@
                     }
                 },
                 "item2": "District",
-                "item3": "Compliance",
                 "item4": "PF Configuration",
                 "item5": "Register Template",
                 "item6": "Role Configuration",
@@ -26,7 +25,8 @@
                 "item11": "State",
                 "item12": "POSH",
                 "item13": "Return Setup",
-                "item14": "Register Setup"
+                "item14": "Register Setup",
+                "item15": "Audit Setup"
             }
         }
     }
