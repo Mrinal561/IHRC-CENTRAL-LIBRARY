@@ -258,4 +258,12 @@ export const protectedRoutes = [
         ),
         authority: [],
     },
+    {
+        key: 'complianceAddForm',
+        path: '/add-compliance',
+        component: lazy(() =>
+            import('@/views/IHRC/components/GlobalSettings/AuditTracker/components/ComplianceAddForm')
+        ),
+        authority: [],
+    },
 ]
