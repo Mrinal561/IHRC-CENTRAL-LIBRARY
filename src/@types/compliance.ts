@@ -1,36 +1,72 @@
+// src/types/complianceTypes.ts
+export interface ReferenceData {
+  id: number;
+  name: string;
+}
 
-    export type ComplianceData = {
-        id: string;
-        uuid: string;
-        legislation: string,
-        category: string,
-        header: string,
-        description: string,
-        penalty_description: string,
-        applicablility: string,
-        bare_act_text: string,
-        caluse: string,
-        type: string,
-        frequency: string,
-        scope: string,
-        state_id: number,        
-        statutory_auth: string,
-        approval_required: boolean,
-        criticality: string,
-        penalty_type: string,
-        default_due_date: {
-            first_date: string,
-            second_date: string,
-            third_date: string,
-            last_date: string,
-        },
-        proof_mandatory: boolean,
-        created_type: string,
-        created_at: string,
-    }
+export interface ComplianceData {
+  id: number;
+  uuid: string;
+  country: string;
+  function: string;
+  applicable: string;  // This exists in API response
+  state_id: number | null;
+  state_name?: string;
+  legislation_act: string;
+  compliance_categorization: string;
+  compliance_header: string;
+  compliance_description: string;
+  penalty_type: string;
+  penalty_description: string;
+  compliance_applicability: string;
+  compliance_reference: string;
+  compliance_type: string;
+  compliance_frequency: string;
+  criticality: string;
+  due_date_frequency: string;
+  due_dates: {
+    first_due_date?: string;
+    second_due_date?: string;
+    third_due_date?: string;
+    last_due_date?: string;
+  };
+  is_active: boolean;
+}
 
-export type ComplianceResponseData = {
-    compliance: ComplianceData[];
-    Loading: boolean;
-    error: string | null;
+// For form data, we use "scope" instead of "applicable"
+export interface ComplianceFormData {
+  id?: number;
+  country: string;
+  function: string;
+  scope: string;  // This is used in the form
+  state_id: number | null;
+  legislation_act: string;
+  compliance_categorization: string;
+  penalty_type: string;
+  compliance_header: string;
+  compliance_description: string;
+  penalty_description: string;
+  compliance_applicability: string;
+  compliance_reference: string;
+  compliance_type: string;
+  compliance_frequency: string;
+  criticality: string;
+  due_date_frequency: string;
+  due_dates: {
+    first_due_date?: string;
+    second_due_date?: string;
+    third_due_date?: string;
+    last_due_date?: string;
+  };
+  is_active?: boolean;
+}
+
+export interface CountryOption {
+  value: string;
+  label: string;
+}
+
+export interface SelectOption {
+  value: string;
+  label: string;
 }
