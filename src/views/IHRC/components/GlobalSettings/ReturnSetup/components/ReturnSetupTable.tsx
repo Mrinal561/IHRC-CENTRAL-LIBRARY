@@ -33,6 +33,7 @@ interface ReturnSetupTableProps {
     pageSize: number;
     onPaginationChange: (page: number) => void;
     onSelectChange: (pageSize: number) => void;
+    timestamp: number;
 }
 
 const capitalize = (str: string) => {
@@ -58,6 +59,7 @@ const ReturnSetupTable = ({
     searchBy,
     pageIndex,
     pageSize,
+    timestamp,
     onPaginationChange,
     onSelectChange,
 }: ReturnSetupTableProps) => {
@@ -68,7 +70,7 @@ const ReturnSetupTable = ({
     const [actionType, setActionType] = useState<'enable' | 'disable' | null>(null);
     const [returnSetupData, setReturnSetupData] = useState<ReturnSetupData[]>([]);
     const [totalResults, setTotalResults] = useState(0);
-    const [timestamp, setTimestamp] = useState(Date.now());
+    // const [timestamp, setTimestamp] = useState(Date.now());
 
     useEffect(() => {
         const fetchReturnSetupData = async () => {

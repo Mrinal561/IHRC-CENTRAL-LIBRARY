@@ -2,7 +2,27 @@
 import React, { useState, useEffect } from 'react';
 import { Select } from '../Select';
 
-const OutlinedSelect = ({ label, options, value, onChange, isMulti = false, disabled = false }) => {
+
+interface OutlinedSelectProps {
+  label: string;
+  options: any[];
+  value: any;
+  onChange: (value: any) => void;
+  isMulti?: boolean;
+  disabled?: boolean;
+  loading?: boolean; // Add this
+}
+
+
+const OutlinedSelect = ({ 
+  label, 
+  options, 
+  value, 
+  onChange, 
+  isMulti = false, 
+  disabled = false,
+  loading = false // Add this
+}: OutlinedSelectProps) => {
   const [isFocused, setIsFocused] = useState(false);
   const [selectedValue, setSelectedValue] = useState(value);
 
