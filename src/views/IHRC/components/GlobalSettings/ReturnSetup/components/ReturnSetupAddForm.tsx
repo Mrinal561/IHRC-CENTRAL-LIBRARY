@@ -74,7 +74,7 @@ const ReturnSetupAddForm = () => {
     { value: "quarterly", label: "Quarterly" },
     { value: "half_yearly", label: "Half Yearly" },
     { value: "yearly", label: "Yearly" },
-    { value: "bi_annual", label: "Bi Annual Return" },
+    { value: "bi_annual", label: "Biennial" },
   ];
 
   const applicabilityOptions = [

@@ -3,14 +3,14 @@ import { AdaptableCard } from '@/components/shared';
 import { Button } from '@/components/ui';
 import OutlinedInput from '@/components/ui/OutlinedInput';
 import { useNavigate } from 'react-router-dom';
-import { HiDownload, HiPlusCircle } from 'react-icons/hi';
+import { HiDownload, HiPlusCircle, HiUpload } from 'react-icons/hi';
 import OutlinedSelect from '@/components/ui/Outlined/Outlined';
 import httpClient from '@/api/http-client';
 import { endpoints } from '@/api/endpoint';
 import { Notification, toast } from '@/components/ui';
 import AuditTrackerTable from './components/AuditTrackerTable';
+import BulkUploadCompliance from './components/BulkUploadCompliance';
 import { ComplianceData, CountryOption, ReferenceData } from '@/@types/compliance';
-// import { ComplianceData, CountryOption, ReferenceData } from '@/types/complianceTypes';
 
 const AuditTracker = () => {
   const navigate = useNavigate();
@@ -18,12 +18,13 @@ const AuditTracker = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [tableData, setTableData] = useState<ComplianceData[]>([]);
   const [loading, setLoading] = useState(false);
+  const [states, setStates] = useState<ReferenceData[]>([]);
+  const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
   const [pagination, setPagination] = useState({
     pageIndex: 1,
     pageSize: 10,
     total: 0,
   });
-  const [states, setStates] = useState<ReferenceData[]>([]);
 
   const countryOptions: CountryOption[] = [
     { value: 'INDIA', label: 'India' },
@@ -56,11 +57,18 @@ const AuditTracker = () => {
       });
 
       const dataWithStateNames = response.data.data.map((item: any) => ({
-        ...item,
-        state_name: item.state_id
-          ? states.find(state => state.id === item.state_id)?.name
-          : (item.applicable === 'central' ? 'Central' : 'N/A')
-      }));
+  ...item,
+  state_name: item.state_id
+    ? states.find(state => state.id === item.state_id)?.name
+    : (item.applicable === 'central' ? 'Central' : 'N/A'),
+  // Format dates to DD-MM-YYYY for display
+  formatted_due_dates: item.due_dates ? Object.fromEntries(
+    Object.entries(item.due_dates).map(([key, value]) => [
+      key,
+      value ? formatDisplayDate(value as string) : ''
+    ])
+  ) : {}
+}));
 
       setTableData(dataWithStateNames);
       setPagination({
@@ -80,16 +88,29 @@ const AuditTracker = () => {
     }
   };
 
+  const formatDisplayDate = (dateString: string): string => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
+
   const handleDownload = async () => {
     try {
       const response = await httpClient.get(endpoints.compliances.exportData(), {
-        responseType: 'blob'
+        responseType: 'blob',
+        params: {
+          country: selectedCountry,
+          search: searchTerm
+        }
       });
 
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', 'ComplianceData.xlsx');
+      link.setAttribute('download', `ComplianceData_${new Date().toISOString().split('T')[0]}.xlsx`);
       document.body.appendChild(link);
       link.click();
       link.parentNode?.removeChild(link);
@@ -112,26 +133,25 @@ const AuditTracker = () => {
 
   useEffect(() => {
     fetchComplianceData();
-  }, [selectedCountry, searchTerm]);
+  }, [selectedCountry, searchTerm, pagination.pageIndex, pagination.pageSize]);
 
   const handlePageChange = (page: number) => {
     setPagination(prev => ({ ...prev, pageIndex: page }));
-    fetchComplianceData({ page });
   };
 
   const handlePageSizeChange = (size: number) => {
     setPagination(prev => ({ ...prev, pageSize: size, pageIndex: 1 }));
-    fetchComplianceData({ pageSize: size, page: 1 });
   };
 
   const handleSearch = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
+      setPagination(prev => ({ ...prev, pageIndex: 1 }));
       fetchComplianceData({ page: 1 });
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
+  const handleInputChange = (value: string) => {
+    setSearchTerm(value);
   };
 
   const selectedCountryOption = countryOptions.find(option => option.value === selectedCountry) || countryOptions[0];
@@ -152,13 +172,13 @@ const AuditTracker = () => {
             />
           </div>
           <div className="w-full md:w-48">
-  <OutlinedInput
-    label="Search By State"
-    value={searchTerm}
-    onChange={setSearchTerm}  // Directly pass setSearchTerm since it expects (value: string) => void
-    onKeyDown={handleSearch}
-  />
-</div>
+            <OutlinedInput
+              label="Search By State"
+              value={searchTerm}
+              onChange={handleInputChange}
+              onKeyDown={handleSearch}
+            />
+          </div>
           <div className="flex gap-2 w-full md:w-auto">
             <Button
               variant='solid'
@@ -167,6 +187,14 @@ const AuditTracker = () => {
               onClick={handleDownload}
             >
               Download Data
+            </Button>
+            <Button
+              variant='solid'
+              size='sm'
+              icon={<HiUpload />}
+              onClick={() => setIsBulkUploadOpen(true)}
+            >
+              Bulk Upload
             </Button>
             <Button
               variant="solid"
@@ -190,6 +218,17 @@ const AuditTracker = () => {
           states={states}
         />
       </div>
+
+      {/* Bulk Upload Modal */}
+      {isBulkUploadOpen && (
+        <BulkUploadCompliance 
+          onUploadSuccess={() => {
+            setIsBulkUploadOpen(false);
+            fetchComplianceData(); // Refresh data after successful upload
+          }}
+          onClose={() => setIsBulkUploadOpen(false)}
+        />
+      )}
     </AdaptableCard>
   );
 };

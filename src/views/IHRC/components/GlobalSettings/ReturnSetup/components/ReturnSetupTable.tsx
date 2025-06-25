@@ -136,6 +136,25 @@ const ReturnSetupTable = ({
         }
     };
 
+    const formatDate = (dateString: string) => {
+    if (!dateString || dateString === '-') return '-';
+    
+    try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return dateString; // Return original if invalid date
+        
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        
+        return `${day}-${month}-${year}`;
+    } catch (error) {
+        console.error('Error formatting date:', error);
+        return dateString;
+    }
+};
+
+
     const columns = useMemo(
         () => [
             {
@@ -169,6 +188,16 @@ const ReturnSetupTable = ({
                 ),
             },
             {
+            header: 'Applicability',
+            enableSorting: false,
+            accessorKey: 'return_applicable',
+            cell: ({ row }) => (
+                <div className="w-20 text-center">
+                    {row.original.return_applicable ? 'Yes' : 'No'}
+                </div>
+            ),
+        },
+            {
                 header: 'State',
                 enableSorting: false,
                 accessorKey: 'state',
@@ -193,35 +222,35 @@ const ReturnSetupTable = ({
                 cell: ({ row }) => <div className="w-40 truncate">{capitalize(row.original.frequency)}</div>,
             },
             {
-                header: 'First Due Date',
-                enableSorting: false,
-                accessorKey: 'first_due_date',
-                cell: ({ row }) => <div className="w-40 truncate">{row.original.first_due_date}</div>,
-            },
-            {
-                header: 'Second Due Date',
-                enableSorting: false,
-                accessorKey: 'second_due_date',
-                cell: ({ row }) => <div className="w-40 truncate">{row.original.second_due_date}</div>,
-            },
-            {
-                header: 'Third Due Date',
-                enableSorting: false,
-                accessorKey: 'third_due_date',
-                cell: ({ row }) => <div className="w-40 truncate">{row.original.third_due_date}</div>,
-            },
-            {
-                header: 'Last Due Date',
-                enableSorting: false,
-                accessorKey: 'last_due_date',
-                cell: ({ row }) => <div className="w-40 truncate">{row.original.last_due_date}</div>,
-            },
-            {
-                header: 'Biennial Due Date',
-                enableSorting: false,
-                accessorKey: 'bi_annual_date',
-                cell: ({ row }) => <div className="w-40 truncate">{row.original.bi_annual_date}</div>,
-            },
+    header: 'First Due Date',
+    enableSorting: false,
+    accessorKey: 'first_due_date',
+    cell: ({ row }) => <div className="w-40 truncate">{formatDate(row.original.first_due_date)}</div>,
+},
+{
+    header: 'Second Due Date',
+    enableSorting: false,
+    accessorKey: 'second_due_date',
+    cell: ({ row }) => <div className="w-40 truncate">{formatDate(row.original.second_due_date)}</div>,
+},
+{
+    header: 'Third Due Date',
+    enableSorting: false,
+    accessorKey: 'third_due_date',
+    cell: ({ row }) => <div className="w-40 truncate">{formatDate(row.original.third_due_date)}</div>,
+},
+{
+    header: 'Last Due Date',
+    enableSorting: false,
+    accessorKey: 'last_due_date',
+    cell: ({ row }) => <div className="w-40 truncate">{formatDate(row.original.last_due_date)}</div>,
+},
+{
+    header: 'Biennial Due Date',
+    enableSorting: false,
+    accessorKey: 'bi_annual_date',
+    cell: ({ row }) => <div className="w-40 truncate">{formatDate(row.original.bi_annual_date)}</div>,
+},
             {
                 header: 'Status',
                 enableSorting: false,

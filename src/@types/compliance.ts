@@ -1,4 +1,3 @@
-// src/types/complianceTypes.ts
 export interface ReferenceData {
   id: number;
   name: string;
@@ -9,7 +8,7 @@ export interface ComplianceData {
   uuid: string;
   country: string;
   function: string;
-  applicable: string;  // This exists in API response
+  applicable: 'central' | 'state';  // Changed to union type
   state_id: number | null;
   state_name?: string;
   legislation_act: string;
@@ -33,18 +32,18 @@ export interface ComplianceData {
   is_active: boolean;
 }
 
-// For form data, we use "scope" instead of "applicable"
 export interface ComplianceFormData {
   id?: number;
   country: string;
   function: string;
-  scope: string;  // This is used in the form
+  applicable: 'central' | 'state';  // Changed to union type
   state_id: number | null;
+  state_name?: string;
   legislation_act: string;
   compliance_categorization: string;
-  penalty_type: string;
   compliance_header: string;
   compliance_description: string;
+  penalty_type: string;
   penalty_description: string;
   compliance_applicability: string;
   compliance_reference: string;
@@ -58,7 +57,7 @@ export interface ComplianceFormData {
     third_due_date?: string;
     last_due_date?: string;
   };
-  is_active?: boolean;
+  is_active: boolean;
 }
 
 export interface CountryOption {

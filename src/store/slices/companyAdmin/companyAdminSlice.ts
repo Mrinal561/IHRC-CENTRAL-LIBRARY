@@ -286,13 +286,19 @@ export const updateCompanyAdmin = createAsyncThunk(
         moduleAccess,
         name,
         email,
-        entityName 
+        entityName,
+        compliance_checklist,
+        both_checklist,
+        custom_checklist
     }: { 
         id: string | number;
         moduleAccess: number[];
         name: string;
         email: string;
         entityName: string;
+        compliance_checklist?: boolean;
+        both_checklist?: boolean;
+        custom_checklist?: boolean;
     }, { rejectWithValue }) => {
         try {
             const { data } = await httpClient.put(
@@ -301,7 +307,10 @@ export const updateCompanyAdmin = createAsyncThunk(
                     moduleAccess,
                     name,
                     email,
-                    entityName
+                    entityName,
+                    compliance_checklist,
+                    both_checklist,
+                    custom_checklist
                 }
             )
             return data

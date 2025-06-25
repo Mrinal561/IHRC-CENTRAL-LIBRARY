@@ -14,6 +14,7 @@ import { updateCompanyAdmin } from '@/store/slices/companyAdmin/companyAdminSlic
 import EditCompanyAdmin from './EditCompanyAdmin';
 import OutlinedInput from '@/components/ui/OutlinedInput/OutlinedInput';
 import * as yup from 'yup';
+import AuditTrackerDialog from './AuditTrackerDialog';
 
 const validationSchema = yup.object().shape({
   entityName: yup
@@ -54,6 +55,9 @@ interface AdminData {
     role: string;
     entityName: string;
     moduleAccessNames: string[];
+    compliance_checklist?: boolean;
+    both_checklist?: boolean;
+    custom_checklist?: boolean;
 }
 
 interface AdminTableProps {
@@ -85,12 +89,16 @@ const AdminTable: React.FC<AdminTableProps> = ({
     const [editDialogIsOpen, setEditDialogIsOpen] = useState(false);
     const [itemToEdit, setItemToEdit] = useState<AdminData | null>(null);
     const [touchedFields, setTouchedFields] = useState<{ [key: string]: boolean }>({});
-
+const [showAuditTrackerDialog, setShowAuditTrackerDialog] = useState(false);
+    const [tempSelectedModules, setTempSelectedModules] = useState<string[]>([]);
     const [editedAdminData, setEditedAdminData] = useState({
         name: '',
         email: '',
         entityName: '',
-        moduleAccess: [] as string[]  // Changed to string[] to store module names instead of IDs
+        moduleAccess: [] as string[],
+        compliance_checklist: false,
+        both_checklist: false,
+        custom_checklist: false
     });
     const [tableData, setTableData] = useState({
         total: 0,
@@ -254,6 +262,33 @@ const AdminTable: React.FC<AdminTableProps> = ({
                 ),
             },
             {
+                header: 'POSH',
+                id: 'POSH',
+                cell: ({ row }) => (
+                    <AccessIndicator 
+                        hasAccess={row.original.moduleAccessNames.includes('POSH')} 
+                    />
+                ),
+            },
+            {
+                header: 'Return',
+                id: 'Return',
+                cell: ({ row }) => (
+                    <AccessIndicator 
+                        hasAccess={row.original.moduleAccessNames.includes('Return')} 
+                    />
+                ),
+            },
+            {
+                header: 'Audit Tracker',
+                id: 'Audit Tracker',
+                cell: ({ row }) => (
+                    <AccessIndicator 
+                        hasAccess={row.original.moduleAccessNames.includes('Audit Tracker')} 
+                    />
+                ),
+            },
+            {
                 header: 'Actions',
                 id: 'actions',
                 enableSorting: false,
@@ -287,7 +322,10 @@ const AdminTable: React.FC<AdminTableProps> = ({
                     name: editedAdminData.name,
                     email: editedAdminData.email,
                     entityName: editedAdminData.entityName,
-                    moduleAccess: moduleIds
+                    moduleAccess: moduleIds,
+                    compliance_checklist: itemToEdit.compliance_checklist || false,
+                    both_checklist: itemToEdit.both_checklist || false,
+                    custom_checklist: itemToEdit.custom_checklist || false
                 })).unwrap();
                 
                 onDataChange();
@@ -299,6 +337,41 @@ const AdminTable: React.FC<AdminTableProps> = ({
             }
         }
     };
+
+    const handleModuleChange = (moduleName: string, isChecked: boolean) => {
+        if (moduleName === 'Audit Tracker') {
+            if (isChecked) {
+                setTempSelectedModules([...editedAdminData.moduleAccess]);
+                setShowAuditTrackerDialog(true);
+            } else {
+                setEditedAdminData(prev => ({
+                    ...prev,
+                    moduleAccess: prev.moduleAccess.filter(name => name !== 'Audit Tracker'),
+                    compliance_checklist: false,
+                    both_checklist: false,
+                    custom_checklist: false
+                }));
+            }
+        } else {
+            setEditedAdminData(prev => ({
+                ...prev,
+                moduleAccess: isChecked
+                    ? [...prev.moduleAccess, moduleName]
+                    : prev.moduleAccess.filter(name => name !== moduleName)
+            }));
+        }
+    };
+
+    const handleAuditTrackerConfirm = (selection: 'custom' | 'compliance' | 'both') => {
+        setEditedAdminData(prev => ({
+            ...prev,
+            moduleAccess: [...tempSelectedModules, 'Audit Tracker'],
+            compliance_checklist: selection === 'compliance',
+            both_checklist: selection === 'both',
+            custom_checklist: selection === 'custom' || selection === 'both'
+        }));
+        setShowAuditTrackerDialog(false);
+    };
       
     const openEditDialog = (admin: AdminData) => {
         setItemToEdit(admin);
@@ -306,32 +379,51 @@ const AdminTable: React.FC<AdminTableProps> = ({
             name: admin.name,
             email: admin.email,
             entityName: admin.entityName || '',
-            moduleAccess: admin.moduleAccessNames
+            moduleAccess: admin.moduleAccessNames,
+            compliance_checklist: admin.compliance_checklist || false,
+            both_checklist: admin.both_checklist || false,
+            custom_checklist: admin.custom_checklist || false
         });
         setEditDialogIsOpen(true);
         setErrors({});
         setTouchedFields({});
     };
 
-    const handleModuleChange = (field: string, value: any) => {
-    if (field === 'moduleAccess') {
-        setEditedAdminData(prev => ({
-            ...prev,
-            moduleAccess: value
-        }));
-    } else {
-        setEditedAdminData(prev => ({
-            ...prev,
-            [field]: value
-        }));
-    }
+    const handleInputChange = (field: string, value: string) => {
+    setEditedAdminData(prev => ({
+        ...prev,
+        [field]: value
+    }));
+    setTouchedFields(prev => ({
+        ...prev,
+        [field]: true
+    }));
+
     if (touchedFields[field]) {
         validateField(field, value);
     }
-    if (!touchedFields[field] && value) {
-        setTouchedFields((prev) => ({...prev, [field]: true }));
-      }
 };
+
+
+//     const handleModuleChange = (field: string, value: any) => {
+//     if (field === 'moduleAccess') {
+//         setEditedAdminData(prev => ({
+//             ...prev,
+//             moduleAccess: value
+//         }));
+//     } else {
+//         setEditedAdminData(prev => ({
+//             ...prev,
+//             [field]: value
+//         }));
+//     }
+//     if (touchedFields[field]) {
+//         validateField(field, value);
+//     }
+//     if (!touchedFields[field] && value) {
+//         setTouchedFields((prev) => ({...prev, [field]: true }));
+//       }
+// };
 
 const handleDialogClose = () => {
     setEditDialogIsOpen(false);
@@ -340,7 +432,10 @@ const handleDialogClose = () => {
         name: '',
         email: '',
         entityName: '',
-        moduleAccess: []
+        moduleAccess: [],
+        compliance_checklist: false,
+        both_checklist: false,
+        custom_checklist: false
     });
     setErrors({});
         setTouchedFields({});
@@ -415,7 +510,7 @@ const handleDialogClose = () => {
                       <OutlinedInput
                           label="Entity Name"
                           value={editedAdminData.entityName}
-                          onChange={(value: string) => handleModuleChange('entityName', value)}
+                          onChange={(value: string) => handleInputChange('entityName', value)}
                       />
                      {errors.entityName && (
                                 <p className="text-red-500 text-xs mt-1">{errors.entityName}</p>
@@ -434,7 +529,7 @@ const handleDialogClose = () => {
                 <OutlinedInput
                   label="Full Name"
                   value={editedAdminData.name}
-                  onChange={(value: string) => handleModuleChange('name', value)}
+                  onChange={(value: string) => handleInputChange('name', value)}
                 />
                 {/* {errors.name && ( 
     <p className="text-red-500 text-xs mt-1">{errors.name}</p>
@@ -445,7 +540,7 @@ const handleDialogClose = () => {
                 <OutlinedInput
                   label="Email"
                   value={editedAdminData.email}
-                  onChange={(value: string) => handleModuleChange('email', value)}
+                  onChange={(value: string) => handleInputChange('email', value)}
                 />
                {errors.email && (
                                         <p className="text-red-500 text-xs mt-1">{errors.email}</p>
@@ -458,27 +553,26 @@ const handleDialogClose = () => {
         <div>
     <label className="text-gray-600 mb-2 block">Modules List</label>
     <div className="border rounded p-4">
-        <Checkbox.Group
-            value={editedAdminData.moduleAccess}
-            onChange={(values: string[]) => handleModuleChange('moduleAccess', values)}
-            className="flex flex-row flex-wrap gap-6"
-        >
+        <div className="flex flex-row flex-wrap gap-6">
             {modules
-                .filter(module => ['Remittance Tracker', 'Notice', 'Agreement'].includes(module.name))
+                .filter(module => 
+                    ['Remittance Tracker', 'Notice', 'Agreement', 'POSH', 'Return Tracker', 'Audit Tracker']
+                    .includes(module.name))
                 .map(module => (
                     <div key={module.id} className="flex-1 min-w-[180px]">
-                        <Checkbox 
-                            value={module.name}
+                        <Checkbox
+                            checked={editedAdminData.moduleAccess.includes(module.name)}
+                            onChange={(checked) => handleModuleChange(module.name, checked)}
                             className="inline-flex items-center"
                         >
                             <span className="ml-2 whitespace-nowrap">{module.name}</span>
                         </Checkbox>
                     </div>
                 ))}
-        </Checkbox.Group>
-        {/* {errors.moduleAccess && (
+        </div>
+        {errors.moduleAccess && (
             <p className="text-red-500 text-xs mt-1">{errors.moduleAccess}</p>
-        )} */}
+        )}
     </div>
 </div>
                 </div>
@@ -498,6 +592,17 @@ const handleDialogClose = () => {
                     </Button>
                 </div>
             </Dialog>
+            <AuditTrackerDialog
+                isOpen={showAuditTrackerDialog}
+                onClose={() => {
+                    setShowAuditTrackerDialog(false);
+                    setEditedAdminData(prev => ({
+                        ...prev,
+                        moduleAccess: prev.moduleAccess.filter(name => name !== 'Audit Tracker')
+                    }));
+                }}
+                onConfirm={handleAuditTrackerConfirm}
+            />
 {/* 
 <EditCompanyAdmin
   isOpen={editDialogIsOpen}
