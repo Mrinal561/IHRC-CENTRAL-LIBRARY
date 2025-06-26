@@ -1155,15 +1155,6 @@ const EditCompanyAdmin: React.FC<EditCompanyAdminProps> = ({
     custom_checklist: false
   });
 
-  // Debug useEffect - place this RIGHT AFTER your state declarations
-  useEffect(() => {
-    console.log('--- STATE UPDATE ---');
-    console.log('selectedModules:', selectedModules);
-    console.log('formData:', formData);
-    console.log('lastProcessedModules:', lastProcessedModules);
-    console.log('tempSelectedModules:', tempSelectedModules);
-    console.log('showAuditTrackerDialog:', showAuditTrackerDialog);
-  }, [selectedModules, formData, lastProcessedModules, tempSelectedModules, showAuditTrackerDialog]);
 
   useEffect(() => {
     if (adminData && modules.length > 0) {
@@ -1220,14 +1211,10 @@ const EditCompanyAdmin: React.FC<EditCompanyAdminProps> = ({
 
   // FIXED handleModuleChange function
   const handleModuleChange = (options: (string | number)[]) => {
-    console.log('handleModuleChange triggered with:', options);
 
     const auditTrackerModule = modules.find(m => m.name === 'Audit Tracker');
     const auditTrackerId = auditTrackerModule?.id || -1;
 
-    console.log('Audit Tracker ID:', auditTrackerId);
-    console.log('Current selectedModules:', selectedModules);
-    console.log('Current lastProcessedModules:', lastProcessedModules);
     
     // Check if this is the initial selection (no previous state)
     const isInitialSelection = selectedModules.length === 0 && options.length === 1;
@@ -1238,14 +1225,11 @@ const EditCompanyAdmin: React.FC<EditCompanyAdminProps> = ({
         !lastProcessedModules.includes(auditTrackerId) &&
         !isInitialSelection;
 
-    console.log('isSpecificallySelectingAuditTracker:', isSpecificallySelectingAuditTracker);
 
     if (isSpecificallySelectingAuditTracker) {
-        console.log('Opening audit tracker dialog with tempSelectedModules:', options);
         setTempSelectedModules(options);
         setShowAuditTrackerDialog(true);
     } else {
-        console.log('Direct module selection, updating state');
         const moduleAccess = options.map(option => Number(option));
         setSelectedModules(options);
         setLastProcessedModules(options);
@@ -1263,11 +1247,8 @@ const EditCompanyAdmin: React.FC<EditCompanyAdminProps> = ({
 
   // FIXED handleAuditTrackerConfirm function
   const handleAuditTrackerConfirm = (selection: 'custom' | 'compliance' | 'both') => {
-    console.log('handleAuditTrackerConfirm called with:', selection);
-    console.log('Current tempSelectedModules:', tempSelectedModules);
     
     const moduleAccess = tempSelectedModules.map(option => Number(option));
-    console.log('New moduleAccess:', moduleAccess);
     
     // Update all states synchronously
     setSelectedModules([...tempSelectedModules]); // Force array copy
@@ -1282,18 +1263,15 @@ const EditCompanyAdmin: React.FC<EditCompanyAdminProps> = ({
       custom_checklist: selection === 'custom'
     };
     
-    console.log('Setting new form data:', newFormData);
     setFormData(newFormData);
     
     // Clean up dialog state
     setShowAuditTrackerDialog(false);
     setTempSelectedModules([]);
     
-    console.log('Dialog closed, state should be updated');
   };
 
   const updateSelections = (newSelected: number[]) => {
-    console.log('updateSelections called:', newSelected);
     
     setSelectedModules(newSelected);
     setLastProcessedModules(newSelected);
@@ -1355,7 +1333,6 @@ const EditCompanyAdmin: React.FC<EditCompanyAdminProps> = ({
         return;
       }
 
-      console.log('Submitting form data:', formData);
       await onConfirm(formData);
       handleDialogClose();
     } catch (error) {

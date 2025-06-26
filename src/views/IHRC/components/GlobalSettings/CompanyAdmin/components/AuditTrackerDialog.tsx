@@ -18,26 +18,22 @@ const AuditTrackerDialog: React.FC<AuditTrackerDialogProps> = ({
   // Reset selection when dialog opens
   useEffect(() => {
     if (isOpen) {
-      console.log('AuditTrackerDialog opened, resetting selection')
       setSelection(null)
     }
   }, [isOpen])
 
   const handleSelectionChange = (newSelection: 'custom' | 'compliance' | 'both') => {
-    console.log('Selection changed to:', newSelection)
     setSelection(newSelection)
   }
 
   const handleConfirm = () => {
     if (selection) {
-      console.log('Confirming selection:', selection)
       onConfirm(selection)
       setSelection(null) // Reset after confirmation
     }
   }
 
   const handleClose = () => {
-    console.log('Dialog cancelled, resetting selection')
     setSelection(null)
     onClose()
   }
