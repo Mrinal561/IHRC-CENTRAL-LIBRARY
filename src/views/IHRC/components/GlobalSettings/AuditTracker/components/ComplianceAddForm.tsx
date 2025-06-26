@@ -760,7 +760,7 @@ import * as Yup from 'yup';
 
 // Auto-suggest components
 import FunctionAutoSuggest from './FunctionAutoSuggest';
-import LegislationActAutoSuggest from './LegislationActAutoSuggest';
+import LegislationActAutoSuggest from './LegislationActAutoSUggest';
 import ComplianceCategorizationAutoSuggest from './ComplianceCategorizationAutoSuggest';
 import PenaltyTypeAutoSuggest from './PenaltyTypeAutoSuggest';
 import ComplianceApplicabilityAutoSuggest from './ComplianceApplicabilityAutoSuggest';
