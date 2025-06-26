@@ -1,5 +1,5 @@
 // components/AuditTrackerDialog.tsx
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Dialog, Button, Checkbox } from '@/components/ui'
 
 interface AuditTrackerDialogProps {
@@ -15,41 +15,89 @@ const AuditTrackerDialog: React.FC<AuditTrackerDialogProps> = ({
 }) => {
   const [selection, setSelection] = useState<'custom' | 'compliance' | 'both' | null>(null)
 
+  // Reset selection when dialog opens
+  useEffect(() => {
+    if (isOpen) {
+      console.log('AuditTrackerDialog opened, resetting selection')
+      setSelection(null)
+    }
+  }, [isOpen])
+
+  const handleSelectionChange = (newSelection: 'custom' | 'compliance' | 'both') => {
+    console.log('Selection changed to:', newSelection)
+    setSelection(newSelection)
+  }
+
+  const handleConfirm = () => {
+    if (selection) {
+      console.log('Confirming selection:', selection)
+      onConfirm(selection)
+      setSelection(null) // Reset after confirmation
+    }
+  }
+
+  const handleClose = () => {
+    console.log('Dialog cancelled, resetting selection')
+    setSelection(null)
+    onClose()
+  }
+
   return (
-    <Dialog isOpen={isOpen} onClose={onClose} width={500}>
+    <Dialog isOpen={isOpen} onClose={handleClose} width={500}>
       <h5 className="mb-4">Audit Tracker Options</h5>
+      <p className="text-gray-600 mb-4 text-sm">
+        Please select which checklist type you want to use for Audit Tracker:
+      </p>
       <div className="space-y-3">
-        <Checkbox
-          checked={selection === 'custom'}
-          onChange={() => setSelection('custom')}
-        >
-          Custom Checklist
-        </Checkbox>
-        <Checkbox
-          checked={selection === 'compliance'}
-          onChange={() => setSelection('compliance')}
-        >
-          Compliance Checklist
-        </Checkbox>
-        <Checkbox
-          checked={selection === 'both'}
-          onChange={() => setSelection('both')}
-        >
-          Both Checklists
-        </Checkbox>
+        <div className="flex items-center p-2 border rounded hover:bg-gray-50">
+          <Checkbox
+            checked={selection === 'custom'}
+            onChange={() => handleSelectionChange('custom')}
+            className="mr-3"
+          />
+          <div>
+            <div className="font-medium">Custom Checklist</div>
+            <div className="text-sm text-gray-500">Use your own custom audit checklist</div>
+          </div>
+        </div>
+        
+        <div className="flex items-center p-2 border rounded hover:bg-gray-50">
+          <Checkbox
+            checked={selection === 'compliance'}
+            onChange={() => handleSelectionChange('compliance')}
+            className="mr-3"
+          />
+          <div>
+            <div className="font-medium">Compliance Checklist</div>
+            <div className="text-sm text-gray-500">Use standard compliance audit checklist</div>
+          </div>
+        </div>
+        
+        <div className="flex items-center p-2 border rounded hover:bg-gray-50">
+          <Checkbox
+            checked={selection === 'both'}
+            onChange={() => handleSelectionChange('both')}
+            className="mr-3"
+          />
+          <div>
+            <div className="font-medium">Both Checklists</div>
+            <div className="text-sm text-gray-500">Use both custom and compliance checklists</div>
+          </div>
+        </div>
       </div>
+
+      {/* Debug info - remove in production */}
+      <div className="mt-4 p-2 bg-gray-100 rounded text-xs">
+        <strong>Debug:</strong> Current selection: {selection || 'none'}
+      </div>
+
       <div className="flex justify-end gap-2 mt-4">
-        <Button variant="plain" onClick={onClose}>
+        <Button variant="plain" onClick={handleClose}>
           Cancel
         </Button>
         <Button
           variant="solid"
-          onClick={() => {
-            if (selection) {
-              onConfirm(selection)
-              onClose()
-            }
-          }}
+          onClick={handleConfirm}
           disabled={!selection}
         >
           Confirm

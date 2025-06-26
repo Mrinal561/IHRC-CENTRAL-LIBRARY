@@ -271,17 +271,17 @@ const [showAuditTrackerDialog, setShowAuditTrackerDialog] = useState(false);
                 ),
             },
             {
-                header: 'Return',
-                id: 'Return',
+                header: 'Return Tracker',
+                id: 'returnTracker',
                 cell: ({ row }) => (
                     <AccessIndicator 
-                        hasAccess={row.original.moduleAccessNames.includes('Return')} 
+                        hasAccess={row.original.moduleAccessNames.includes('Return Tracker')} 
                     />
                 ),
             },
             {
                 header: 'Audit Tracker',
-                id: 'Audit Tracker',
+                id: 'auditTracker',
                 cell: ({ row }) => (
                     <AccessIndicator 
                         hasAccess={row.original.moduleAccessNames.includes('Audit Tracker')} 
