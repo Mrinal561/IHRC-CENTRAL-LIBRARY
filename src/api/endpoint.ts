@@ -128,6 +128,15 @@ export const endpoints = {
     update: (id:any) => api(`return-superadmin/${id}`),
     createActName: () => api('return-superadmin/act-name'),
     listactname: () => api('return-superadmin/act-name')
+   },
+   register: {
+    createRegister: () => api('register-superadmin'),
+    listRegister: () => api('register-superadmin'),
+    detailRegister: (id:any) => api(`register-superadmin/${id}`),
+    updateRegister: (id:any) => api(`register-superadmin/${id}`),
+    deleteRegister: (id:any) => api(`register-superadmin/${id}`),
+    exportRegister: () => api('register-superadmin/export'),
+    downloadDocumentRegister: (id:any) => api(`registr-superadmin/download-document/${id}`)
    }
     
 
