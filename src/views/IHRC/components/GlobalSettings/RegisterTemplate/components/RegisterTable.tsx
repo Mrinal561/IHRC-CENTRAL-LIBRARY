@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import DataTable from '@/components/shared/DataTable';
 import { Button, Dialog, Input, toast, Notification, Tooltip } from '@/components/ui';
 import { RiUploadLine, RiDownloadLine, RiFileTextLine } from 'react-icons/ri';
-import { HiDownload } from 'react-icons/hi';
-import { FiFile } from 'react-icons/fi';
+import { HiDownload, HiTrash } from 'react-icons/hi';
+import { FiFile, FiTrash } from 'react-icons/fi';
 import { endpoints } from '@/api/endpoint';
 import httpClient from '@/api/http-client';
+import { BiTrash } from 'react-icons/bi';
 
 interface RegisterData {
     id: number;
@@ -239,12 +240,11 @@ const RegisterTable = () => {
                     <Tooltip title="Delete Register">
                         <Button
                             size="sm"
-                            variant="solid"
-                            color="red"
+                            icon={<FiTrash />}
+                            className='hover:bg-transparent text-red-500'
                             onClick={() => handleDelete(row.original.id)}
                             disabled={loading.table}
                         >
-                            Delete
                         </Button>
                     </Tooltip>
                 </div>
