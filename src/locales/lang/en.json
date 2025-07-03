@@ -25,7 +25,18 @@
                 "item11": "State",
                 "item12": "POSH",
                 "item13": "Return Setup",
-                "item14": "Register Setup",
+                "registerSetup": "Register Setup",
+                "collapse": {
+                    "collapse": "Register Setup",
+                    "registerTracker": {
+                        "collapse": {
+                            "collapse": "Register Setup",
+                            "registerSetup": {
+                                "item1": "Register Input",
+                                "item2": "Register Output"
+                            }                        }
+                    }
+                },
                 "item15": "Audit Setup"
             }
         }

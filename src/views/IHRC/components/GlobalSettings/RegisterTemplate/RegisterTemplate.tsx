@@ -233,7 +233,7 @@ const RegisterTemplate = () => {
     return (
         <AdaptableCard className="h-full" bodyClass="h-full">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-10 gap-4">
-                <h3 className="text-2xl font-bold">Register Templates</h3>
+                <h3 className="text-2xl font-bold">Register Input Templates</h3>
                 <div className='flex gap-3'>
                     <Button 
                         size='sm' 

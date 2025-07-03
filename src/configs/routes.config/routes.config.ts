@@ -125,12 +125,23 @@ export const protectedRoutes = [
         authority: [],
     },
     {
-        key: 'groupMenu.collapse.item14',
-        path: '/register',
+        key: 'registerSetup.item1',
+        path: '/register-input-setup',
         component: lazy(
             () =>
                 import(
                     '@/views/IHRC/components/GlobalSettings/RegisterTemplate/RegisterTemplate'
+                ),
+        ),
+        authority: [],
+    },
+    {
+        key: 'registerSetup.item2',
+        path: '/register-output-setup',
+        component: lazy(
+            () =>
+                import(
+                    '@/views/IHRC/components/GlobalSettings/RegisterTemplate/RegisterOutputTemplate'
                 ),
         ),
         authority: [],
@@ -146,17 +157,7 @@ export const protectedRoutes = [
         ),
         authority: [],
     },
-    {
-        key: 'groupMenu.collapse.item14',
-        path: '/register',
-        component: lazy(
-            () =>
-                import(
-                    '@/views/IHRC/components/GlobalSettings/RegisterTemplate/RegisterTemplate'
-                ),
-        ),
-        authority: [],
-    },
+    
     {
         key: 'groupMenu.collapse.item5',
         path: '/register-template',
