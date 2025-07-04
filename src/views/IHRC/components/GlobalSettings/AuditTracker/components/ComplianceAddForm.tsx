@@ -1159,7 +1159,7 @@ const ComplianceAddForm: React.FC = () => {
                       <div className="text-red-500 text-sm">{errors.compliance_categorization}</div>
                     )}
                   </div>
-                  <div>
+                  {/* <div>
                     <PenaltyTypeAutoSuggest
                       value={values.penalty_type}
                       onChange={(value) => setFieldValue('penalty_type', value)}
@@ -1169,7 +1169,7 @@ const ComplianceAddForm: React.FC = () => {
                     {touched.penalty_type && errors.penalty_type && (
                       <div className="text-red-500 text-sm">{errors.penalty_type}</div>
                     )}
-                  </div>
+                  </div> */}
                 </div>
 
                 {/* 4th Row: Compliance Header */}
@@ -1200,6 +1200,17 @@ const ComplianceAddForm: React.FC = () => {
                 </div>
 
                 {/* 6th Row: Penalty Description */}
+                 <div>
+                    <PenaltyTypeAutoSuggest
+                      value={values.penalty_type}
+                      onChange={(value) => setFieldValue('penalty_type', value)}
+                      onPenaltySelect={(id) => {}}
+                      disabled={loading}
+                    />
+                    {touched.penalty_type && errors.penalty_type && (
+                      <div className="text-red-500 text-sm">{errors.penalty_type}</div>
+                    )}
+                  </div>
                 <div>
                   <p className="mb-2">Penalty Description</p>
                   <OutlinedInput

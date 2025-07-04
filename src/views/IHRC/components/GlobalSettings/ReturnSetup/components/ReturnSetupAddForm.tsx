@@ -720,27 +720,37 @@ const ReturnSetupAddForm = () => {
     fetchData();
   }, []);
 
-  const formatDueDates = (frequency: string, dueDates: DueDates) => {
-    const formatDate = (date: Date | null) => date ? new Date(date).toISOString().split('T')[0] : null;
+const formatDueDates = (frequency: string, dueDates: DueDates) => {
+  // Helper function to format date without timezone adjustment
+  const formatDate = (date: Date | null) => {
+    if (!date) return null;
     
-    const formattedDates: Record<string, string | null> = {};
+    // Get local date parts (this avoids timezone conversion)
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
     
-    if (frequency === 'monthly' || frequency === 'yearly') {
-      formattedDates.first_due_date = formatDate(dueDates.first_due_date);
-    } else if (frequency === 'half_yearly') {
-      formattedDates.first_due_date = formatDate(dueDates.first_due_date);
-      formattedDates.last_due_date = formatDate(dueDates.last_due_date);
-    } else if (frequency === 'quarterly') {
-      formattedDates.first_due_date = formatDate(dueDates.first_due_date);
-      formattedDates.second_due_date = formatDate(dueDates.second_due_date);
-      formattedDates.third_due_date = formatDate(dueDates.third_due_date);
-      formattedDates.last_due_date = formatDate(dueDates.last_due_date);
-    } else if (frequency === 'bi_annual') {
-      formattedDates.bi_annual_due_date = formatDate(dueDates.bi_annual_due_date);
-    }
-    
-    return formattedDates;
+    return `${year}-${month}-${day}`;
   };
+  
+  const formattedDates: Record<string, string | null> = {};
+  
+  if (frequency === 'monthly' || frequency === 'yearly') {
+    formattedDates.first_due_date = formatDate(dueDates.first_due_date);
+  } else if (frequency === 'half_yearly') {
+    formattedDates.first_due_date = formatDate(dueDates.first_due_date);
+    formattedDates.last_due_date = formatDate(dueDates.last_due_date);
+  } else if (frequency === 'quarterly') {
+    formattedDates.first_due_date = formatDate(dueDates.first_due_date);
+    formattedDates.second_due_date = formatDate(dueDates.second_due_date);
+    formattedDates.third_due_date = formatDate(dueDates.third_due_date);
+    formattedDates.last_due_date = formatDate(dueDates.last_due_date);
+  } else if (frequency === 'bi_annual') {
+    formattedDates.bi_annual_due_date = formatDate(dueDates.bi_annual_due_date);
+  }
+  
+  return formattedDates;
+};
 
   const validationSchema = Yup.object().shape({
     act_name: Yup.string().required('Act Name is required'),
