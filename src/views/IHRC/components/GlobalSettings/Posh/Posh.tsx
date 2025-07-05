@@ -751,14 +751,15 @@ const Posh = () => {
                         </div>
                     </div>
                     <div>
-                        <label className="text-gray-600 mb-2 block">Authority Address</label>
-                        <OutlinedInput
-                            textarea
-                            value={formData.authority_address}
-                            label={'Enter Authority Address'} 
-                            onChange={(value) => handleInputChange('authority_address', value)} 
-                        />
-                    </div>
+  <label className="text-gray-600 mb-2 block">Authority Address</label>
+  <OutlinedInput
+    textarea
+    value={formData.authority_address}
+    label={'Enter Authority Address'} 
+    onChange={(value) => handleInputChange('authority_address', value)}
+    maxCharsPerLine={36}
+  />
+</div>
                 </div>
 
                 <div className="flex justify-end gap-2 mt-6">
