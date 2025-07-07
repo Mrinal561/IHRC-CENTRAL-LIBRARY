@@ -766,13 +766,9 @@ const formatDueDates = (frequency: string, dueDates: DueDates) => {
     applicable: Yup.string()
       .required('Applicable is required')
       .oneOf(['CENTRAL', 'ALL_STATES', 'STATE'], 'Invalid selection'),
-    return_applicable_at: Yup.string().when('return_applicability', {
-      is: 'yes',
-      then: (schema) => schema
-        .required('Return Applicable At is required')
-        .oneOf(['branch', 'state', 'central'], 'Invalid selection'),
-      otherwise: (schema) => schema.notRequired()
-    }),
+   return_applicable_at: Yup.string()
+  .required('Return Applicable At is required')
+  .oneOf(['branch', 'state', 'central'], 'Invalid selection'),
     frequency: Yup.string().when('return_applicability', {
       is: 'yes',
       then: (schema) => schema
@@ -846,7 +842,7 @@ const formatDueDates = (frequency: string, dueDates: DueDates) => {
       state_id: values.applicable === 'STATE' ? parseInt(values.state_id) : null,
         applicable: values.applicable,
         return_applicable: values.return_applicability === "yes",
-        return_applicable_at: values.return_applicability === "yes" ? values.return_applicable_at : null,
+        return_applicable_at: values.return_applicable_at,
         frequency: values.return_applicability === "yes" ? values.frequency : null,
         due_dates: values.return_applicability === "yes" ? formatDueDates(values.frequency, values.due_dates) : null
       };
