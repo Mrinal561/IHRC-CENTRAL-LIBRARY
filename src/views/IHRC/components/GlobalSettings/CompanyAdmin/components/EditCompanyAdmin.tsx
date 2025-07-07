@@ -1496,356 +1496,1122 @@
 
 
 
-import React, { useState, useEffect } from 'react';
-import { Button, Dialog, Notification, toast } from '@/components/ui';
-import Checkbox from '@/components/ui/Checkbox';
-import OutlinedInput from '@/components/ui/OutlinedInput';
-import * as yup from 'yup';
-import AuditTrackerDialog from './AuditTrackerDialog';
+// import React, { useState, useEffect } from 'react';
+// import { Button, Dialog, Notification, toast } from '@/components/ui';
+// import Checkbox from '@/components/ui/Checkbox';
+// import OutlinedInput from '@/components/ui/OutlinedInput';
+// import * as yup from 'yup';
+// import AuditTrackerDialog from './AuditTrackerDialog';
 
-const validationSchema = yup.object().shape({
-  entityName: yup
-    .string()
-    .required('Entity name is required')
-    .min(3, 'Entity name must be at least 3 characters')
-    .matches(/^\S.*\S$|^\S$/, 'The input must not have leading or trailing spaces'),
-  email: yup
-    .string()
-    .email('Invalid email address')
-    .required('Email is required'),
-  moduleAccess: yup
-    .array()
-    .of(yup.number())
-    .min(1, 'At least one module must be selected'),
-});
+// const validationSchema = yup.object().shape({
+//   entityName: yup
+//     .string()
+//     .required('Entity name is required')
+//     .min(3, 'Entity name must be at least 3 characters')
+//     .matches(/^\S.*\S$|^\S$/, 'The input must not have leading or trailing spaces'),
+//   email: yup
+//     .string()
+//     .email('Invalid email address')
+//     .required('Email is required'),
+//   moduleAccess: yup
+//     .array()
+//     .of(yup.number())
+//     .min(1, 'At least one module must be selected'),
+// });
 
-interface ValidationErrors {
-  [key: string]: string;
-}
+// interface ValidationErrors {
+//   [key: string]: string;
+// }
 
-interface Module {
-  id: number;
-  name: string;
-}
+// interface Module {
+//   id: number;
+//   name: string;
+// }
 
-interface EditCompanyAdminProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onConfirm: (data: any) => Promise<void>;
-  adminData: {
-    id: number;
-    name: string;
-    email: string;
-    entityName: string;
-    moduleAccessNames: string[];
-    compliance_checklist?: boolean;
-    both_checklist?: boolean;
-    custom_checklist?: boolean;
-  };
-  modules: Module[];
-  isLoading: boolean;
-}
+// interface EditCompanyAdminProps {
+//   isOpen: boolean;
+//   onClose: () => void;
+//   onConfirm: (data: any) => Promise<void>;
+//   adminData: {
+//     id: number;
+//     name: string;
+//     email: string;
+//     entityName: string;
+//     moduleAccessNames: string[];
+//     compliance_checklist?: boolean;
+//     both_checklist?: boolean;
+//     custom_checklist?: boolean;
+//   };
+//   modules: Module[];
+//   isLoading: boolean;
+// }
 
-const EditCompanyAdmin: React.FC<EditCompanyAdminProps> = ({
-  isOpen,
-  onClose,
-  onConfirm,
-  adminData,
-  modules,
-  isLoading,
-}) => {
-  const [errors, setErrors] = useState<ValidationErrors>({});
-  const [touchedFields, setTouchedFields] = useState<{ [key: string]: boolean }>({});
-  const [selectedModules, setSelectedModules] = useState<(string | number)[]>([]);
-  const [showAuditTrackerDialog, setShowAuditTrackerDialog] = useState(false);
-  const [tempSelectedModules, setTempSelectedModules] = useState<(string | number)[]>([]);
-  const [formData, setFormData] = useState({
-    id: 0,
-    name: '',
-    email: '',
-    moduleAccess: [] as number[],
-    entityName: '',
-    compliance_checklist: false,
-    both_checklist: false,
-    custom_checklist: false
-  });
+// const EditCompanyAdmin: React.FC<EditCompanyAdminProps> = ({
+//   isOpen,
+//   onClose,
+//   onConfirm,
+//   adminData,
+//   modules,
+//   isLoading,
+// }) => {
+//   const [errors, setErrors] = useState<ValidationErrors>({});
+//   const [touchedFields, setTouchedFields] = useState<{ [key: string]: boolean }>({});
+//   const [selectedModules, setSelectedModules] = useState<(string | number)[]>([]);
+//   const [showAuditTrackerDialog, setShowAuditTrackerDialog] = useState(false);
+//   const [tempSelectedModules, setTempSelectedModules] = useState<(string | number)[]>([]);
+//   const [formData, setFormData] = useState({
+//     id: 0,
+//     name: '',
+//     email: '',
+//     moduleAccess: [] as number[],
+//     entityName: '',
+//     compliance_checklist: false,
+//     both_checklist: false,
+//     custom_checklist: false
+//   });
 
-  useEffect(() => {
-    if (adminData && modules.length > 0) {
-      const initialModuleIds = modules
-        .filter(module => adminData.moduleAccessNames.includes(module.name))
-        .map(module => module.id);
+//   useEffect(() => {
+//     if (adminData && modules.length > 0) {
+//       const initialModuleIds = modules
+//         .filter(module => adminData.moduleAccessNames.includes(module.name))
+//         .map(module => module.id);
       
-      setFormData({
-        id: adminData.id,
-        name: adminData.name || '',
-        email: adminData.email || '',
-        moduleAccess: initialModuleIds,
-        entityName: adminData.entityName || '',
-        compliance_checklist: adminData.compliance_checklist || false,
-        both_checklist: adminData.both_checklist || false,
-        custom_checklist: adminData.custom_checklist || false
-      });
-      setSelectedModules(initialModuleIds);
-    }
-  }, [adminData, modules]);
+//       setFormData({
+//         id: adminData.id,
+//         name: adminData.name || '',
+//         email: adminData.email || '',
+//         moduleAccess: initialModuleIds,
+//         entityName: adminData.entityName || '',
+//         compliance_checklist: adminData.compliance_checklist || false,
+//         both_checklist: adminData.both_checklist || false,
+//         custom_checklist: adminData.custom_checklist || false
+//       });
+//       setSelectedModules(initialModuleIds);
+//     }
+//   }, [adminData, modules]);
 
-  const validateField = async (field: string, value: any) => {
-    try {
-      await validationSchema.validateAt(field, { ...formData, [field]: value });
-      setErrors(prev => ({
-        ...prev,
-        [field]: ''
-      }));
-    } catch (error) {
-      if (error instanceof yup.ValidationError) {
-        setErrors(prev => ({
-          ...prev,
-          [field]: error.message
-        }));
-      }
-    }
-  };
+//   const validateField = async (field: string, value: any) => {
+//     try {
+//       await validationSchema.validateAt(field, { ...formData, [field]: value });
+//       setErrors(prev => ({
+//         ...prev,
+//         [field]: ''
+//       }));
+//     } catch (error) {
+//       if (error instanceof yup.ValidationError) {
+//         setErrors(prev => ({
+//           ...prev,
+//           [field]: error.message
+//         }));
+//       }
+//     }
+//   };
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-    setTouchedFields(prev => ({
-      ...prev,
-      [field]: true
-    }));
+//   const handleInputChange = (field: string, value: string) => {
+//     setFormData(prev => ({
+//       ...prev,
+//       [field]: value
+//     }));
+//     setTouchedFields(prev => ({
+//       ...prev,
+//       [field]: true
+//     }));
 
-    if (touchedFields[field]) {
-      validateField(field, value);
-    }
-  };
+//     if (touchedFields[field]) {
+//       validateField(field, value);
+//     }
+//   };
 
-  const handleModuleChange = (options: (string | number)[]) => {
-    const auditTrackerModule = modules.find(m => m.name === 'Audit Tracker');
-    const auditTrackerId = auditTrackerModule?.id || -1;
+//   const handleDialogClose = () => {
+//     onClose(); // Call the onClose prop
+//     setErrors({});
+//     setTouchedFields({});
+//   };
 
-    // Check if Audit Tracker is being specifically selected now
-    const isSelectingAuditTracker = 
-      options.includes(auditTrackerId) && 
-      !selectedModules.includes(auditTrackerId);
+//   const handleModuleChange = (options: (string | number)[]) => {
+//     const auditTrackerModule = modules.find(m => m.name === 'Audit Tracker');
+//     const auditTrackerId = auditTrackerModule?.id || -1;
 
-    if (isSelectingAuditTracker) {
-      setTempSelectedModules(options);
-      setShowAuditTrackerDialog(true);
-    } else {
-      const moduleAccess = options.map(option => Number(option));
-      setSelectedModules(options);
-      setFormData(prev => ({
-        ...prev,
-        moduleAccess,
-        // Reset checklist flags if Audit Tracker was deselected
-        ...(!options.includes(auditTrackerId) && {
-          compliance_checklist: false,
-          both_checklist: false,
-          custom_checklist: false
-        })
-      }));
-    }
-  };
+//     // Check if Audit Tracker is being specifically selected now
+//     const isSelectingAuditTracker = 
+//       options.includes(auditTrackerId) && 
+//       !selectedModules.includes(auditTrackerId);
 
-  const handleAuditTrackerConfirm = (selection: 'custom' | 'compliance' | 'both') => {
-    const moduleAccess = tempSelectedModules.map(option => Number(option));
-    setSelectedModules(tempSelectedModules);
+//     if (isSelectingAuditTracker) {
+//       setTempSelectedModules(options);
+//       setShowAuditTrackerDialog(true);
+//     } else {
+//       const moduleAccess = options.map(option => Number(option));
+//       setSelectedModules(options);
+//       setFormData(prev => ({
+//         ...prev,
+//         moduleAccess,
+//         // Reset checklist flags if Audit Tracker was deselected
+//         ...(!options.includes(auditTrackerId) && {
+//           compliance_checklist: false,
+//           both_checklist: false,
+//           custom_checklist: false
+//         })
+//       }));
+//     }
+//   };
+
+// const handleAuditTrackerConfirm = (selection: 'custom' | 'compliance' | 'both') => {
+//   console.log('Dialog selection:', selection);
+  
+//   // Get current module IDs including Audit Tracker
+//   const auditTrackerModule = modules.find(m => m.name === 'Audit Tracker');
+//   const moduleIds = [
+//     ...tempSelectedModules.map(opt => Number(opt)),
+//     auditTrackerModule?.id || 0
+//   ].filter(id => id !== 0);
+
+//   // Update form state
+//   setFormData(prev => ({
+//     ...prev,
+//     moduleAccess: moduleIds,
+//     compliance_checklist: selection === 'compliance' || selection === 'both',
+//     both_checklist: selection === 'both',
+//     custom_checklist: selection === 'custom' || selection === 'both'
+//   }));
+
+//   // Update UI state
+//   setSelectedModules(moduleIds);
+//   setShowAuditTrackerDialog(false);
+//   setTempSelectedModules([]);
+// };
+
+// useEffect(() => {
+//   console.log('Current form state:', {
+//     ...formData,
+//     moduleNames: modules.filter(m => formData.moduleAccess.includes(m.id)).map(m => m.name)
+//   });
+// }, [formData, modules]);
+
+//   const validateForm = async () => {
+//     try {
+//       const validationObject = {
+//         entityName: formData.entityName,
+//         email: formData.email,
+//         moduleAccess: formData.moduleAccess,
+//       };
+
+//       await validationSchema.validate(validationObject, { abortEarly: false });
+//       setErrors({});
+//       return true;
+//     } catch (yupError) {
+//       if (yupError instanceof yup.ValidationError) {
+//         const newErrors: ValidationErrors = {};
+//         yupError.inner.forEach((error) => {
+//           if (error.path) {
+//             newErrors[error.path] = error.message;
+//           }
+//         });
+//         setErrors(newErrors);
+//       }
+//       return false;
+//     }
+//   };
+
+//   const handleConfirm = async () => {
+//   try {
+//     const isFormValid = await validateForm();
+//     if (!isFormValid) {
+//       toast.push(<Notification title="Error" type="error">Please fix the validation errors</Notification>);
+//       return;
+//     }
+
+//     const payload = {
+//        ...formData,
+//       // Explicitly include all checklist fields
+//       compliance_checklist: formData.compliance_checklist,
+//       both_checklist: formData.both_checklist,
+//       custom_checklist: formData.custom_checklist
+//     };
+
+//     console.log('Final payload being sent:', payload); // Detailed log
     
-    setFormData(prev => ({
-      ...prev,
-      moduleAccess,
-      compliance_checklist: selection === 'compliance',
-      both_checklist: selection === 'both',
-      custom_checklist: selection === 'custom' || selection === 'both'
-    }));
-    
-    setShowAuditTrackerDialog(false);
-    setTempSelectedModules([]);
-  };
+//     await onConfirm(payload);
+//     handleDialogClose();
+//   } catch (error) {
+//     console.error('Error updating admin:', error);
+//     toast.push(<Notification title="Error" type="error">Failed to update admin</Notification>);
+//   }
+// };
 
-  const handleDialogClose = () => {
-    onClose();
-    setErrors({});
-    setTouchedFields({});
-  };
+//   const displayedModules = modules.filter(module => 
+//     ['Remittance Tracker', 'Notice', 'Agreement', 'Audit Tracker', 'POSH', 'Return Tracker'].includes(module.name)
+//   );
 
-  const validateForm = async () => {
-    try {
-      const validationObject = {
-        entityName: formData.entityName,
-        email: formData.email,
-        moduleAccess: formData.moduleAccess,
-      };
+//   return (
+//     <>
+//       <Dialog
+//         isOpen={isOpen}
+//         onClose={handleDialogClose}
+//         onRequestClose={handleDialogClose}
+//         width={600}
+//       >
+//         <h5 className="mb-3">Edit Company Admin</h5>
+//         <div className="flex flex-col gap-3">
+//           {/* Company Group Section */}
+//           <div className="border-b pb-2">
+//             <h6 className="text-gray-800 font-medium mb-2">Company Group</h6>
+//             <div className="w-full">
+//               <label className="text-gray-600 mb-2 block">Entity Name <span className="text-red-500">*</span></label>
+//               <OutlinedInput
+//                 label="Entity Name"
+//                 value={formData.entityName}
+//                 onChange={(value: string) => handleInputChange('entityName', value)}
+//               />
+//               {errors.entityName && (
+//                 <p className="text-red-500 text-xs mt-1">{errors.entityName}</p>
+//               )}
+//             </div>
+//           </div>
 
-      await validationSchema.validate(validationObject, { abortEarly: false });
-      setErrors({});
-      return true;
-    } catch (yupError) {
-      if (yupError instanceof yup.ValidationError) {
-        const newErrors: ValidationErrors = {};
-        yupError.inner.forEach((error) => {
-          if (error.path) {
-            newErrors[error.path] = error.message;
-          }
-        });
-        setErrors(newErrors);
-      }
-      return false;
-    }
-  };
+//           {/* User Details Section */}
+//           <div className="border-b pb-2">
+//             <h6 className="text-gray-800 font-medium mb-2">User Details</h6>
+//             <div className="space-y-4">
+//               <div className="flex gap-4">
+//                 <div className="flex-1">
+//                   <label className="text-gray-600 mb-2 block">Name</label>
+//                   <OutlinedInput
+//                     label="Full Name"
+//                     value={formData.name}
+//                     onChange={(value: string) => handleInputChange('name', value)}
+//                   />
+//                 </div>
+//                 <div className="flex-1">
+//                   <label className="text-gray-600 mb-2 block">Email <span className="text-red-500">*</span></label>
+//                   <OutlinedInput
+//                     label="Email"
+//                     value={formData.email}
+//                     onChange={(value: string) => handleInputChange('email', value)}
+//                   />
+//                   {errors.email && (
+//                     <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+//                   )}
+//                 </div>
+//               </div>
+//             </div>
+//           </div>
 
-  const handleConfirm = async () => {
-    try {
-      const isFormValid = await validateForm();
-      if (!isFormValid) {
-        toast.push(
-          <Notification title="Error" type="error">
-            Please fix the validation errors
-          </Notification>
-        );
-        return;
-      }
+//           {/* Module List Section */}
+//           <div>
+//             <h6 className="text-gray-800 font-medium mb-2">Module List</h6>
+//             <div className="border rounded p-2">
+//               <Checkbox.Group
+//                 value={selectedModules}
+//                 onChange={handleModuleChange}
+//                 className="flex flex-row flex-wrap gap-3"
+//               >
+//                 {displayedModules.map((module) => (
+//                   <div key={module.id} className="flex-1 min-w-[180px]">
+//                     <Checkbox value={module.id} className="inline-flex items-center">
+//                       <span className="ml-2 whitespace-nowrap">{module.name}</span>
+//                     </Checkbox>
+//                   </div>
+//                 ))}
+//               </Checkbox.Group>
+//               {errors.moduleAccess && (
+//                 <p className="text-red-500 text-xs mt-1">{errors.moduleAccess}</p>
+//               )}
+//             </div>
+//           </div>
+//         </div>
 
-      // Create the payload with all required fields
-      const payload = {
-        id: formData.id,
-        name: formData.name,
-        email: formData.email,
-        entityName: formData.entityName,
-        moduleAccess: formData.moduleAccess,
-        compliance_checklist: formData.compliance_checklist,
-        both_checklist: formData.both_checklist,
-        custom_checklist: formData.custom_checklist
-      };
-
-      console.log('API Payload:', payload); // Debug log
-
-      await onConfirm(payload);
-      handleDialogClose();
-    } catch (error) {
-      console.error('Error updating admin:', error);
-      toast.push(
-        <Notification title="Error" type="error">
-          Failed to update admin
-        </Notification>
-      );
-    }
-  };
-
-  const displayedModules = modules.filter(module => 
-    ['Remittance Tracker', 'Notice', 'Agreement', 'Audit Tracker', 'POSH', 'Return Tracker'].includes(module.name)
-  );
-
-  return (
-    <>
-      <Dialog
-        isOpen={isOpen}
-        onClose={handleDialogClose}
-        onRequestClose={handleDialogClose}
-        width={600}
-      >
-        <h5 className="mb-3">Edit Company Admin</h5>
-        <div className="flex flex-col gap-3">
-          {/* Company Group Section */}
-          <div className="border-b pb-2">
-            <h6 className="text-gray-800 font-medium mb-2">Company Group</h6>
-            <div className="w-full">
-              <label className="text-gray-600 mb-2 block">Entity Name <span className="text-red-500">*</span></label>
-              <OutlinedInput
-                label="Entity Name"
-                value={formData.entityName}
-                onChange={(value: string) => handleInputChange('entityName', value)}
-              />
-              {errors.entityName && (
-                <p className="text-red-500 text-xs mt-1">{errors.entityName}</p>
-              )}
-            </div>
-          </div>
-
-          {/* User Details Section */}
-          <div className="border-b pb-2">
-            <h6 className="text-gray-800 font-medium mb-2">User Details</h6>
-            <div className="space-y-4">
-              <div className="flex gap-4">
-                <div className="flex-1">
-                  <label className="text-gray-600 mb-2 block">Name</label>
-                  <OutlinedInput
-                    label="Full Name"
-                    value={formData.name}
-                    onChange={(value: string) => handleInputChange('name', value)}
-                  />
-                </div>
-                <div className="flex-1">
-                  <label className="text-gray-600 mb-2 block">Email <span className="text-red-500">*</span></label>
-                  <OutlinedInput
-                    label="Email"
-                    value={formData.email}
-                    onChange={(value: string) => handleInputChange('email', value)}
-                  />
-                  {errors.email && (
-                    <p className="text-red-500 text-xs mt-1">{errors.email}</p>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Module List Section */}
-          <div>
-            <h6 className="text-gray-800 font-medium mb-2">Module List</h6>
-            <div className="border rounded p-2">
-              <Checkbox.Group
-                value={selectedModules}
-                onChange={handleModuleChange}
-                className="flex flex-row flex-wrap gap-3"
-              >
-                {displayedModules.map((module) => (
-                  <div key={module.id} className="flex-1 min-w-[180px]">
-                    <Checkbox value={module.id} className="inline-flex items-center">
-                      <span className="ml-2 whitespace-nowrap">{module.name}</span>
-                    </Checkbox>
-                  </div>
-                ))}
-              </Checkbox.Group>
-              {errors.moduleAccess && (
-                <p className="text-red-500 text-xs mt-1">{errors.moduleAccess}</p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="flex justify-end gap-2 mt-3">
-          <Button variant="plain" onClick={handleDialogClose}>
-            Cancel
-          </Button>
-          <Button
-            variant="solid"
-            onClick={handleConfirm}
-            loading={isLoading}
-          >
-            Save Changes
-          </Button>
-        </div>
-      </Dialog>
+//         <div className="flex justify-end gap-2 mt-3">
+//           <Button variant="plain" onClick={handleDialogClose}>
+//             Cancel
+//           </Button>
+//           <Button
+//             variant="solid"
+//             onClick={handleConfirm}
+//             loading={isLoading}
+//           >
+//             Save Changes
+//           </Button>
+//         </div>
+//       </Dialog>
       
-      <AuditTrackerDialog
-        isOpen={showAuditTrackerDialog}
-        onClose={() => {
-          setShowAuditTrackerDialog(false);
-          setTempSelectedModules([]);
-        }}
-        onConfirm={handleAuditTrackerConfirm}
-        initialSelection={
-          formData.compliance_checklist ? 'compliance' : 
-          formData.both_checklist ? 'both' : 
-          formData.custom_checklist ? 'custom' : null
-        }
-      />
-    </>
-  );
-};
+//       <AuditTrackerDialog
+//         isOpen={showAuditTrackerDialog}
+//         onClose={() => {
+//           setShowAuditTrackerDialog(false);
+//           setTempSelectedModules([]);
+//         }}
+//         onConfirm={handleAuditTrackerConfirm}
+//         initialSelection={
+//           formData.compliance_checklist ? 'compliance' : 
+//           formData.both_checklist ? 'both' : 
+//           formData.custom_checklist ? 'custom' : null
+//         }
+//       />
+//     </>
+//   );
+// };
 
-export default EditCompanyAdmin;
+// export default EditCompanyAdmin;
+
+
+
+
+
+// import React, { useState, useEffect, useCallback } from 'react';
+// import { Button, Dialog, Notification, toast } from '@/components/ui';
+// import Checkbox from '@/components/ui/Checkbox';
+// import OutlinedInput from '@/components/ui/OutlinedInput';
+// import * as yup from 'yup';
+// import AuditTrackerDialog from './AuditTrackerDialog';
+
+// const validationSchema = yup.object().shape({
+//   entityName: yup
+//     .string()
+//     .required('Entity name is required')
+//     .min(3, 'Entity name must be at least 3 characters')
+//     .matches(/^\S.*\S$|^\S$/, 'The input must not have leading or trailing spaces'),
+//   email: yup
+//     .string()
+//     .email('Invalid email address')
+//     .required('Email is required'),
+//   moduleAccess: yup
+//     .array()
+//     .of(yup.number())
+//     .min(1, 'At least one module must be selected'),
+// });
+
+// interface ValidationErrors {
+//   [key: string]: string;
+// }
+
+// interface Module {
+//   id: number;
+//   name: string;
+// }
+
+// interface EditCompanyAdminProps {
+//   isOpen: boolean;
+//   onClose: () => void;
+//   onConfirm: (data: any) => Promise<void>;
+//   adminData: {
+//     id: number;
+//     name: string;
+//     email: string;
+//     entityName: string;
+//     moduleAccessNames: string[];
+//     compliance_checklist?: boolean;
+//     both_checklist?: boolean;
+//     custom_checklist?: boolean;
+//   };
+//   modules: Module[];
+//   isLoading: boolean;
+// }
+
+// const EditCompanyAdmin: React.FC<EditCompanyAdminProps> = ({
+//   isOpen,
+//   onClose,
+//   onConfirm,
+//   adminData,
+//   modules,
+//   isLoading,
+// }) => {
+//   const [errors, setErrors] = useState<ValidationErrors>({});
+//   const [touchedFields, setTouchedFields] = useState<{ [key: string]: boolean }>({});
+//   const [selectedModules, setSelectedModules] = useState<(string | number)[]>([]);
+//   const [showAuditTrackerDialog, setShowAuditTrackerDialog] = useState(false);
+//   const [tempSelectedModules, setTempSelectedModules] = useState<(string | number)[]>([]);
+//   const [formData, setFormData] = useState({
+//     id: 0,
+//     name: '',
+//     email: '',
+//     moduleAccess: [] as number[],
+//     entityName: '',
+//     compliance_checklist: false,
+//     both_checklist: false,
+//     custom_checklist: false
+//   });
+
+//   useEffect(() => {
+//     if (adminData && modules.length > 0) {
+//       const initialModuleIds = modules
+//         .filter(module => adminData.moduleAccessNames.includes(module.name))
+//         .map(module => module.id);
+      
+//       setFormData({
+//         id: adminData.id,
+//         name: adminData.name || '',
+//         email: adminData.email || '',
+//         moduleAccess: initialModuleIds,
+//         entityName: adminData.entityName || '',
+//         compliance_checklist: adminData.compliance_checklist || false,
+//         both_checklist: adminData.both_checklist || false,
+//         custom_checklist: adminData.custom_checklist || false
+//       });
+//       setSelectedModules(initialModuleIds);
+//     }
+//   }, [adminData, modules]);
+
+//   const validateField = async (field: string, value: any) => {
+//     try {
+//       await validationSchema.validateAt(field, { ...formData, [field]: value });
+//       setErrors(prev => ({
+//         ...prev,
+//         [field]: ''
+//       }));
+//     } catch (error) {
+//       if (error instanceof yup.ValidationError) {
+//         setErrors(prev => ({
+//           ...prev,
+//           [field]: error.message
+//         }));
+//       }
+//     }
+//   };
+
+//   const handleInputChange = (field: string, value: string) => {
+//     setFormData(prev => ({
+//       ...prev,
+//       [field]: value
+//     }));
+//     setTouchedFields(prev => ({
+//       ...prev,
+//       [field]: true
+//     }));
+
+//     if (touchedFields[field]) {
+//       validateField(field, value);
+//     }
+//   };
+
+//   const handleDialogClose = () => {
+//     onClose();
+//     setErrors({});
+//     setTouchedFields({});
+//   };
+
+//   const handleModuleChange = (options: (string | number)[]) => {
+//     const auditTrackerModule = modules.find(m => m.name === 'Audit Tracker');
+//     const auditTrackerId = auditTrackerModule?.id || -1;
+
+//     // Check if Audit Tracker is being specifically selected now
+//     const isSelectingAuditTracker = 
+//       options.includes(auditTrackerId) && 
+//       !selectedModules.includes(auditTrackerId);
+
+//     if (isSelectingAuditTracker) {
+//       setTempSelectedModules(options);
+//       setShowAuditTrackerDialog(true);
+//     } else {
+//       const moduleAccess = options.map(option => Number(option));
+//       setSelectedModules(options);
+//       setFormData(prev => ({
+//         ...prev,
+//         moduleAccess,
+//         // Reset checklist flags if Audit Tracker was deselected
+//         ...(!options.includes(auditTrackerId) && {
+//           compliance_checklist: false,
+//           both_checklist: false,
+//           custom_checklist: false
+//         })
+//       }));
+//     }
+//   };
+
+// //   const handleAuditTrackerConfirm = useCallback((selection: 'custom' | 'compliance' | 'both') => {
+// //   const auditTrackerModule = modules.find(m => m.name === 'Audit Tracker');
+// //   const auditTrackerId = auditTrackerModule?.id || 0;
+  
+// //   const finalModuleAccess = [...tempSelectedModules.map(opt => Number(opt))];
+// //   if (!finalModuleAccess.includes(auditTrackerId)) {
+// //     finalModuleAccess.push(auditTrackerId);
+// //   }
+
+// //   setFormData(prev => ({
+// //     ...prev,
+// //     moduleAccess: finalModuleAccess,
+// //     compliance_checklist: selection === 'compliance' || selection === 'both',
+// //     both_checklist: selection === 'both',
+// //     custom_checklist: selection === 'custom' || selection === 'both'
+// //   }));
+
+// //   setSelectedModules(finalModuleAccess);
+// //   setShowAuditTrackerDialog(false);
+// //   setTempSelectedModules([]);
+// // }, [modules, tempSelectedModules]);
+
+// const handleAuditTrackerConfirm = useCallback((selection: 'custom' | 'compliance' | 'both') => {
+//   const auditTrackerModule = modules.find(m => m.name === 'Audit Tracker');
+//   const auditTrackerId = auditTrackerModule?.id || 0;
+  
+//   // Create final module list including Audit Tracker
+//   const finalModuleAccess = [...new Set([...tempSelectedModules, auditTrackerId])].map(Number);
+  
+//   setFormData(prev => ({
+//     ...prev,
+//     moduleAccess: finalModuleAccess,
+//     compliance_checklist: selection === 'compliance' || selection === 'both',
+//     both_checklist: selection === 'both',
+//     custom_checklist: selection === 'custom' || selection === 'both'
+//   }));
+
+//   // Update the UI state
+//   setSelectedModules(finalModuleAccess);
+//   setShowAuditTrackerDialog(false);
+//   setTempSelectedModules([]);
+// }, [modules, tempSelectedModules]);
+
+
+//   useEffect(() => {
+//     console.log('Form data changed:', {
+//       ...formData,
+//       moduleNames: modules.filter(m => formData.moduleAccess.includes(m.id)).map(m => m.name)
+//     });
+//   }, [formData, modules]);
+
+//   const validateForm = async () => {
+//     try {
+//       const validationObject = {
+//         entityName: formData.entityName,
+//         email: formData.email,
+//         moduleAccess: formData.moduleAccess,
+//       };
+
+//       await validationSchema.validate(validationObject, { abortEarly: false });
+//       setErrors({});
+//       return true;
+//     } catch (yupError) {
+//       if (yupError instanceof yup.ValidationError) {
+//         const newErrors: ValidationErrors = {};
+//         yupError.inner.forEach((error) => {
+//           if (error.path) {
+//             newErrors[error.path] = error.message;
+//           }
+//         });
+//         setErrors(newErrors);
+//       }
+//       return false;
+//     }
+//   };
+
+//  const handleConfirm = async () => {
+//   try {
+//     const isFormValid = await validateForm();
+//     if (!isFormValid) {
+//       toast.push(<Notification title="Error" type="error">Please fix the validation errors</Notification>);
+//       return;
+//     }
+
+//     const payload = {
+//       ...formData,
+//       compliance_checklist: formData.compliance_checklist,
+//       both_checklist: formData.both_checklist,
+//       custom_checklist: formData.custom_checklist
+//     };
+    
+//     await onConfirm(payload);
+//     handleDialogClose();
+//   } catch (error) {
+//     console.error('Error updating admin:', error);
+//     toast.push(<Notification title="Error" type="error">Failed to update admin</Notification>);
+//   }
+// };
+
+//   const displayedModules = modules.filter(module => 
+//     ['Remittance Tracker', 'Notice', 'Agreement', 'Audit Tracker', 'POSH', 'Return Tracker'].includes(module.name)
+//   );
+
+//   return (
+//     <>
+//       <Dialog
+//         isOpen={isOpen}
+//         onClose={handleDialogClose}
+//         onRequestClose={handleDialogClose}
+//         width={600}
+//       >
+//         <h5 className="mb-3">Edit Company Admin</h5>
+//         <div className="flex flex-col gap-3">
+//           {/* Company Group Section */}
+//           <div className="border-b pb-2">
+//             <h6 className="text-gray-800 font-medium mb-2">Company Group</h6>
+//             <div className="w-full">
+//               <label className="text-gray-600 mb-2 block">Entity Name <span className="text-red-500">*</span></label>
+//               <OutlinedInput
+//                 label="Entity Name"
+//                 value={formData.entityName}
+//                 onChange={(value: string) => handleInputChange('entityName', value)}
+//               />
+//               {errors.entityName && (
+//                 <p className="text-red-500 text-xs mt-1">{errors.entityName}</p>
+//               )}
+//             </div>
+//           </div>
+
+//           {/* User Details Section */}
+//           <div className="border-b pb-2">
+//             <h6 className="text-gray-800 font-medium mb-2">User Details</h6>
+//             <div className="space-y-4">
+//               <div className="flex gap-4">
+//                 <div className="flex-1">
+//                   <label className="text-gray-600 mb-2 block">Name</label>
+//                   <OutlinedInput
+//                     label="Full Name"
+//                     value={formData.name}
+//                     onChange={(value: string) => handleInputChange('name', value)}
+//                   />
+//                 </div>
+//                 <div className="flex-1">
+//                   <label className="text-gray-600 mb-2 block">Email <span className="text-red-500">*</span></label>
+//                   <OutlinedInput
+//                     label="Email"
+//                     value={formData.email}
+//                     onChange={(value: string) => handleInputChange('email', value)}
+//                   />
+//                   {errors.email && (
+//                     <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+//                   )}
+//                 </div>
+//               </div>
+//             </div>
+//           </div>
+
+//           {/* Module List Section */}
+//           <div>
+//             <h6 className="text-gray-800 font-medium mb-2">Module List</h6>
+//             <div className="border rounded p-2">
+//               <Checkbox.Group
+//                 value={selectedModules}
+//                 onChange={handleModuleChange}
+//                 className="flex flex-row flex-wrap gap-3"
+//               >
+//                 {displayedModules.map((module) => (
+//                   <div key={module.id} className="flex-1 min-w-[180px]">
+//                     <Checkbox value={module.id} className="inline-flex items-center">
+//                       <span className="ml-2 whitespace-nowrap">{module.name}</span>
+//                     </Checkbox>
+//                   </div>
+//                 ))}
+//               </Checkbox.Group>
+//               {errors.moduleAccess && (
+//                 <p className="text-red-500 text-xs mt-1">{errors.moduleAccess}</p>
+//               )}
+//             </div>
+//           </div>
+//         </div>
+
+//         <div className="flex justify-end gap-2 mt-3">
+//           <Button variant="plain" onClick={handleDialogClose}>
+//             Cancel
+//           </Button>
+//           <Button
+//             variant="solid"
+//             onClick={handleConfirm}
+//             loading={isLoading}
+//           >
+//             Save Changes
+//           </Button>
+//         </div>
+//       </Dialog>
+      
+//       <AuditTrackerDialog
+//         isOpen={showAuditTrackerDialog}
+//         onClose={() => {
+//           console.log('AuditTrackerDialog onClose called');
+//           setShowAuditTrackerDialog(false);
+//           setTempSelectedModules([]);
+//         }}
+//         onConfirm={(selection) => {
+//           console.log('AuditTrackerDialog onConfirm prop called with:', selection);
+//           handleAuditTrackerConfirm(selection);
+//         }}
+//         initialSelection={
+//           formData.both_checklist ? 'both' :
+//           formData.compliance_checklist ? 'compliance' : 
+//           formData.custom_checklist ? 'custom' : null
+//         }
+//       />
+//     </>
+//   );
+// };
+
+// export default EditCompanyAdmin;
+
+
+
+
+
+// import React, { useState, useEffect, useCallback } from 'react';
+// import { Button, Dialog, Notification, toast } from '@/components/ui';
+// import Checkbox from '@/components/ui/Checkbox';
+// import OutlinedInput from '@/components/ui/OutlinedInput';
+// import * as yup from 'yup';
+// import AuditTrackerDialog from './AuditTrackerDialog';
+
+// const validationSchema = yup.object().shape({
+//   entityName: yup
+//     .string()
+//     .required('Entity name is required')
+//     .min(3, 'Entity name must be at least 3 characters')
+//     .matches(/^\S.*\S$|^\S$/, 'The input must not have leading or trailing spaces'),
+//   email: yup
+//     .string()
+//     .email('Invalid email address')
+//     .required('Email is required'),
+//   moduleAccess: yup
+//     .array()
+//     .of(yup.number())
+//     .min(1, 'At least one module must be selected'),
+// });
+
+// interface ValidationErrors {
+//   [key: string]: string;
+// }
+
+// interface Module {
+//   id: number;
+//   name: string;
+// }
+
+// interface EditCompanyAdminProps {
+//   isOpen: boolean;
+//   onClose: () => void;
+//   onConfirm: (data: any) => Promise<void>;
+//   adminData: {
+//     id: number;
+//     name: string;
+//     email: string;
+//     entityName: string;
+//     moduleAccessNames: string[];
+//     compliance_checklist?: boolean;
+//     both_checklist?: boolean;
+//     custom_checklist?: boolean;
+//   };
+//   modules: Module[];
+//   isLoading: boolean;
+// }
+
+// const EditCompanyAdmin: React.FC<EditCompanyAdminProps> = ({
+//   isOpen,
+//   onClose,
+//   onConfirm,
+//   adminData,
+//   modules,
+//   isLoading,
+// }) => {
+//   const [errors, setErrors] = useState<ValidationErrors>({});
+//   const [touchedFields, setTouchedFields] = useState<{ [key: string]: boolean }>({});
+//   const [selectedModules, setSelectedModules] = useState<(string | number)[]>([]);
+//   const [showAuditTrackerDialog, setShowAuditTrackerDialog] = useState(false);
+//   const [tempSelectedModules, setTempSelectedModules] = useState<(string | number)[]>([]);
+//   const [formData, setFormData] = useState({
+//     id: 0,
+//     name: '',
+//     email: '',
+//     moduleAccess: [] as number[],
+//     entityName: '',
+//     compliance_checklist: false,
+//     both_checklist: false,
+//     custom_checklist: false
+//   });
+
+//   useEffect(() => {
+//     if (adminData && modules.length > 0) {
+//       const initialModuleIds = modules
+//         .filter(module => adminData.moduleAccessNames.includes(module.name))
+//         .map(module => module.id);
+      
+//       setFormData({
+//         id: adminData.id,
+//         name: adminData.name || '',
+//         email: adminData.email || '',
+//         moduleAccess: initialModuleIds,
+//         entityName: adminData.entityName || '',
+//         compliance_checklist: adminData.compliance_checklist || false,
+//         both_checklist: adminData.both_checklist || false,
+//         custom_checklist: adminData.custom_checklist || false
+//       });
+//       setSelectedModules(initialModuleIds);
+//     }
+//   }, [adminData, modules]);
+
+//   const validateField = async (field: string, value: any) => {
+//     try {
+//       await validationSchema.validateAt(field, { ...formData, [field]: value });
+//       setErrors(prev => ({
+//         ...prev,
+//         [field]: ''
+//       }));
+//     } catch (error) {
+//       if (error instanceof yup.ValidationError) {
+//         setErrors(prev => ({
+//           ...prev,
+//           [field]: error.message
+//         }));
+//       }
+//     }
+//   };
+
+//   const handleInputChange = (field: string, value: string) => {
+//     setFormData(prev => ({
+//       ...prev,
+//       [field]: value
+//     }));
+//     setTouchedFields(prev => ({
+//       ...prev,
+//       [field]: true
+//     }));
+
+//     if (touchedFields[field]) {
+//       validateField(field, value);
+//     }
+//   };
+
+//   const handleDialogClose = () => {
+//     onClose();
+//     setErrors({});
+//     setTouchedFields({});
+//   };
+
+//   const handleModuleChange = (options: (string | number)[]) => {
+//     const auditTrackerModule = modules.find(m => m.name === 'Audit Tracker');
+//     const auditTrackerId = auditTrackerModule?.id || -1;
+
+//     console.log('Module change options:', options);
+//     console.log('Current selected modules:', selectedModules);
+//     console.log('Audit tracker ID:', auditTrackerId);
+
+//     // Check if Audit Tracker is being specifically selected now
+//     const isSelectingAuditTracker = 
+//       options.includes(auditTrackerId) && 
+//       !selectedModules.includes(auditTrackerId);
+
+//     // Check if Audit Tracker is being deselected
+//     const isDeselectingAuditTracker = 
+//       !options.includes(auditTrackerId) && 
+//       selectedModules.includes(auditTrackerId);
+
+//     console.log('Is selecting audit tracker:', isSelectingAuditTracker);
+//     console.log('Is deselecting audit tracker:', isDeselectingAuditTracker);
+
+//     if (isSelectingAuditTracker) {
+//       // Store the complete selection (including other modules) for later use
+//       setTempSelectedModules(options);
+//       setShowAuditTrackerDialog(true);
+//     } else {
+//       const moduleAccess = options.map(option => Number(option));
+//       setSelectedModules(options);
+//       setFormData(prev => ({
+//         ...prev,
+//         moduleAccess,
+//         // Reset checklist flags if Audit Tracker was deselected
+//         ...(isDeselectingAuditTracker && {
+//           compliance_checklist: false,
+//           both_checklist: false,
+//           custom_checklist: false
+//         })
+//       }));
+//     }
+//   };
+
+//   const handleAuditTrackerConfirm = useCallback((selection: 'custom' | 'compliance' | 'both') => {
+//     const auditTrackerModule = modules.find(m => m.name === 'Audit Tracker');
+//     const auditTrackerId = auditTrackerModule?.id || 0;
+    
+//     // tempSelectedModules already contains the Audit Tracker ID, just convert to numbers
+//     const finalModuleAccess = tempSelectedModules.map(Number);
+    
+//     console.log('Final module access:', finalModuleAccess);
+//     console.log('Temp selected modules:', tempSelectedModules);
+//     console.log('Audit tracker ID:', auditTrackerId);
+    
+//     setFormData(prev => ({
+//       ...prev,
+//       moduleAccess: finalModuleAccess,
+//       compliance_checklist: selection === 'compliance' || selection === 'both',
+//       both_checklist: selection === 'both',
+//       custom_checklist: selection === 'custom' || selection === 'both'
+//     }));
+
+//     // Update the UI state - use tempSelectedModules directly since it already has everything
+//     setSelectedModules(tempSelectedModules);
+//     setShowAuditTrackerDialog(false);
+//     setTempSelectedModules([]);
+//   }, [modules, tempSelectedModules]);
+
+//   const handleAuditTrackerCancel = () => {
+//     // Reset to previous state when cancelled
+//     setShowAuditTrackerDialog(false);
+//     setTempSelectedModules([]);
+//   };
+
+//   useEffect(() => {
+//     console.log('Form data changed:', {
+//       ...formData,
+//       moduleNames: modules.filter(m => formData.moduleAccess.includes(m.id)).map(m => m.name)
+//     });
+//   }, [formData, modules]);
+
+//   useEffect(() => {
+//     console.log('Selected modules state:', selectedModules);
+//     console.log('Form data module access:', formData.moduleAccess);
+//   }, [selectedModules, formData.moduleAccess]);
+
+//   const validateForm = async () => {
+//     try {
+//       const validationObject = {
+//         entityName: formData.entityName,
+//         email: formData.email,
+//         moduleAccess: formData.moduleAccess,
+//       };
+
+//       await validationSchema.validate(validationObject, { abortEarly: false });
+//       setErrors({});
+//       return true;
+//     } catch (yupError) {
+//       if (yupError instanceof yup.ValidationError) {
+//         const newErrors: ValidationErrors = {};
+//         yupError.inner.forEach((error) => {
+//           if (error.path) {
+//             newErrors[error.path] = error.message;
+//           }
+//         });
+//         setErrors(newErrors);
+//       }
+//       return false;
+//     }
+//   };
+
+//   const handleConfirm = async () => {
+//     try {
+//       const isFormValid = await validateForm();
+//       if (!isFormValid) {
+//         toast.push(<Notification title="Error" type="error">Please fix the validation errors</Notification>);
+//         return;
+//       }
+
+//       const payload = {
+//         ...formData,
+//         compliance_checklist: formData.compliance_checklist,
+//         both_checklist: formData.both_checklist,
+//         custom_checklist: formData.custom_checklist
+//       };
+      
+//       await onConfirm(payload);
+//       handleDialogClose();
+//     } catch (error) {
+//       console.error('Error updating admin:', error);
+//       toast.push(<Notification title="Error" type="error">Failed to update admin</Notification>);
+//     }
+//   };
+
+//   const displayedModules = modules.filter(module => 
+//     ['Remittance Tracker', 'Notice', 'Agreement', 'Audit Tracker', 'POSH', 'Return Tracker'].includes(module.name)
+//   );
+
+//   return (
+//     <>
+//       <Dialog
+//         isOpen={isOpen}
+//         onClose={handleDialogClose}
+//         onRequestClose={handleDialogClose}
+//         width={600}
+//       >
+//         <h5 className="mb-3">Edit Company Admin</h5>
+//         <div className="flex flex-col gap-3">
+//           {/* Company Group Section */}
+//           <div className="border-b pb-2">
+//             <h6 className="text-gray-800 font-medium mb-2">Company Group</h6>
+//             <div className="w-full">
+//               <label className="text-gray-600 mb-2 block">Entity Name <span className="text-red-500">*</span></label>
+//               <OutlinedInput
+//                 label="Entity Name"
+//                 value={formData.entityName}
+//                 onChange={(value: string) => handleInputChange('entityName', value)}
+//               />
+//               {errors.entityName && (
+//                 <p className="text-red-500 text-xs mt-1">{errors.entityName}</p>
+//               )}
+//             </div>
+//           </div>
+
+//           {/* User Details Section */}
+//           <div className="border-b pb-2">
+//             <h6 className="text-gray-800 font-medium mb-2">User Details</h6>
+//             <div className="space-y-4">
+//               <div className="flex gap-4">
+//                 <div className="flex-1">
+//                   <label className="text-gray-600 mb-2 block">Name</label>
+//                   <OutlinedInput
+//                     label="Full Name"
+//                     value={formData.name}
+//                     onChange={(value: string) => handleInputChange('name', value)}
+//                   />
+//                 </div>
+//                 <div className="flex-1">
+//                   <label className="text-gray-600 mb-2 block">Email <span className="text-red-500">*</span></label>
+//                   <OutlinedInput
+//                     label="Email"
+//                     value={formData.email}
+//                     onChange={(value: string) => handleInputChange('email', value)}
+//                   />
+//                   {errors.email && (
+//                     <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+//                   )}
+//                 </div>
+//               </div>
+//             </div>
+//           </div>
+
+//           {/* Module List Section */}
+//           <div>
+//             <h6 className="text-gray-800 font-medium mb-2">Module List</h6>
+//             <div className="border rounded p-2">
+//               <Checkbox.Group
+//                 value={selectedModules}
+//                 onChange={handleModuleChange}
+//                 className="flex flex-row flex-wrap gap-3"
+//               >
+//                 {displayedModules.map((module) => (
+//                   <div key={module.id} className="flex-1 min-w-[180px]">
+//                     <Checkbox value={module.id} className="inline-flex items-center">
+//                       <span className="ml-2 whitespace-nowrap">{module.name}</span>
+//                     </Checkbox>
+//                   </div>
+//                 ))}
+//               </Checkbox.Group>
+//               {errors.moduleAccess && (
+//                 <p className="text-red-500 text-xs mt-1">{errors.moduleAccess}</p>
+//               )}
+//             </div>
+//           </div>
+//         </div>
+
+//         <div className="flex justify-end gap-2 mt-3">
+//           <Button variant="plain" onClick={handleDialogClose}>
+//             Cancel
+//           </Button>
+//           <Button
+//             variant="solid"
+//             onClick={handleConfirm}
+//             loading={isLoading}
+//           >
+//             Save Changes
+//           </Button>
+//         </div>
+//       </Dialog>
+      
+//       <AuditTrackerDialog
+//         isOpen={showAuditTrackerDialog}
+//         onClose={handleAuditTrackerCancel}
+//         onConfirm={handleAuditTrackerConfirm}
+//         initialSelection={
+//           formData.both_checklist ? 'both' :
+//           formData.compliance_checklist ? 'compliance' : 
+//           formData.custom_checklist ? 'custom' : null
+//         }
+//       />
+//     </>
+//   );
+// };
+
+// export default EditCompanyAdmin;

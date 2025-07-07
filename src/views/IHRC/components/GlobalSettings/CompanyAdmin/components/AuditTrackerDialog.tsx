@@ -111,9 +111,6 @@
 
 
 
-
-
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, Button, Checkbox } from '@/components/ui';
 
@@ -143,10 +140,10 @@ const AuditTrackerDialog: React.FC<AuditTrackerDialogProps> = ({
     setSelection(newSelection);
   };
 
-  const handleConfirm = () => {
+   const handleConfirm = () => {
     if (selection) {
       onConfirm(selection);
-      setSelection(null); // Reset after confirmation
+      onClose(); // Move onClose here to ensure it's called after onConfirm
     }
   };
 

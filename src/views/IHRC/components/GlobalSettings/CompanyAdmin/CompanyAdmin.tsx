@@ -1054,9 +1054,7 @@ useEffect(() => {
             console.log(formData)
             const apiPayload = {
     ...formData,
-    compliance_checklist: formData.complianceChecklist,
-    both_checklist: formData.bothChecklist,
-    custom_checklist: formData.customChecklist,
+   
   };
 
             try {
