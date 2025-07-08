@@ -1207,7 +1207,7 @@ const ReturnSetupEditForm = () => {
                   {/* Bi-Annual Due Date */}
                   {enabledDateFields.bi_annual_due_date && (
                     <div className="space-y-2">
-                      <label>Bi-Annual Due Date <span className="text-red-500">*</span></label>
+                      <label>Biennial Due Date <span className="text-red-500">*</span></label>
                       <DatePicker 
                         value={values.due_dates.bi_annual_due_date}
                         onChange={(date) => setFieldValue('due_dates.bi_annual_due_date', date)}
