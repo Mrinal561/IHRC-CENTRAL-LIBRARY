@@ -752,67 +752,245 @@ const formatDueDates = (frequency: string, dueDates: DueDates) => {
   return formattedDates;
 };
 
+const validateDueDates = (dueDates: DueDates, frequency: string) => {
+  const errors: Record<string, string> = {};
+  
+  if (frequency === 'half_yearly') {
+    if (dueDates.first_due_date && dueDates.last_due_date && 
+        dueDates.first_due_date.getTime() === dueDates.last_due_date.getTime()) {
+      errors.last_due_date = 'Last due date must be different from first due date';
+    }
+  }
+  
+  if (frequency === 'quarterly') {
+    const dates = [
+      dueDates.first_due_date,
+      dueDates.second_due_date,
+      dueDates.third_due_date,
+      dueDates.last_due_date
+    ].filter(date => date !== null);
+    
+    // Check for duplicate dates
+    const uniqueDates = new Set(dates.map(date => date?.getTime()));
+    if (uniqueDates.size !== dates.length) {
+      if (dates[0] && dates[1] && dates[0].getTime() === dates[1].getTime()) {
+        errors.second_due_date = 'Dates must be different';
+      }
+      if (dates[0] && dates[2] && dates[0].getTime() === dates[2].getTime()) {
+        errors.third_due_date = 'Dates must be different';
+      }
+      if (dates[0] && dates[3] && dates[0].getTime() === dates[3].getTime()) {
+        errors.last_due_date = 'Dates must be different';
+      }
+      if (dates[1] && dates[2] && dates[1].getTime() === dates[2].getTime()) {
+        errors.third_due_date = 'Dates must be different';
+      }
+      if (dates[1] && dates[3] && dates[1].getTime() === dates[3].getTime()) {
+        errors.last_due_date = 'Dates must be different';
+      }
+      if (dates[2] && dates[3] && dates[2].getTime() === dates[3].getTime()) {
+        errors.last_due_date = 'Dates must be different';
+      }
+    }
+  }
+  
+  return Object.keys(errors).length > 0 ? errors : undefined;
+};
+
+  // const validationSchema = Yup.object().shape({
+  //   act_name: Yup.string().required('Act Name is required'),
+  //   return_name: Yup.string().required('Return Name is required'),
+  //   state_id: Yup.string().when('applicable', {
+  //     is: 'STATE',
+  //     then: (schema) => schema.required('State is required'),
+  //     otherwise: (schema) => schema.notRequired()
+  //   }),
+  //   return_applicability: Yup.string()
+  //     .required('Return Applicability is required')
+  //     .oneOf(['yes', 'no'], 'Invalid selection'),
+  //   applicable: Yup.string()
+  //     .required('Applicable is required')
+  //     .oneOf(['CENTRAL', 'ALL_STATES', 'STATE'], 'Invalid selection'),
+  //  return_applicable_at: Yup.string()
+  // .required('Return Applicable At is required')
+  // .oneOf(['branch', 'state', 'central'], 'Invalid selection'),
+  //   frequency: Yup.string().when('return_applicability', {
+  //     is: 'yes',
+  //     then: (schema) => schema
+  //       .required('Frequency is required')
+  //       .oneOf(['monthly', 'quarterly', 'half_yearly', 'yearly', 'bi_annual'], 'Invalid selection'),
+  //     otherwise: (schema) => schema.notRequired()
+  //   }),
+  //   due_dates: Yup.object().when('return_applicability', {
+  //     is: 'yes',
+  //     then: (schema) => schema.shape({
+  //       first_due_date: Yup.date()
+  //         .nullable()
+  //         .when('$enabledDateFields.first_due_date', {
+  //           is: true,
+  //           then: (schema) => schema.required('First due date is required')
+  //         }),
+  //       second_due_date: Yup.date()
+  //         .nullable()
+  //         .when('$enabledDateFields.second_due_date', {
+  //           is: true,
+  //           then: (schema) => schema.required('Second due date is required')
+  //         }),
+  //       third_due_date: Yup.date()
+  //         .nullable()
+  //         .when('$enabledDateFields.third_due_date', {
+  //           is: true,
+  //           then: (schema) => schema.required('Third due date is required')
+  //         }),
+  //       last_due_date: Yup.date()
+  //         .nullable()
+  //         .when('$enabledDateFields.last_due_date', {
+  //           is: true,
+  //           then: (schema) => schema.required('Last due date is required')
+  //         }),
+  //       bi_annual_due_date: Yup.date()
+  //         .nullable()
+  //         .when('$enabledDateFields.bi_annual_due_date', {
+  //           is: true,
+  //           then: (schema) => schema.required('Bi-annual due date is required')
+  //         })
+  //     }),
+  //     otherwise: (schema) => schema.notRequired()
+  //   })
+  // });
+
   const validationSchema = Yup.object().shape({
-    act_name: Yup.string().required('Act Name is required'),
-    return_name: Yup.string().required('Return Name is required'),
-    state_id: Yup.string().when('applicable', {
-      is: 'STATE',
-      then: (schema) => schema.required('State is required'),
-      otherwise: (schema) => schema.notRequired()
-    }),
-    return_applicability: Yup.string()
-      .required('Return Applicability is required')
-      .oneOf(['yes', 'no'], 'Invalid selection'),
-    applicable: Yup.string()
-      .required('Applicable is required')
-      .oneOf(['CENTRAL', 'ALL_STATES', 'STATE'], 'Invalid selection'),
-   return_applicable_at: Yup.string()
-  .required('Return Applicable At is required')
-  .oneOf(['branch', 'state', 'central'], 'Invalid selection'),
-    frequency: Yup.string().when('return_applicability', {
-      is: 'yes',
-      then: (schema) => schema
-        .required('Frequency is required')
-        .oneOf(['monthly', 'quarterly', 'half_yearly', 'yearly', 'bi_annual'], 'Invalid selection'),
-      otherwise: (schema) => schema.notRequired()
-    }),
-    due_dates: Yup.object().when('return_applicability', {
-      is: 'yes',
-      then: (schema) => schema.shape({
-        first_due_date: Yup.date()
-          .nullable()
-          .when('$enabledDateFields.first_due_date', {
-            is: true,
-            then: (schema) => schema.required('First due date is required')
-          }),
-        second_due_date: Yup.date()
-          .nullable()
-          .when('$enabledDateFields.second_due_date', {
-            is: true,
-            then: (schema) => schema.required('Second due date is required')
-          }),
-        third_due_date: Yup.date()
-          .nullable()
-          .when('$enabledDateFields.third_due_date', {
-            is: true,
-            then: (schema) => schema.required('Third due date is required')
-          }),
-        last_due_date: Yup.date()
-          .nullable()
-          .when('$enabledDateFields.last_due_date', {
-            is: true,
-            then: (schema) => schema.required('Last due date is required')
-          }),
-        bi_annual_due_date: Yup.date()
-          .nullable()
-          .when('$enabledDateFields.bi_annual_due_date', {
-            is: true,
-            then: (schema) => schema.required('Bi-annual due date is required')
-          })
-      }),
-      otherwise: (schema) => schema.notRequired()
-    })
-  });
+  act_name: Yup.string().required('Act Name is required'),
+  return_name: Yup.string().required('Return Name is required'),
+  state_id: Yup.string().when('applicable', {
+    is: 'STATE',
+    then: (schema) => schema.required('State is required'),
+    otherwise: (schema) => schema.notRequired()
+  }),
+  return_applicability: Yup.string()
+    .required('Return Applicability is required')
+    .oneOf(['yes', 'no'], 'Invalid selection'),
+  applicable: Yup.string()
+    .required('Applicable is required')
+    .oneOf(['CENTRAL', 'ALL_STATES', 'STATE'], 'Invalid selection'),
+  return_applicable_at: Yup.string()
+    .required('Return Applicable At is required')
+    .oneOf(['branch', 'state', 'central'], 'Invalid selection'),
+  frequency: Yup.string().when('return_applicability', {
+    is: 'yes',
+    then: (schema) => schema
+      .required('Frequency is required')
+      .oneOf(['monthly', 'quarterly', 'half_yearly', 'yearly', 'bi_annual'], 'Invalid selection'),
+    otherwise: (schema) => schema.notRequired()
+  }),
+  due_dates: Yup.object<DueDates>().when(['return_applicability', 'frequency'], {
+    is: (return_applicability: string, frequency: string) => 
+      return_applicability === 'yes' && frequency,
+    then: (schema) => schema.shape({
+      first_due_date: Yup.date()
+        .nullable()
+        .when('$enabledDateFields.first_due_date', {
+          is: true,
+          then: (schema) => schema.required('First due date is required')
+        }),
+      second_due_date: Yup.date()
+        .nullable()
+        .when('$enabledDateFields.second_due_date', {
+          is: true,
+          then: (schema) => schema.required('Second due date is required')
+        }),
+      third_due_date: Yup.date()
+        .nullable()
+        .when('$enabledDateFields.third_due_date', {
+          is: true,
+          then: (schema) => schema.required('Third due date is required')
+        }),
+      last_due_date: Yup.date()
+        .nullable()
+        .when('$enabledDateFields.last_due_date', {
+          is: true,
+          then: (schema) => schema.required('Last due date is required')
+        }),
+      bi_annual_due_date: Yup.date()
+        .nullable()
+        .when('$enabledDateFields.bi_annual_due_date', {
+          is: true,
+          then: (schema) => schema.required('Bi-annual due date is required')
+        })
+    }).test(
+      'unique-dates',
+      'Dates must be unique',
+      function(value) {
+        const { frequency } = this.parent;
+        
+        if (!frequency || !value) return true;
+
+        if (frequency === 'half_yearly') {
+          if (value.first_due_date && value.last_due_date && 
+              value.first_due_date.getTime() === value.last_due_date.getTime()) {
+            return this.createError({
+              path: 'due_dates.last_due_date',
+              message: 'Last due date must be different from first due date'
+            });
+          }
+        }
+        
+        if (frequency === 'quarterly') {
+          const dates = [
+            value.first_due_date,
+            value.second_due_date,
+            value.third_due_date,
+            value.last_due_date
+          ].filter(date => date !== null) as Date[];
+          
+          // Check for duplicate dates
+          const uniqueDates = new Set(dates.map(date => date.getTime()));
+          if (uniqueDates.size !== dates.length) {
+            if (dates[0] && dates[1] && dates[0].getTime() === dates[1].getTime()) {
+              return this.createError({
+                path: 'due_dates.second_due_date',
+                message: 'Second due date must be different from first due date'
+              });
+            }
+            if (dates[0] && dates[2] && dates[0].getTime() === dates[2].getTime()) {
+              return this.createError({
+                path: 'due_dates.third_due_date',
+                message: 'Third due date must be different from first due date'
+              });
+            }
+            if (dates[0] && dates[3] && dates[0].getTime() === dates[3].getTime()) {
+              return this.createError({
+                path: 'due_dates.last_due_date',
+                message: 'Last due date must be different from first due date'
+              });
+            }
+            if (dates[1] && dates[2] && dates[1].getTime() === dates[2].getTime()) {
+              return this.createError({
+                path: 'due_dates.third_due_date',
+                message: 'Third due date must be different from second due date'
+              });
+            }
+            if (dates[1] && dates[3] && dates[1].getTime() === dates[3].getTime()) {
+              return this.createError({
+                path: 'due_dates.last_due_date',
+                message: 'Last due date must be different from second due date'
+              });
+            }
+            if (dates[2] && dates[3] && dates[2].getTime() === dates[3].getTime()) {
+              return this.createError({
+                path: 'due_dates.last_due_date',
+                message: 'Last due date must be different from third due date'
+              });
+            }
+          }
+        }
+        
+        return true;
+      }
+    ),
+    otherwise: (schema) => schema.notRequired()
+  })
+});
 
   // Fixed initial values - removed default values that were showing up on form load
   const initialValues: FormValues = {
@@ -832,6 +1010,7 @@ const formatDueDates = (frequency: string, dueDates: DueDates) => {
     }
   };
 
+  
   const handleSubmit = async (values: FormValues, { resetForm }: { resetForm: () => void }) => {
     setLoading(true);
     
@@ -901,7 +1080,15 @@ const formatDueDates = (frequency: string, dueDates: DueDates) => {
         validateOnChange={true}
         validateOnBlur={true}
       >
-        {({ values, errors, touched, setFieldValue, handleSubmit }) => (
+        {({ values, errors, touched, setFieldValue, handleSubmit, validateForm  }) => {
+          useEffect(() => {
+      if (values.return_applicability === 'yes' && 
+          (values.frequency === 'quarterly' || values.frequency === 'half_yearly')) {
+        validateForm();
+      }
+    }, [values.due_dates, values.frequency, validateForm]);
+
+    return (
           <Form onSubmit={handleSubmit}>
             <div className="space-y-6">
               {/* First row - Act Name and Return Name */}
@@ -1056,7 +1243,13 @@ const formatDueDates = (frequency: string, dueDates: DueDates) => {
                       <label>First Due Date <span className="text-red-500">*</span></label>
                       <DatePicker 
                         value={values.due_dates.first_due_date}
-                        onChange={(date) => setFieldValue('due_dates.first_due_date', date)}
+                        // onChange={(date) => setFieldValue('due_dates.first_due_date', date)}
+                        onChange={(date) => {
+                    setFieldValue('due_dates.first_due_date', date);
+                    if (values.frequency === 'quarterly' || values.frequency === 'half_yearly') {
+                      validateForm();
+                    }
+                  }}
                         disabled={!values.frequency}
                         placeholder="Select First Due Date"
                         inputFormat="DD-MM-YYYY"
@@ -1073,7 +1266,13 @@ const formatDueDates = (frequency: string, dueDates: DueDates) => {
                       <label>Second Due Date <span className="text-red-500">*</span></label>
                       <DatePicker 
                         value={values.due_dates.second_due_date}
-                        onChange={(date) => setFieldValue('due_dates.second_due_date', date)}
+                        // onChange={(date) => setFieldValue('due_dates.second_due_date', date)}
+                        onChange={(date) => {
+                    setFieldValue('due_dates.second_due_date', date);
+                    if (values.frequency === 'quarterly') {
+                      validateForm();
+                    }
+                  }}
                         disabled={!values.frequency}
                         placeholder="Select Second Due Date"
                         inputFormat="DD-MM-YYYY"
@@ -1090,7 +1289,13 @@ const formatDueDates = (frequency: string, dueDates: DueDates) => {
                       <label>Third Due Date <span className="text-red-500">*</span></label>
                       <DatePicker 
                         value={values.due_dates.third_due_date}
-                        onChange={(date) => setFieldValue('due_dates.third_due_date', date)}
+                        // onChange={(date) => setFieldValue('due_dates.third_due_date', date)}
+                        onChange={(date) => {
+                    setFieldValue('due_dates.third_due_date', date);
+                    if (values.frequency === 'quarterly') {
+                      validateForm();
+                    }
+                  }}
                         disabled={!values.frequency}
                         placeholder="Select Third Due Date"
                         inputFormat="DD-MM-YYYY"
@@ -1107,7 +1312,13 @@ const formatDueDates = (frequency: string, dueDates: DueDates) => {
                       <label>Last Due Date <span className="text-red-500">*</span></label>
                       <DatePicker 
                         value={values.due_dates.last_due_date}
-                        onChange={(date) => setFieldValue('due_dates.last_due_date', date)}
+                        // onChange={(date) => setFieldValue('due_dates.last_due_date', date)}
+                        onChange={(date) => {
+                    setFieldValue('due_dates.last_due_date', date);
+                    if (values.frequency === 'quarterly' || values.frequency === 'half_yearly') {
+                      validateForm();
+                    }
+                  }}
                         disabled={!values.frequency}
                         placeholder="Select Last Due Date"
                         inputFormat="DD-MM-YYYY"
@@ -1157,7 +1368,8 @@ const formatDueDates = (frequency: string, dueDates: DueDates) => {
               </div>
             </div>
           </Form>
-        )}
+    )
+}}
       </Formik>
     </div>
   );
