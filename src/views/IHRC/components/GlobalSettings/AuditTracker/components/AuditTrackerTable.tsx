@@ -544,7 +544,7 @@ const AuditTrackerTable = ({
         id: 'actions',
         cell: ({ row }) => (
           <div className="flex items-center gap-2">
-            <Tooltip title="Edit">
+            {/* <Tooltip title="Edit">
               <Button
                 size="sm"
                 onClick={() =>
@@ -555,7 +555,7 @@ const AuditTrackerTable = ({
                 icon={<MdEdit />}
                 className="text-blue-500"
               />
-            </Tooltip>
+            </Tooltip> */}
 
             {row.original.is_active ? (
               <Tooltip title="Disable">
