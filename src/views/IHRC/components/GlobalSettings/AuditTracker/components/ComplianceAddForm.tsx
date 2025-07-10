@@ -1377,7 +1377,7 @@ const ComplianceAddForm: React.FC = () => {
                 {/* 1st Row: Country and Function */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <p className="mb-2">Country</p>
+                    <p className="mb-2">Country <span className="text-red-500">*</span></p>
                     <OutlinedSelect
                       label="Select Country"
                       options={countryOptions}
@@ -1404,7 +1404,7 @@ const ComplianceAddForm: React.FC = () => {
                 {/* 2nd Row: Applicable and Legislation */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <p className="mb-2">Central/State</p>
+                    <p className="mb-2">Central/State <span className="text-red-500">*</span></p>
                     <OutlinedSelect
                       label="Select Applicable"
                       options={applicableOptions}
@@ -1478,7 +1478,7 @@ const ComplianceAddForm: React.FC = () => {
 
                 {/* 4th Row: Compliance Header */}
                 <div>
-                  <p className="mb-2">Compliance Header</p>
+                  <p className="mb-2">Compliance Header <span className="text-red-500">*</span></p>
                   <OutlinedInput
                     label="Compliance Header"
                     value={values.compliance_header}
@@ -1491,7 +1491,7 @@ const ComplianceAddForm: React.FC = () => {
 
                 {/* 5th Row: Compliance Description */}
                 <div>
-                  <p className="mb-2">Compliance Description</p>
+                  <p className="mb-2">Compliance Description <span className="text-red-500">*</span></p>
                   <OutlinedInput
                     label="Compliance Description"
                     value={values.compliance_description}
@@ -1505,7 +1505,7 @@ const ComplianceAddForm: React.FC = () => {
 
                 {/* 6th Row: Penalty Description */}
                 <div>
-                  <p className="mb-2">Penalty Description</p>
+                  <p className="mb-2">Penalty Description <span className="text-red-500">*</span></p>
                   <OutlinedInput
                     label="Penalty Description"
                     value={values.penalty_description}
@@ -1531,7 +1531,7 @@ const ComplianceAddForm: React.FC = () => {
                     )}
                   </div>
                   <div>
-                    <p className="mb-2">Compliance Reference</p>
+                    <p className="mb-2">Compliance Reference <span className="text-red-500">*</span></p>
                     <OutlinedInput
                       label="Compliance Reference"
                       value={values.compliance_reference}
@@ -1557,7 +1557,7 @@ const ComplianceAddForm: React.FC = () => {
                     )}
                   </div>
                   <div>
-                    <p className="mb-2">Compliance Frequency</p>
+                    <p className="mb-2">Compliance Frequency <span className="text-red-500">*</span></p>
                     <OutlinedSelect
                       label="Select Frequency"
                       options={frequencyOptions}
@@ -1573,7 +1573,7 @@ const ComplianceAddForm: React.FC = () => {
                 {/* 9th Row: Criticality and Due Date Frequency */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <p className="mb-2">Criticality</p>
+                    <p className="mb-2">Criticality <span className="text-red-500">*</span></p>
                     <OutlinedSelect
                       label="Select Criticality"
                       options={criticalityOptions}
@@ -1585,7 +1585,7 @@ const ComplianceAddForm: React.FC = () => {
                     )}
                   </div>
                   <div>
-                    <p className="mb-2">Due Date Frequency</p>
+                    <p className="mb-2">Due Date Frequency <span className="text-red-500">*</span></p>
                     <OutlinedSelect
                       label="Select Due Date Frequency"
                       options={dueDateFrequencyOptions}
@@ -1605,7 +1605,7 @@ const ComplianceAddForm: React.FC = () => {
                 {/* Proof Mandatory field */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <p className="mb-2">Proof Mandatory</p>
+                    <p className="mb-2">Proof Mandatory <span className="text-red-500">*</span></p>
                     <OutlinedSelect
                       label="Select Proof Mandatory"
                       options={proofMandatoryOptions}
@@ -1623,7 +1623,7 @@ const ComplianceAddForm: React.FC = () => {
                   <div className='grid grid-cols-2 gap-4'>
                     {/* First Due Date - always required */}
                     <div>
-                      <p className="mb-2">First Due Date <span className="text-red-500">*</span></p>
+                      <p className="mb-2">First Due Date  <span className="text-red-500">*</span></p>
                       <DatePicker
                         placeholder="Select first due date"
                         value={values.due_dates.first_due_date ? new Date(values.due_dates.first_due_date) : null}

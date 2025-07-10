@@ -142,7 +142,7 @@ const ComplianceApplicabilityAutoSuggest: React.FC<ComplianceApplicabilityAutoSu
 
   return (
     <div className="relative" ref={wrapperRef}>
-      <p className="mb-2">{label}</p>
+      <p className="mb-2">{label} <span className="text-red-500">*</span></p>
       <div 
         className="relative"
         onKeyDown={handleKeyDown}
