@@ -708,9 +708,9 @@ const CompanyAdmin = () => {
         password: '',
         moduleAccess: [] as number[],
         entityName: '',
-        complianceChecklist: false,
-        bothChecklist: false,
-        customChecklist: false
+        compliance_checklist: false,
+        both_checklist: false,
+        custom_checklist: false
     })
     const [pagination, setPagination] = useState({
         total: 0,
@@ -823,33 +823,33 @@ const CompanyAdmin = () => {
     }
 
 
-    const handleEditAdmin = async (adminId: number, updateData: any) => {
-    try {
-      setIsLoading(true);
-      const response = await httpClient.put(
-        endpoints.companyAdmin.update(adminId),
-        {
-          ...updateData,
-          // Ensure we're sending snake_case field names
-          compliance_checklist: updateData.compliance_checklist,
-          both_checklist: updateData.both_checklist,
-          custom_checklist: updateData.custom_checklist
-        }
-      );
-      await fetchAdminData();
-      toast.push(
-        <Notification title="Success" type="success">
-          Admin updated successfully
-        </Notification>
-      );
-      return response.data;
-    } catch (error) {
-      showErrorNotification(error);
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
+//     const handleEditAdmin = async (adminId: number, updateData: any) => {
+//     try {
+//       setIsLoading(true);
+//       const response = await httpClient.put(
+//         endpoints.companyAdmin.update(adminId),
+//         {
+//           ...updateData,
+//           // Ensure we're sending snake_case field names
+//           compliance_checklist: updateData.compliance_checklist,
+//           both_checklist: updateData.both_checklist,
+//           custom_checklist: updateData.custom_checklist
+//         }
+//       );
+//       await fetchAdminData();
+//       toast.push(
+//         <Notification title="Success" type="success">
+//           Admin updated successfully
+//         </Notification>
+//       );
+//       return response.data;
+//     } catch (error) {
+//       showErrorNotification(error);
+//       throw error;
+//     } finally {
+//       setIsLoading(false);
+//     }
+//   };
 
     const handleInputChange = (field: string, value: string) => {
         setFormData((prev) => ({
@@ -906,9 +906,9 @@ const CompanyAdmin = () => {
             password: '',
             moduleAccess: [],
             entityName: '',
-            complianceChecklist: false,
-            bothChecklist: false,
-            customChecklist: false
+            compliance_checklist: false,
+            both_checklist: false,
+            custom_checklist: false
 
         })
         setErrors({})

@@ -279,6 +279,8 @@ const AuditTracker = () => {
   const [states, setStates] = useState<ReferenceData[]>([]);
   const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
   const [timestamp, setTimestamp] = useState(Date.now());
+  const [selectedState, setSelectedState] = useState<number | null>(null);
+
   const [pagination, setPagination] = useState({
     pageIndex: 1,
     pageSize: 10,
@@ -312,6 +314,7 @@ const AuditTracker = () => {
           page_size: params.pageSize || pagination.pageSize,
           search: params.search || searchTerm,
           country: selectedCountry,
+          state_id: selectedState,
           ...params,
         },
       });
@@ -420,7 +423,7 @@ const AuditTracker = () => {
 
   useEffect(() => {
     fetchComplianceData();
-  }, [timestamp, selectedCountry, searchTerm, pagination.pageIndex, pagination.pageSize]);
+  }, [timestamp, selectedCountry, searchTerm, pagination.pageIndex, pagination.pageSize, selectedState]);
 
   const handlePageChange = (page: number) => {
     setPagination(prev => ({ ...prev, pageIndex: page }));
@@ -436,6 +439,11 @@ const AuditTracker = () => {
       fetchComplianceData({ page: 1 });
     }
   };
+
+  const handleStateChange = (option: any) => {
+  setSelectedState(option?.value || null);
+  setPagination(prev => ({ ...prev, pageIndex: 1 })); // Reset to first page
+};
 
   const handleInputChange = (value: string) => {
     setSearchTerm(value);
@@ -458,13 +466,20 @@ const AuditTracker = () => {
               onChange={(option: any) => setSelectedCountry(option?.value || 'INDIA')}
             />
           </div>
-          <div className="w-full md:w-48">
-            <OutlinedInput
-              label="Search By State"
-              value={searchTerm}
-              onChange={handleInputChange}
-              onKeyDown={handleSearch}
-            />
+          <div className="w-full md:w-48 z-20">
+           <OutlinedSelect
+  label="Filter by State"
+  options={states.map(state => ({
+    value: state.id,
+    label: state.name
+  }))}
+  value={selectedState ? { 
+    value: selectedState, 
+    label: states.find(s => s.id === selectedState)?.name || '' 
+  } : null}
+  onChange={handleStateChange}
+  showClearButton={true}
+/>
           </div>
           <div className="flex gap-2 w-full md:w-auto">
             <Button
