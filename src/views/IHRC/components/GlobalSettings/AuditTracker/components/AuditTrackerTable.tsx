@@ -397,6 +397,30 @@ const AuditTrackerTable = ({
     return value.charAt(0).toUpperCase() + value.slice(1);
   };
 
+  const formatDateDDMMYYYY = (dateString: string) => {
+  try {
+    // Handle cases where the date string might include timezone info
+    const date = new Date(dateString);
+    
+    // Check if the date is valid
+    if (isNaN(date.getTime())) {
+      // If not a valid date, try to extract just the date part (YYYY-MM-DD)
+      const datePart = dateString.split('T')[0];
+      const [year, month, day] = datePart.split('-');
+      return `${day}-${month}-${year}`;
+    }
+    
+    // Format as DD-MM-YYYY
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return dateString; // Return original if formatting fails
+  }
+};
+
   const columns = useMemo(
     () => [
       {
@@ -506,29 +530,45 @@ const AuditTrackerTable = ({
         )
       },
       {
-        header: 'First Due Date',
-        enableSorting: false,
-        accessorKey: 'due_dates',
-        cell: ({ row }) => <div className="w-40">{row.original.due_dates.first_due_date}</div>
-      },
-      {
-        header: 'Second Due Date',
-        enableSorting: false,
-        accessorKey: 'due_dates',
-        cell: ({ row }) => <div className="w-40">{row.original.due_dates.second_due_date}</div>
-      },
-      {
-        header: 'Third Due Date',
-        enableSorting: false,
-        accessorKey: 'due_dates',
-        cell: ({ row }) => <div className="w-40">{row.original.due_dates.third_due_date}</div>
-      },
-      {
-        header: 'Last Due Date',
-        enableSorting: false,
-        accessorKey: 'due_dates',
-        cell: ({ row }) => <div className="w-40">{row.original.due_dates.last_due_date}</div>
-      },
+  header: 'First Due Date',
+  enableSorting: false,
+  accessorKey: 'due_dates',
+  cell: ({ row }) => {
+    const dateStr = row.original.due_dates.first_due_date;
+    const formattedDate = dateStr ? formatDateDDMMYYYY(dateStr) : '';
+    return <div className="w-40">{formattedDate}</div>;
+  }
+},
+{
+  header: 'Second Due Date',
+  enableSorting: false,
+  accessorKey: 'due_dates',
+  cell: ({ row }) => {
+    const dateStr = row.original.due_dates.second_due_date;
+    const formattedDate = dateStr ? formatDateDDMMYYYY(dateStr) : '';
+    return <div className="w-40">{formattedDate}</div>;
+  }
+},
+{
+  header: 'Third Due Date',
+  enableSorting: false,
+  accessorKey: 'due_dates',
+  cell: ({ row }) => {
+    const dateStr = row.original.due_dates.third_due_date;
+    const formattedDate = dateStr ? formatDateDDMMYYYY(dateStr) : '';
+    return <div className="w-40">{formattedDate}</div>;
+  }
+},
+{
+  header: 'Last Due Date',
+  enableSorting: false,
+  accessorKey: 'due_dates',
+  cell: ({ row }) => {
+    const dateStr = row.original.due_dates.last_due_date;
+    const formattedDate = dateStr ? formatDateDDMMYYYY(dateStr) : '';
+    return <div className="w-40">{formattedDate}</div>;
+  }
+},
       {
         header: 'Status',
         enableSorting: false,
