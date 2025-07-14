@@ -1289,7 +1289,7 @@ useEffect(() => {
             >
               {modules
                 .filter((module) =>
-                  ['Remittance Tracker', 'Notice', 'Agreement', 'Audit Tracker', 'POSH', 'Return Tracker'].includes(module.name)
+                  ['Remittance Tracker', 'Notice', 'Agreement', 'Audit Tracker', 'POSH', 'Return Tracker', 'Register Tracker'].includes(module.name)
                 )
                 .map((module) => (
                   <div key={module.id} className="flex-1 min-w-[180px]">

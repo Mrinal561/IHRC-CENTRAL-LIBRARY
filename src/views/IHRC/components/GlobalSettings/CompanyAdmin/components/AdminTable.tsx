@@ -875,6 +875,15 @@ const AdminTable: React.FC<AdminTableProps> = ({
                 ),
             },
             {
+                header: 'Register Tracker',
+                id: 'registerTracker',
+                cell: ({ row }) => (
+                    <AccessIndicator 
+                        hasAccess={row.original.moduleAccessNames.includes('Register Tracker')} 
+                    />
+                ),
+            },
+            {
                 header: 'Actions',
                 id: 'actions',
                 enableSorting: false,
@@ -1114,7 +1123,7 @@ const AdminTable: React.FC<AdminTableProps> = ({
                             <div className="flex flex-row flex-wrap gap-6">
                                 {modules
                                     .filter(module => 
-                                        ['Remittance Tracker', 'Notice', 'Agreement', 'POSH', 'Return Tracker', 'Audit Tracker']
+                                        ['Remittance Tracker', 'Notice', 'Agreement', 'POSH', 'Return Tracker', 'Audit Tracker', 'Register Tracker']
                                         .includes(module.name))
                                     .map(module => (
                                         <div key={module.id} className="flex-1 min-w-[180px]">
