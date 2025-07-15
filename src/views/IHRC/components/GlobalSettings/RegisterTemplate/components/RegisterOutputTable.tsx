@@ -50,7 +50,7 @@ const RegisterOutputTable = ({
       enableSorting: false,
       accessorKey: 'document',
       cell: ({ row }) => (
-        <div className="flex justify-center">
+        <div className="flex justify-start px-7 items-start">
           {row.original.document ? (
             <button
               onClick={() => onDownload(row.original)}
