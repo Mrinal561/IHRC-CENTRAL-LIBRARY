@@ -15,7 +15,11 @@ interface RegisterData {
     is_active: boolean;
 }
 
-const RegisterTable = () => {
+interface RegisterTableProps {
+    refreshTable?: boolean;
+}
+
+const RegisterTable = ({ refreshTable }: RegisterTableProps) => {
     const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [selectedRegister, setSelectedRegister] = useState<RegisterData | null>(null);
@@ -60,7 +64,7 @@ const RegisterTable = () => {
 
     useEffect(() => {
         fetchRegisters();
-    }, [tableData.pageIndex, tableData.pageSize]);
+    }, [tableData.pageIndex, tableData.pageSize, refreshTable]);
 
     const handleUploadClick = (register: RegisterData) => {
         setSelectedRegister(register);

@@ -2,14 +2,9 @@ import React from 'react';
 import { FiFile } from 'react-icons/fi';
 import DataTable from '@/components/shared/DataTable';
 import type { ColumnDef } from '@/components/shared/DataTable';
+import { RegisterOutput } from '../RegisterOutputTemplate';
 
-interface RegisterOutput {
-  id: number;
-  register_type: string;
-  state_name: string;
-  document?: string;
-  original_filename?: string;
-}
+// 
 
 interface RegisterOutputTableProps {
   data: RegisterOutput[];

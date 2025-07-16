@@ -11,7 +11,7 @@ interface StateOption {
   label: string;
 }
 
-interface RegisterOutput {
+export interface RegisterOutput {
   id: number;
   register_type: string;
   state_id: number;
@@ -105,21 +105,58 @@ const RegisterOutputTemplate = () => {
     }
   };
 
+  const resetForm = () => {
+    setRegisterType('');
+    setSelectedState(null);
+    setSelectedFile(null);
+  };
+
+  const handleDialogClose = () => {
+    resetForm();
+    setIsDialogOpen(false);
+  };
+
   const handleSubmit = async () => {
-    if (!registerType || !selectedState || !selectedFile) {
+        const trimmedRegisterType = registerType.trim();
+if (!trimmedRegisterType) {
       toast.push(
         <Notification title="Error" type="error">
-          Please fill all fields and select a file
+          Please enter a register type
+        </Notification>
+      );
+      return;
+    }
+    // if (!registerType || !selectedState || !selectedFile) {
+    //   toast.push(
+    //     <Notification title="Error" type="error">
+    //       Please fill all fields and select a file
+    //     </Notification>
+    //   );
+    //   return;
+    // }
+
+     if (!selectedState) {
+      toast.push(
+        <Notification title="Error" type="error">
+          Please select a state
         </Notification>
       );
       return;
     }
 
+     if (!selectedFile) {
+      toast.push(
+        <Notification title="Error" type="error">
+          Please upload a document
+        </Notification>
+      );
+      return;
+    }
     setLoading(prev => ({ ...prev, submit: true }));
 
     try {
       const formData = new FormData();
-      formData.append('register_type', registerType);
+      formData.append('register_type', trimmedRegisterType);
       formData.append('state_id', selectedState.value);
       formData.append('document', selectedFile);
 
@@ -136,6 +173,7 @@ const RegisterOutputTemplate = () => {
       );
 
       // Reset form and refresh data
+      resetForm();
       setRegisterType('');
       setSelectedState(null);
       setSelectedFile(null);
@@ -157,17 +195,15 @@ const RegisterOutputTemplate = () => {
 
     try {
       const response = await httpClient.get(
-        endpoints.register.downloadDocumentRegister(register.id),
+        endpoints.register.downloadDocumentOutputRegister(register.id),
         { responseType: 'blob' }
       );
 
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute(
-        'download',
-        register.original_filename || `${register.register_type}_${register.state_name}.xlsx`
-      );
+            link.setAttribute('download', register.original_filename || `register_${register.id}.pdf`)
+
       document.body.appendChild(link);
       link.click();
       link.parentNode?.removeChild(link);
@@ -227,8 +263,8 @@ const RegisterOutputTemplate = () => {
 
      <Dialog
         isOpen={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
-        onRequestClose={() => setIsDialogOpen(false)}
+        onClose={handleDialogClose}
+        onRequestClose={handleDialogClose}
         width={500}
       >
         <h5 className="mb-4">Add New Register Output</h5>
@@ -239,7 +275,13 @@ const RegisterOutputTemplate = () => {
           </label>
           <Input
   value={registerType}
-  onChange={(e) => setRegisterType(e.target.value)}  // Note the e.target.value
+   onChange={(e) => {
+              // Prevent leading spaces
+              const value = e.target.value;
+              if (value !== ' ' && !(value.endsWith(' ') && registerType.endsWith(' '))) {
+                setRegisterType(value);
+              }
+            }} // Note the e.target.value
   placeholder="Enter register type"
   required
 />
@@ -267,14 +309,14 @@ const RegisterOutputTemplate = () => {
             type="file"
             id="register-document"
             onChange={handleFileChange}
-            accept=".xlsx,.xls,.doc,.docx,.pdf"
+             accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv"
           />
         </div>
 
         <div className="flex justify-end gap-2">
           <Button
             variant="plain"
-            onClick={() => setIsDialogOpen(false)}
+            onClick={handleDialogClose}
           >
             Cancel
           </Button>

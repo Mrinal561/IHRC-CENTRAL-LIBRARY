@@ -137,6 +137,18 @@ const RegisterTemplate = () => {
     const [registerName, setRegisterName] = useState('')
     const [selectedFile, setSelectedFile] = useState<File | null>(null)
     const [loading, setLoading] = useState(false)
+        const [refreshTable, setRefreshTable] = useState(false)
+
+
+        const resetForm = () => {
+        setRegisterName('')
+        setSelectedFile(null)
+    }
+
+    const handleDialogClose = () => {
+        resetForm()
+        setIsDialogOpen(false)
+    }
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.files && event.target.files[0]) {
@@ -145,7 +157,10 @@ const RegisterTemplate = () => {
     }
 
     const handleAddRegister = async () => {
-        if (!registerName.trim()) {
+                const trimmedRegisterName = registerName.trim()
+
+
+                 if (!trimmedRegisterName) {
             toast.push(
                 <Notification title="Error" type="error">
                     Please enter a register name
@@ -153,6 +168,15 @@ const RegisterTemplate = () => {
             )
             return
         }
+
+        // if (!registerName.trim()) {
+        //     toast.push(
+        //         <Notification title="Error" type="error">
+        //             Please enter a register name
+        //         </Notification>
+        //     )
+        //     return
+        // }
 
         if (!selectedFile) {
             toast.push(
@@ -167,7 +191,7 @@ const RegisterTemplate = () => {
         
         try {
             const formData = new FormData()
-            formData.append('register_type', registerName)
+            formData.append('register_type', trimmedRegisterName)
             formData.append('document', selectedFile)
 
             const response = await httpClient.post(
@@ -187,9 +211,12 @@ const RegisterTemplate = () => {
             )
             
             // Refresh the list or perform any other success action
+            resetForm()
             setIsDialogOpen(false)
             setRegisterName('')
             setSelectedFile(null)
+                        setRefreshTable(prev => !prev)
+
         } catch (error) {
            throw error
         } finally {
@@ -256,12 +283,12 @@ const RegisterTemplate = () => {
                 </div>
             </div>
             
-            <RegisterTable />
+            <RegisterTable refreshTable={refreshTable} />
             
             <Dialog
                 isOpen={isDialogOpen}
-                onClose={() => setIsDialogOpen(false)}
-                onRequestClose={() => setIsDialogOpen(false)}
+                 onClose={handleDialogClose} 
+                 onRequestClose={handleDialogClose} 
             >
                 <h5 className="mb-4">Add New Register</h5>
                 
@@ -273,7 +300,13 @@ const RegisterTemplate = () => {
                         id="register-name"
                         placeholder="Enter register name"
                         value={registerName}
-                        onChange={(e) => setRegisterName(e.target.value)}
+                        onChange={(e) => {
+        // Prevent leading/trailing spaces
+        const value = e.target.value
+        if (value !== ' ' && !(value.endsWith(' ') && registerName.endsWith(' '))) {
+            setRegisterName(value)
+        }
+    }}
                     />
                 </div>
                 
@@ -292,7 +325,7 @@ const RegisterTemplate = () => {
                 <div className="text-right">
                     <Button
                         className="mr-2"
-                        onClick={() => setIsDialogOpen(false)}
+                        onClick={handleDialogClose} 
                     >
                         Cancel
                     </Button>

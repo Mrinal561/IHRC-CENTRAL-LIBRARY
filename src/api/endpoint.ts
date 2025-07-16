@@ -137,6 +137,7 @@ export const endpoints = {
     deleteRegister: (id:any) => api(`register-superadmin/${id}`),
     exportRegister: () => api('register-superadmin/export'),
     downloadDocumentRegister: (id:any) => api(`register-superadmin/download-document/${id}`),
+    downloadDocumentOutputRegister: (id:any) => api(`register-superadmin/download-document-register-output/${id}`),
     createRegisterOutput: () => api('register-superadmin/register-output'),
     listRegisterOutput: () => api('register-superadmin/register-output')
    }
