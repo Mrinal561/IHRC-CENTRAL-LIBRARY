@@ -32,11 +32,12 @@ const RegisterOutputTemplate = () => {
     table: false,
     submit: false,
   });
-  const [tableData, setTableData] = useState({
-    total: 0,
+  const [pagination, setPagination] = useState({
     pageIndex: 1,
     pageSize: 10,
+    total: 0,
   });
+
 
   // Fetch states for dropdown
   useEffect(() => {
@@ -68,9 +69,9 @@ const RegisterOutputTemplate = () => {
     setLoading(prev => ({ ...prev, table: true }));
     try {
       const response = await httpClient.get(endpoints.register.listRegisterOutput(), {
-        params: {
-          page: tableData.pageIndex,
-          page_size: tableData.pageSize,
+         params: {
+          page: pagination.pageIndex,
+          page_size: pagination.pageSize,
         },
       });
 
@@ -80,10 +81,11 @@ const RegisterOutputTemplate = () => {
       }));
 
       setRegisters(formattedData);
-      setTableData(prev => ({
-        ...prev,
+       setPagination({
+        pageIndex: response.data.paginate_data.page,
+        pageSize: response.data.paginate_data.limit,
         total: response.data.paginate_data.totalResults,
-      }));
+      });
     } catch (error) {
       toast.push(
         <Notification title="Error" type="error">
@@ -95,10 +97,7 @@ const RegisterOutputTemplate = () => {
     }
   };
 
-  useEffect(() => {
-    fetchRegisterOutputs();
-  }, [tableData.pageIndex, tableData.pageSize]);
-
+  
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setSelectedFile(e.target.files[0]);
@@ -223,13 +222,23 @@ if (!trimmedRegisterType) {
     }
   };
 
-  const handlePaginationChange = (pageIndex: number, pageSize: number) => {
-    setTableData(prev => ({
-      ...prev,
-      pageIndex,
-      pageSize,
-    }));
+
+  
+  useEffect(() => {
+    fetchRegisterOutputs();
+  }, [pagination.pageIndex, pagination.pageSize]);
+
+  
+ const handlePageChange = (page: number) => {
+    setPagination(prev => ({ ...prev, pageIndex: page }));
   };
+
+  const handlePageSizeChange = (size: number) => {
+    setPagination(prev => ({ ...prev, pageSize: size, pageIndex: 1 }));
+  };
+
+
+
 
   return (
         <AdaptableCard className="h-full" bodyClass="h-full">
@@ -260,11 +269,10 @@ if (!trimmedRegisterType) {
       <RegisterOutputTable
         data={registers}
         loading={loading.table}
-        pageIndex={tableData.pageIndex}
-        pageSize={tableData.pageSize}
-        total={tableData.total}
-        onPaginationChange={handlePaginationChange}
-        onDownload={handleDownload}
+       onDownload={handleDownload}
+        pagination={pagination}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
       />
 
      <Dialog
@@ -277,7 +285,7 @@ if (!trimmedRegisterType) {
         
         <div className="mb-4">
           <label className="block text-sm font-medium mb-1" htmlFor="register-type">
-            Register Type
+            Register Type <span className='text-red-500'>*</span>
           </label>
           <Input
   value={registerType}
@@ -295,7 +303,7 @@ if (!trimmedRegisterType) {
 
         <div className="mb-4">
           <label className="block text-sm font-medium mb-1" htmlFor="state-select">
-            State
+            State <span className='text-red-500'>*</span>
           </label>
           <Select
             id="state-select"
@@ -309,9 +317,9 @@ if (!trimmedRegisterType) {
 
         <div className="mb-6">
           <label className="block text-sm font-medium mb-1" htmlFor="register-document">
-            Document (Excel file)
+            Document (Excel file) <span className='text-red-500'>*</span>
           </label>
-          <input
+          <Input
             type="file"
             id="register-document"
             onChange={handleFileChange}

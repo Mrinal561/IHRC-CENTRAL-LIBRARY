@@ -124,7 +124,255 @@
 
 
 
-import React, { useState } from 'react'
+
+
+
+
+
+
+
+
+
+
+
+
+// import React, { useState } from 'react'
+// import AdaptableCard from '@/components/shared/AdaptableCard'
+// import { Button, Dialog, Input, Notification, toast } from '@/components/ui'
+// import { HiDownload, HiPlus } from 'react-icons/hi'
+// import httpClient from '@/api/http-client'
+// import { endpoints } from '@/api/endpoint'
+// import RegisterTable from './components/RegisterTable'
+
+// const RegisterTemplate = () => {
+//     const [isDialogOpen, setIsDialogOpen] = useState(false)
+//     const [registerName, setRegisterName] = useState('')
+//     const [selectedFile, setSelectedFile] = useState<File | null>(null)
+//     const [loading, setLoading] = useState(false)
+//         const [refreshTable, setRefreshTable] = useState(false)
+
+
+//         const resetForm = () => {
+//         setRegisterName('')
+//         setSelectedFile(null)
+//     }
+
+//     const handleDialogClose = () => {
+//         resetForm()
+//         setIsDialogOpen(false)
+//     }
+
+//       const [pagination, setPagination] = useState({
+//         pageIndex: 1,
+//         pageSize: 10,
+//         total: 0,
+//       });
+
+
+      
+//     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+//         if (event.target.files && event.target.files[0]) {
+//             setSelectedFile(event.target.files[0])
+//         }
+//     }
+
+//     const handleAddRegister = async () => {
+//                 const trimmedRegisterName = registerName.trim()
+
+
+//                  if (!trimmedRegisterName) {
+//             toast.push(
+//                 <Notification title="Error" type="error">
+//                     Please enter a register name
+//                 </Notification>
+//             )
+//             return
+//         }
+
+//         // if (!registerName.trim()) {
+//         //     toast.push(
+//         //         <Notification title="Error" type="error">
+//         //             Please enter a register name
+//         //         </Notification>
+//         //     )
+//         //     return
+//         // }
+
+//         if (!selectedFile) {
+//             toast.push(
+//                 <Notification title="Error" type="error">
+//                     Please upload a register template
+//                 </Notification>
+//             )
+//             return
+//         }
+
+//         setLoading(true)
+        
+//         try {
+//             const formData = new FormData()
+//             formData.append('register_type', trimmedRegisterName)
+//             formData.append('document', selectedFile)
+
+//             const response = await httpClient.post(
+//                 endpoints.register.createRegister(),
+//                 formData,
+//                 {
+//                     headers: {
+//                         'Content-Type': 'multipart/form-data'
+//                     }
+//                 }
+//             )
+
+//             toast.push(
+//                 <Notification title="Success" type="success">
+//                     Register "{registerName}" created successfully
+//                 </Notification>
+//             )
+            
+//             // Refresh the list or perform any other success action
+//             resetForm()
+//             setIsDialogOpen(false)
+//             setRegisterName('')
+//             setSelectedFile(null)
+//                         setRefreshTable(prev => !prev)
+
+//         } catch (error) {
+//            throw error
+//         } finally {
+//             setLoading(false)
+//         }
+//     }
+
+//     const handleDownloadAll = async () => {
+//         try {
+//             const response = await httpClient.get(
+//                 endpoints.register.exportRegister(),
+//                 { responseType: 'blob' }
+//             )
+            
+//             // Create download link
+//             const url = window.URL.createObjectURL(new Blob([response.data]))
+//             const link = document.createElement('a')
+//             link.href = url
+//             link.setAttribute('download', 'registers_export.xlsx')
+//             document.body.appendChild(link)
+//             link.click()
+            
+//             // Clean up
+//             link.parentNode?.removeChild(link)
+//             window.URL.revokeObjectURL(url)
+            
+//             toast.push(
+//                 <Notification title="Success" type="success">
+//                     Registers downloaded successfully
+//                 </Notification>
+//             )
+//         } catch (error) {
+//             toast.push(
+//                 <Notification title="Error" type="error">
+//                     Failed to download registers
+//                 </Notification>
+//             )
+//         }
+//     }
+
+//     return (
+//         <AdaptableCard className="h-full" bodyClass="h-full">
+//             <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-10 gap-4">
+//                 <h3 className="text-2xl font-bold">Register Input Templates</h3>
+//                 <div className='flex gap-3'>
+//                     <Button 
+//                         size='sm' 
+//                         variant='solid' 
+//                         icon={<HiDownload />}
+//                         onClick={handleDownloadAll}
+//                         loading={loading}
+//                     >
+//                         Download Registers
+//                     </Button>
+
+//                     <Button 
+//                         size="sm"
+//                         variant="solid"
+//                         icon={<HiPlus />}
+//                         onClick={() => setIsDialogOpen(true)}
+//                     >
+//                         Add Register
+//                     </Button>
+//                 </div>
+//             </div>
+            
+//             <RegisterTable refreshTable={refreshTable} />
+            
+//             <Dialog
+//                 isOpen={isDialogOpen}
+//                  onClose={handleDialogClose} 
+//                  onRequestClose={handleDialogClose} 
+//             >
+//                 <h5 className="mb-4">Add New Register</h5>
+                
+//                 <div className="mb-4">
+//                     <label className="block text-sm font-medium mb-1" htmlFor="register-name">
+//                         Register Name <span className='text-red-500'>*</span>
+//                     </label>
+//                     <Input
+//                         id="register-name"
+//                         placeholder="Enter register name"
+//                         value={registerName}
+//                         onChange={(e) => {
+//         // Prevent leading/trailing spaces
+//         const value = e.target.value
+//         if (value !== ' ' && !(value.endsWith(' ') && registerName.endsWith(' '))) {
+//             setRegisterName(value)
+//         }
+//     }}
+//                     />
+//                 </div>
+                
+//                 <div className="mb-4">
+//                     <label className="block text-sm font-medium mb-1" htmlFor="register-template">
+//                         Upload Register Template <span className='text-red-500'>*</span>
+//                     </label>
+//                     <Input
+//                         type="file"
+//                         id="register-template"
+//                         onChange={handleFileChange}
+//                         accept=".xlsx,.xls,.doc,.docx,.pdf"
+//                     />
+//                 </div>
+                
+//                 <div className="text-right">
+//                     <Button
+//                         className="mr-2"
+//                         onClick={handleDialogClose} 
+//                     >
+//                         Cancel
+//                     </Button>
+//                     <Button
+//                         variant="solid"
+//                         onClick={handleAddRegister}
+//                         disabled={!registerName.trim() || !selectedFile || loading}
+//                         loading={loading}
+//                     >
+//                         Add Register
+//                     </Button>
+//                 </div>
+//             </Dialog>
+//         </AdaptableCard>
+//     )
+// }
+
+// export default RegisterTemplate
+
+
+
+
+
+
+
+
+import React, { useState, useEffect } from 'react'
 import AdaptableCard from '@/components/shared/AdaptableCard'
 import { Button, Dialog, Input, Notification, toast } from '@/components/ui'
 import { HiDownload, HiPlus } from 'react-icons/hi'
@@ -132,15 +380,75 @@ import httpClient from '@/api/http-client'
 import { endpoints } from '@/api/endpoint'
 import RegisterTable from './components/RegisterTable'
 
+export interface RegisterData {
+    id: number;
+    register_type: string;
+    document?: string;
+    is_active: boolean;
+}
+
 const RegisterTemplate = () => {
     const [isDialogOpen, setIsDialogOpen] = useState(false)
     const [registerName, setRegisterName] = useState('')
     const [selectedFile, setSelectedFile] = useState<File | null>(null)
-    const [loading, setLoading] = useState(false)
-        const [refreshTable, setRefreshTable] = useState(false)
+    const [loading, setLoading] = useState({
+        add: false,
+        downloadAll: false
+    })
+    const [refreshTable, setRefreshTable] = useState(false)
+    
+    // Register table data state
+    const [pagination, setPagination] = useState({
+       pageIndex: 1,
+       pageSize: 10,
+       total: 0,
+     });
+    const [registers, setRegisters] = useState<RegisterData[]>([]);
+    const [tableLoading, setTableLoading] = useState(false);
+
+    // Fetch registers
+    const fetchRegisters = async () => {
+        setTableLoading(true);
+        try {
+            const response = await httpClient.get(endpoints.register.listRegister(), {
+                 params: {
+          page: pagination.pageIndex,
+          page_size: pagination.pageSize,
+        },
+            });
+            
+            setRegisters(response.data.data);
+            setPagination({
+        pageIndex: response.data.paginate_data.page,
+        pageSize: response.data.paginate_data.limit,
+        total: response.data.paginate_data.totalResults,
+      });
+        } catch (error) {
+            toast.push(
+                <Notification title="Error" type="error">
+                    Failed to load registers
+                </Notification>
+            );
+        } finally {
+            setTableLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchRegisters();
+    }, [pagination.pageIndex, pagination.pageSize, refreshTable]);
 
 
-        const resetForm = () => {
+     const handlePageChange = (page: number) => {
+    setPagination(prev => ({ ...prev, pageIndex: page }));
+  };
+
+  const handlePageSizeChange = (size: number) => {
+    setPagination(prev => ({ ...prev, pageSize: size, pageIndex: 1 }));
+  };
+
+
+    const resetForm = () => {
         setRegisterName('')
         setSelectedFile(null)
     }
@@ -157,10 +465,9 @@ const RegisterTemplate = () => {
     }
 
     const handleAddRegister = async () => {
-                const trimmedRegisterName = registerName.trim()
+        const trimmedRegisterName = registerName.trim()
 
-
-                 if (!trimmedRegisterName) {
+        if (!trimmedRegisterName) {
             toast.push(
                 <Notification title="Error" type="error">
                     Please enter a register name
@@ -168,15 +475,6 @@ const RegisterTemplate = () => {
             )
             return
         }
-
-        // if (!registerName.trim()) {
-        //     toast.push(
-        //         <Notification title="Error" type="error">
-        //             Please enter a register name
-        //         </Notification>
-        //     )
-        //     return
-        // }
 
         if (!selectedFile) {
             toast.push(
@@ -187,14 +485,14 @@ const RegisterTemplate = () => {
             return
         }
 
-        setLoading(true)
+        setLoading(prev => ({ ...prev, add: true }))
         
         try {
             const formData = new FormData()
             formData.append('register_type', trimmedRegisterName)
             formData.append('document', selectedFile)
 
-            const response = await httpClient.post(
+            await httpClient.post(
                 endpoints.register.createRegister(),
                 formData,
                 {
@@ -210,21 +508,19 @@ const RegisterTemplate = () => {
                 </Notification>
             )
             
-            // Refresh the list or perform any other success action
             resetForm()
             setIsDialogOpen(false)
-            setRegisterName('')
-            setSelectedFile(null)
-                        setRefreshTable(prev => !prev)
+            setRefreshTable(prev => !prev)
 
         } catch (error) {
            throw error
         } finally {
-            setLoading(false)
+            setLoading(prev => ({ ...prev, add: false }))
         }
     }
 
     const handleDownloadAll = async () => {
+        setLoading(prev => ({ ...prev, downloadAll: true }))
         try {
             const response = await httpClient.get(
                 endpoints.register.exportRegister(),
@@ -254,8 +550,18 @@ const RegisterTemplate = () => {
                     Failed to download registers
                 </Notification>
             )
+        } finally {
+            setLoading(prev => ({ ...prev, downloadAll: false }))
         }
     }
+
+    // const handlePaginationChange = (pageIndex: number, pageSize: number) => {
+    //     setTableData(prev => ({
+    //         ...prev,
+    //         pageIndex,
+    //         pageSize
+    //     }));
+    // };
 
     return (
         <AdaptableCard className="h-full" bodyClass="h-full">
@@ -267,7 +573,7 @@ const RegisterTemplate = () => {
                         variant='solid' 
                         icon={<HiDownload />}
                         onClick={handleDownloadAll}
-                        loading={loading}
+                        loading={loading.downloadAll}
                     >
                         Download Registers
                     </Button>
@@ -283,36 +589,44 @@ const RegisterTemplate = () => {
                 </div>
             </div>
             
-            <RegisterTable refreshTable={refreshTable} />
+            <RegisterTable 
+                registers={registers}
+                loading={tableLoading}
+                // tableData={tableData}
+                pagination={pagination}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
+                refreshTable={refreshTable}
+                onRefresh={fetchRegisters}
+            />
             
             <Dialog
                 isOpen={isDialogOpen}
-                 onClose={handleDialogClose} 
-                 onRequestClose={handleDialogClose} 
+                onClose={handleDialogClose} 
+                onRequestClose={handleDialogClose} 
             >
                 <h5 className="mb-4">Add New Register</h5>
                 
                 <div className="mb-4">
                     <label className="block text-sm font-medium mb-1" htmlFor="register-name">
-                        Register Name
+                        Register Name <span className='text-red-500'>*</span>
                     </label>
                     <Input
                         id="register-name"
                         placeholder="Enter register name"
                         value={registerName}
                         onChange={(e) => {
-        // Prevent leading/trailing spaces
-        const value = e.target.value
-        if (value !== ' ' && !(value.endsWith(' ') && registerName.endsWith(' '))) {
-            setRegisterName(value)
-        }
-    }}
+                            const value = e.target.value
+                            if (value !== ' ' && !(value.endsWith(' ') && registerName.endsWith(' '))) {
+                                setRegisterName(value)
+                            }
+                        }}
                     />
                 </div>
                 
                 <div className="mb-4">
                     <label className="block text-sm font-medium mb-1" htmlFor="register-template">
-                        Upload Register Template
+                        Upload Register Template <span className='text-red-500'>*</span>
                     </label>
                     <Input
                         type="file"
@@ -332,8 +646,8 @@ const RegisterTemplate = () => {
                     <Button
                         variant="solid"
                         onClick={handleAddRegister}
-                        disabled={!registerName.trim() || !selectedFile || loading}
-                        loading={loading}
+                        disabled={!registerName.trim() || !selectedFile || loading.add}
+                        loading={loading.add}
                     >
                         Add Register
                     </Button>

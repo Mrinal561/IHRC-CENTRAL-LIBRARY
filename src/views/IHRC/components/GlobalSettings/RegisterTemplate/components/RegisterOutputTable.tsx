@@ -9,21 +9,23 @@ import { RegisterOutput } from '../RegisterOutputTemplate';
 interface RegisterOutputTableProps {
   data: RegisterOutput[];
   loading: boolean;
-  pageIndex: number;
-  pageSize: number;
-  total: number;
-  onPaginationChange: (pageIndex: number, pageSize: number) => void;
   onDownload: (register: RegisterOutput) => void;
+   pagination: {
+        total: number;
+        pageIndex: number;
+        pageSize: number;
+      };
+  onPaginationChange: (page: number) => void;
+  onPageSizeChange: (pageSize: number) => void;
 }
 
 const RegisterOutputTable = ({
   data,
   loading,
-  pageIndex,
-  pageSize,
-  total,
-  onPaginationChange,
   onDownload,
+  pagination,
+   onPaginationChange,
+    onPageSizeChange,
 }: RegisterOutputTableProps) => {
   const columns: ColumnDef<RegisterOutput>[] = [
     {
@@ -67,11 +69,12 @@ const RegisterOutputTable = ({
       data={data}
       loading={loading}
       pagingData={{
-        total,
-        pageIndex,
-        pageSize,
-      }}
-      onPaginationChange={onPaginationChange}
+                        total: pagination.total,
+                        pageIndex: pagination.pageIndex,
+                        pageSize: pagination.pageSize,
+                      }}
+                      onPaginationChange={onPaginationChange}
+                      onSelectChange={onPageSizeChange}
     />
   );
 };
