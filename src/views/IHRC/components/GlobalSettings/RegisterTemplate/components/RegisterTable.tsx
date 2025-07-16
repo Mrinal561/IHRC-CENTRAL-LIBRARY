@@ -138,6 +138,7 @@ const RegisterTable = ({ refreshTable }: RegisterTableProps) => {
             link.parentNode?.removeChild(link);
             window.URL.revokeObjectURL(url);
             
+            
             toast.push(
                 <Notification title="Success" type="success">
                     {register.register_type} template downloaded successfully
