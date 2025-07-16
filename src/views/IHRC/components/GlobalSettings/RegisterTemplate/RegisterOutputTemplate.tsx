@@ -202,12 +202,18 @@ if (!trimmedRegisterType) {
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-            link.setAttribute('download', register.original_filename || `register_${register.id}.pdf`)
+            link.setAttribute('download', `${register.register_type.replace(/\s+/g, '_')}_document.xlsx`);
 
       document.body.appendChild(link);
       link.click();
       link.parentNode?.removeChild(link);
       window.URL.revokeObjectURL(url);
+
+      toast.push(
+                      <Notification title="Success" type="success">
+                          {register.register_type} template downloaded successfully
+                      </Notification>
+                  );
     } catch (error) {
       toast.push(
         <Notification title="Error" type="error">
