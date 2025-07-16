@@ -632,7 +632,7 @@ const RegisterTemplate = () => {
                         type="file"
                         id="register-template"
                         onChange={handleFileChange}
-                        accept=".xlsx,.xls,.doc,.docx,.pdf"
+             accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv"
                     />
                 </div>
                 
