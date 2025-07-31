@@ -185,12 +185,41 @@ const ReturnSetupTable = ({
                 accessorKey: 'return_applicable_at',
                 cell: ({ row }) => <div className="w-40 truncate">{capitalize(row.original.return_applicable_at)}</div>,
             },
-            {
-                header: 'Frequency',
-                enableSorting: false,
-                accessorKey: 'frequency',
-                cell: ({ row }) => <div className="w-40 truncate">{capitalize(row.original.frequency)}</div>,
+            // {
+            //     header: 'Frequency',
+            //     enableSorting: false,
+            //     accessorKey: 'frequency',
+            //     cell: ({ row }) => <div className="w-40 truncate">{capitalize(row.original.frequency)}</div>,
+            // },
+             {
+            header: 'Frequency',
+            enableSorting: false,
+            accessorKey: 'frequency',
+            cell: ({ row }) => {
+                const formatFrequency = (frequency: string) => {
+                    switch (frequency) {
+                        case 'monthly':
+                            return 'Monthly';
+                        case 'yearly':
+                            return 'Yearly';
+                        case 'half_yearly':
+                            return 'Half Yearly';
+                        case 'quarterly':
+                            return 'Quarterly';
+                        case 'bi_annual':
+                            return 'Biennial ';
+                        default:
+                            return frequency;
+                    }
+                };
+                
+                return (
+                    <div className="w-40 truncate">
+                        {formatFrequency(row.original.frequency)}
+                    </div>
+                );
             },
+        },
             {
                 header: 'First Due Date',
                 enableSorting: false,
