@@ -157,16 +157,16 @@ const ReturnSetupTable = ({
                     </div>
                 ),
             },
-            {
-                header: 'Applicability',
-                enableSorting: false,
-                accessorKey: 'return_applicable',
-                cell: ({ row }) => (
-                    <div className="w-20 text-center">
-                        {row.original.return_applicable ? 'Yes' : 'No'}
-                    </div>
-                ),
-            },
+            // {
+            //     header: 'Applicability',
+            //     enableSorting: false,
+            //     accessorKey: 'return_applicable',
+            //     cell: ({ row }) => (
+            //         <div className="w-20 text-center">
+            //             {row.original.return_applicable ? 'Yes' : 'No'}
+            //         </div>
+            //     ),
+            // },
             {
                 header: 'State',
                 enableSorting: false,
