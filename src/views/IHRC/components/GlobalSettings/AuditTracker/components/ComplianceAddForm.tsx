@@ -1403,6 +1403,18 @@ const ComplianceAddForm: React.FC = () => {
 
                 {/* 2nd Row: Applicable and Legislation */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                   <div>
+                    <LegislationActAutoSuggest
+                      value={values.legislation_act}
+                      onChange={(value) => setFieldValue('legislation_act', value)}
+                      onActSelect={(id) => {}}
+                      disabled={loading}
+                    />
+                    {touched.legislation_act && errors.legislation_act && (
+                      <div className="text-red-500 text-sm">{errors.legislation_act}</div>
+                    )}
+                  </div>
+                  
                   <div>
                     <p className="mb-2">Central/State <span className="text-red-500">*</span></p>
                     <OutlinedSelect
@@ -1415,17 +1427,7 @@ const ComplianceAddForm: React.FC = () => {
                       <div className="text-red-500 text-sm">{errors.applicable}</div>
                     )}
                   </div>
-                  <div>
-                    <LegislationActAutoSuggest
-                      value={values.legislation_act}
-                      onChange={(value) => setFieldValue('legislation_act', value)}
-                      onActSelect={(id) => {}}
-                      disabled={loading}
-                    />
-                    {touched.legislation_act && errors.legislation_act && (
-                      <div className="text-red-500 text-sm">{errors.legislation_act}</div>
-                    )}
-                  </div>
+                 
                 </div>
 
                 {/* State field - conditionally shown */}
@@ -1463,21 +1465,8 @@ const ComplianceAddForm: React.FC = () => {
                       <div className="text-red-500 text-sm">{errors.compliance_categorization}</div>
                     )}
                   </div>
-                  <div>
-                    <PenaltyTypeAutoSuggest
-                      value={values.penalty_type}
-                      onChange={(value) => setFieldValue('penalty_type', value)}
-                      onPenaltySelect={(id) => {}}
-                      disabled={loading}
-                    />
-                    {touched.penalty_type && errors.penalty_type && (
-                      <div className="text-red-500 text-sm">{errors.penalty_type}</div>
-                    )}
-                  </div>
-                </div>
 
-                {/* 4th Row: Compliance Header */}
-                <div>
+                  <div>
                   <p className="mb-2">Compliance Header <span className="text-red-500">*</span></p>
                   <OutlinedInput
                     label="Compliance Header"
@@ -1488,8 +1477,11 @@ const ComplianceAddForm: React.FC = () => {
                     <div className="text-red-500 text-sm">{errors.compliance_header}</div>
                   )}
                 </div>
+                 
+                </div>
 
-                {/* 5th Row: Compliance Description */}
+                {/* 4th Row: Compliance Header */}
+
                 <div>
                   <p className="mb-2">Compliance Description <span className="text-red-500">*</span></p>
                   <OutlinedInput
@@ -1502,6 +1494,21 @@ const ComplianceAddForm: React.FC = () => {
                     <div className="text-red-500 text-sm">{errors.compliance_description}</div>
                   )}
                 </div>
+                
+                 <div>
+                    <PenaltyTypeAutoSuggest
+                      value={values.penalty_type}
+                      onChange={(value) => setFieldValue('penalty_type', value)}
+                      onPenaltySelect={(id) => {}}
+                      disabled={loading}
+                    />
+                    {touched.penalty_type && errors.penalty_type && (
+                      <div className="text-red-500 text-sm">{errors.penalty_type}</div>
+                    )}
+                  </div>
+
+                {/* 5th Row: Compliance Description */}
+                
 
                 {/* 6th Row: Penalty Description */}
                 <div>
@@ -1628,9 +1635,17 @@ const ComplianceAddForm: React.FC = () => {
                         placeholder="Select first due date"
                         value={values.due_dates.first_due_date ? new Date(values.due_dates.first_due_date) : null}
                         onChange={(date) => {
-                          setFieldValue('due_dates.first_due_date', date?.toISOString().split('T')[0] || '');
-                          setFieldTouched('due_dates.first_due_date', true);
-                        }}
+                          if (date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const dateString = `${year}-${month}-${day}`;
+      setFieldValue('due_dates.first_due_date', dateString);
+      setFieldTouched('due_dates.first_due_date', true);
+    } else {
+      setFieldValue('due_dates.first_due_date', '');
+    }
+  }}
                         inputFormat="DD-MM-YYYY"
                       />
                       {/* {touched.due_dates?.first_due_date && errors.due_dates?.first_due_date && (
@@ -1649,9 +1664,17 @@ const ComplianceAddForm: React.FC = () => {
                           placeholder="Select second due date"
                           value={values.due_dates.second_due_date ? new Date(values.due_dates.second_due_date) : null}
                           onChange={(date) => {
-                            setFieldValue('due_dates.second_due_date', date?.toISOString().split('T')[0] || '');
-                            setFieldTouched('due_dates.second_due_date', true);
-                          }}
+                           if (date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const dateString = `${year}-${month}-${day}`;
+      setFieldValue('due_dates.second_due_date', dateString);
+      setFieldTouched('due_dates.second_due_date', true);
+    } else {
+      setFieldValue('due_dates.second_due_date', '');
+    }
+  }}
                           inputFormat="DD-MM-YYYY"
                         />
                         {/* {touched.due_dates?.second_due_date && errors.due_dates?.second_due_date && (
@@ -1671,9 +1694,17 @@ const ComplianceAddForm: React.FC = () => {
                           placeholder="Select third due date"
                           value={values.due_dates.third_due_date ? new Date(values.due_dates.third_due_date) : null}
                           onChange={(date) => {
-                            setFieldValue('due_dates.third_due_date', date?.toISOString().split('T')[0] || '');
-                            setFieldTouched('due_dates.third_due_date', true);
-                          }}
+                            if (date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const dateString = `${year}-${month}-${day}`;
+      setFieldValue('due_dates.third_due_date', dateString);
+      setFieldTouched('due_dates.third_due_date', true);
+    } else {
+      setFieldValue('due_dates.third_due_date', '');
+    }
+  }}
                           inputFormat="DD-MM-YYYY"
                         />
                         {/* {touched.due_dates?.third_due_date && errors.due_dates?.third_due_date && (
@@ -1693,9 +1724,17 @@ const ComplianceAddForm: React.FC = () => {
                           placeholder="Select last due date"
                           value={values.due_dates.last_due_date ? new Date(values.due_dates.last_due_date) : null}
                           onChange={(date) => {
-                            setFieldValue('due_dates.last_due_date', date?.toISOString().split('T')[0] || '');
-                            setFieldTouched('due_dates.last_due_date', true);
-                          }}
+                           if (date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const dateString = `${year}-${month}-${day}`;
+      setFieldValue('due_dates.last_due_date', dateString);
+      setFieldTouched('due_dates.last_due_date', true);
+    } else {
+      setFieldValue('due_dates.last_due_date', '');
+    }
+  }}
                           inputFormat="DD-MM-YYYY"
                         />
                         {/* {touched.due_dates?.last_due_date && errors.due_dates?.last_due_date && (
