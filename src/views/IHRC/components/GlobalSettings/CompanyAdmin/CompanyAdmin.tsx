@@ -16,6 +16,7 @@ import AdminTable from './components/AdminTable'
 import * as yup from 'yup'
 import { createCompanyGroup } from '@/store/slices/companyAdmin/companyGroupSlice'
 import OutlinedPasswordInput from '@/components/ui/OutlinedInput/OutlinedPasswordInput'
+import AuditTrackerDialog from './components/AuditTrackerDialog'
 const validationSchema = yup.object().shape({
     entityName: yup
         .string()
@@ -58,6 +59,10 @@ interface ValidationErrors {
 interface Module {
     id: number
     name: string
+    Menus: {
+        id: number
+        name: string
+    }[]
 }
 
 const CompanyAdmin = () => {
@@ -65,26 +70,27 @@ const CompanyAdmin = () => {
     const [errors, setErrors] = useState<ValidationErrors>({})
     const [confirmPassword, setConfirmPassword] = useState('')
     const [searchTerm, setSearchTerm] = useState('')
-    const [touchedFields, setTouchedFields] = useState<{
-        [key: string]: boolean
-    }>({})
-    // const [entityName, setEntityName] = useState('');
-    // const [entityNameError, setEntityNameError] = useState('');
+    const [touchedFields, setTouchedFields] = useState<{[key: string]: boolean}>({})
     const [isLoading, setIsLoading] = useState(false)
     const [companyData, setCompanyData] = useState([])
     const [modules, setModules] = useState<Module[]>([])
-    const [selectedModules, setSelectedModules] = useState<(string | number)[]>(
-        [],
-    )
+    const [selectedModules, setSelectedModules] = useState<(string | number)[]>([],)
     const [key, setKey] = useState(0)
     const [isDialogOpen, setIsDialogOpen] = useState(false)
     const [adminData, setAdminData] = useState([])
+    const [showAuditTrackerDialog, setShowAuditTrackerDialog] = useState(false)
+    const [tempSelectedModules, setTempSelectedModules] = useState<(string | number)[]>([])
+    const [lastProcessedModules, setLastProcessedModules] = useState<(string | number)[]>([]);
+
     const [formData, setFormData] = useState({
         name: '',
         email: '',
         password: '',
         moduleAccess: [] as number[],
         entityName: '',
+        compliance_checklist: false,
+        both_checklist: false,
+        custom_checklist: false
     })
     const [pagination, setPagination] = useState({
         total: 0,
@@ -196,6 +202,35 @@ const CompanyAdmin = () => {
         }))
     }
 
+
+//     const handleEditAdmin = async (adminId: number, updateData: any) => {
+//     try {
+//       setIsLoading(true);
+//       const response = await httpClient.put(
+//         endpoints.companyAdmin.update(adminId),
+//         {
+//           ...updateData,
+//           // Ensure we're sending snake_case field names
+//           compliance_checklist: updateData.compliance_checklist,
+//           both_checklist: updateData.both_checklist,
+//           custom_checklist: updateData.custom_checklist
+//         }
+//       );
+//       await fetchAdminData();
+//       toast.push(
+//         <Notification title="Success" type="success">
+//           Admin updated successfully
+//         </Notification>
+//       );
+//       return response.data;
+//     } catch (error) {
+//       showErrorNotification(error);
+//       throw error;
+//     } finally {
+//       setIsLoading(false);
+//     }
+//   };
+
     const handleInputChange = (field: string, value: string) => {
         setFormData((prev) => ({
             ...prev,
@@ -226,23 +261,23 @@ const CompanyAdmin = () => {
         }
     }
 
-    const handleModuleChange = (options: (string | number)[]) => {
-        setSelectedModules(options)
-        const moduleAccess = options.map((option) => Number(option))
-        setFormData((prev) => ({
-            ...prev,
-            moduleAccess,
-        }))
+    // const handleModuleChange = (options: (string | number)[]) => {
+    //     setSelectedModules(options)
+    //     const moduleAccess = options.map((option) => Number(option))
+    //     setFormData((prev) => ({
+    //         ...prev,
+    //         moduleAccess,
+    //     }))
 
-        setTouchedFields((prev) => ({
-            ...prev,
-            moduleAccess: true,
-        }))
+    //     setTouchedFields((prev) => ({
+    //         ...prev,
+    //         moduleAccess: true,
+    //     }))
 
-        if (touchedFields.moduleAccess) {
-            validateField('moduleAccess', moduleAccess)
-        }
-    }
+    //     if (touchedFields.moduleAccess) {
+    //         validateField('moduleAccess', moduleAccess)
+    //     }
+    // }
     const handleDialogClose = () => {
         setIsDialogOpen(false)
         setFormData({
@@ -251,12 +286,81 @@ const CompanyAdmin = () => {
             password: '',
             moduleAccess: [],
             entityName: '',
+            compliance_checklist: false,
+            both_checklist: false,
+            custom_checklist: false
+
         })
         setErrors({})
         setSelectedModules([])
         setTouchedFields({})
         setConfirmPassword('')
     }
+
+   const handleModuleChange = (options: (string | number)[]) => {
+    const auditTrackerModule = modules.find(m => m.name === 'Audit Tracker');
+    const auditTrackerId = auditTrackerModule?.id || -1;
+    
+    // Check if this is the initial selection (no previous state)
+    const isInitialSelection = selectedModules.length === 0 && options.length === 1;
+    
+    // Check if Audit Tracker is being specifically selected now
+    const isSpecificallySelectingAuditTracker = 
+        options.includes(auditTrackerId) && 
+        !lastProcessedModules.includes(auditTrackerId) &&
+        !isInitialSelection;
+
+
+        console.log('Current selected:', selectedModules);
+console.log('New selection:', options);
+console.log('Last processed:', lastProcessedModules);
+console.log('Is specifically selecting Audit Tracker:', isSpecificallySelectingAuditTracker);
+
+
+    if (isSpecificallySelectingAuditTracker) {
+        setTempSelectedModules(options);
+        setShowAuditTrackerDialog(true);
+    } else {
+        const moduleAccess = options.map(option => Number(option));
+        setSelectedModules(options);
+        setLastProcessedModules(options);
+        setFormData(prev => ({
+            ...prev,
+            moduleAccess,
+            ...(!options.includes(auditTrackerId) && {
+                complianceChecklist: false,
+                bothChecklist: false,
+                customChecklist: false
+            })
+        }));
+    }
+};
+
+// Add this useEffect to handle dialog confirmation
+useEffect(() => {
+    if (!showAuditTrackerDialog && tempSelectedModules.length > 0) {
+        const moduleAccess = tempSelectedModules.map(option => Number(option));
+        setSelectedModules(tempSelectedModules);
+        setLastProcessedModules(tempSelectedModules);
+        setFormData(prev => ({
+            ...prev,
+            moduleAccess
+        }));
+        setTempSelectedModules([]);
+    }
+}, [showAuditTrackerDialog, tempSelectedModules]);
+  
+ const handleAuditTrackerConfirm = (selection: 'custom' | 'compliance' | 'both') => {
+    setFormData(prev => ({
+      ...prev,
+      complianceChecklist: selection === 'compliance',
+      bothChecklist: selection === 'both',
+      customChecklist: selection === 'custom' || selection === 'both'
+    }));
+    
+    setSelectedModules(tempSelectedModules);
+    setShowAuditTrackerDialog(false);
+  };
 
     const sortedModules = useMemo(() => {
         const moduleOrder = [
@@ -321,15 +425,20 @@ const CompanyAdmin = () => {
             const isFormValid = await validateForm()
             if (!isFormValid) {
                 toast.push(
-                    <Notification title="Danger" type="danger">
+                    <Notification title="Danger" type="error">
                         Please fix the validation errors
                     </Notification>,
                 )
                 return
             }
             console.log(formData)
+            const apiPayload = {
+    ...formData,
+   
+  };
+
             try {
-                const response = await dispatch(createCompanyAdmin(formData))
+                const response = await dispatch(createCompanyAdmin(apiPayload))
                     .unwrap()
                     .catch((error: any) => {
                         throw error
@@ -509,7 +618,7 @@ const CompanyAdmin = () => {
                     </div>
 
                     {/* Module List Section */}
-                    <div>
+                    {/* <div>
                         <h6 className="text-gray-800 font-medium mb-2">
                             Module List
                         </h6>
@@ -525,7 +634,6 @@ const CompanyAdmin = () => {
                                             'Remittance Tracker',
                                             'Notice',
                                             'Agreement',
-                                            'POSH'
                                         ].includes(module.name),
                                     )
                                     .map((module) => (
@@ -550,7 +658,32 @@ const CompanyAdmin = () => {
                                 </p>
                             )}
                         </div>
-                    </div>
+                    </div> */}
+                    <div>
+          <h6 className="text-gray-800 font-medium mb-2">Module List</h6>
+          <div className="border rounded p-2">
+            <Checkbox.Group
+              value={selectedModules}
+              onChange={handleModuleChange}
+              className="flex flex-row flex-wrap gap-3"
+            >
+              {modules
+                .filter((module) =>
+                  ['Remittance Tracker', 'Notice', 'Agreement', 'Audit Tracker', 'POSH', 'Return Tracker', 'Register Tracker'].includes(module.name)
+                )
+                .map((module) => (
+                  <div key={module.id} className="flex-1 min-w-[180px]">
+                    <Checkbox value={module.id} className="inline-flex items-center">
+                      <span className="ml-2 whitespace-nowrap">{module.name}</span>
+                    </Checkbox>
+                  </div>
+                ))}
+            </Checkbox.Group>
+            {errors.moduleAccess && (
+              <p className="text-red-500 text-xs mt-1">{errors.moduleAccess}</p>
+            )}
+          </div>
+        </div>
                 </div>
 
                 <div className="flex justify-end gap-2 mt-3">
@@ -566,8 +699,20 @@ const CompanyAdmin = () => {
                     </Button>
                 </div>
             </Dialog>
+             <AuditTrackerDialog
+        isOpen={showAuditTrackerDialog}
+        onClose={() => {
+          setShowAuditTrackerDialog(false)
+          setSelectedModules(selectedModules) // Revert to previous selection
+        }}
+        onConfirm={handleAuditTrackerConfirm}
+      />
         </AdaptableCard>
     )
 }
 
 export default CompanyAdmin
+
+
+
+

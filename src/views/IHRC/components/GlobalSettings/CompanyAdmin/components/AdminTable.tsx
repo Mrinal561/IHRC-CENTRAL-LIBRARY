@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import DataTable from '@/components/shared/DataTable';
 import { Button, Dialog, Tooltip, Notification, toast } from '@/components/ui';
@@ -11,9 +10,9 @@ import Lottie from 'lottie-react';
 import { HiOutlineViewGrid } from 'react-icons/hi';
 import Checkbox from '@/components/ui/Checkbox';
 import { updateCompanyAdmin } from '@/store/slices/companyAdmin/companyAdminSlice';
-import EditCompanyAdmin from './EditCompanyAdmin';
 import OutlinedInput from '@/components/ui/OutlinedInput/OutlinedInput';
 import * as yup from 'yup';
+import AuditTrackerDialog from './AuditTrackerDialog';
 
 const validationSchema = yup.object().shape({
   entityName: yup
@@ -28,15 +27,6 @@ const validationSchema = yup.object().shape({
        'Invalid email address. Please use a valid email with a.com,.in,.org,.net,.edu, or.gov domain.'
      )
     .required('Email is required'),
-//   moduleAccess: yup
-//     .array()
-//     .of(yup.number())
-//     .min(1, 'At least one module must be selected'),
-//     name: yup
-//    .string()
-//    .required('Full Name is required')
-//    .min(3, 'Full Name must be at least 3 characters')
-//    .matches(/^\S.*\S$|^\S$/, 'The input must not have leading or trailing spaces'),
 });
 
 interface ValidationErrors {
@@ -54,6 +44,9 @@ interface AdminData {
     role: string;
     entityName: string;
     moduleAccessNames: string[];
+    compliance_checklist?: boolean;
+    both_checklist?: boolean;
+    custom_checklist?: boolean;
 }
 
 interface AdminTableProps {
@@ -80,17 +73,20 @@ const AdminTable: React.FC<AdminTableProps> = ({
     pagination,
 }) => {
     const dispatch = useAppDispatch();
-      const [errors, setErrors] = useState<ValidationErrors>({});
+    const [errors, setErrors] = useState<ValidationErrors>({});
     const [adminTableData, setAdminTableData] = useState<AdminData[]>([]);
     const [editDialogIsOpen, setEditDialogIsOpen] = useState(false);
     const [itemToEdit, setItemToEdit] = useState<AdminData | null>(null);
     const [touchedFields, setTouchedFields] = useState<{ [key: string]: boolean }>({});
-
+    const [showAuditTrackerDialog, setShowAuditTrackerDialog] = useState(false);
     const [editedAdminData, setEditedAdminData] = useState({
         name: '',
         email: '',
         entityName: '',
-        moduleAccess: [] as string[]  // Changed to string[] to store module names instead of IDs
+        moduleAccess: [] as string[],
+        compliance_checklist: false,
+        both_checklist: false,
+        custom_checklist: false
     });
     const [tableData, setTableData] = useState({
         total: 0,
@@ -158,7 +154,6 @@ const AdminTable: React.FC<AdminTableProps> = ({
         }
     };
 
-
     const AccessIndicator = ({ hasAccess }: { hasAccess: boolean }) => (
         <div className="flex justify-center items-center w-32">
             {hasAccess ? (
@@ -169,19 +164,8 @@ const AdminTable: React.FC<AdminTableProps> = ({
         </div>
     );
 
-    // useEffect(() => {
-    //     setTableData((prev) => ({ ...prev, total: totalRecords }));
-    // }, [totalRecords]);
     const columns = useMemo(
         () => [
-            // {
-            //     header: 'Name',
-            //     accessorKey: 'name',
-            //     enableSorting: false,
-            //     cell: (props) => (
-            //         <div className="truncate">{props.getValue() as string}</div>
-            //     ),
-            // },
             {
                 header: 'Company Group',
                 accessorKey: 'entityName',
@@ -206,25 +190,6 @@ const AdminTable: React.FC<AdminTableProps> = ({
                     <div className="truncate">{props.getValue() as string}</div>
                 ),
             },
-           
-            
-            // {
-            //     header: 'Role',
-            //     accessorKey: 'role',
-            //     enableSorting: false,
-            //     cell: (props) => (
-            //         <div className="truncate">{props.getValue() as string}</div>
-            //     ),
-            // },
-            // {
-            //     header: 'Audit Checklist',
-            //     id: 'auditChecklist',
-            //     cell: ({ row }) => (
-            //         <AccessIndicator 
-            //             hasAccess={row.original.moduleAccessNames.includes('Audit Checklist')} 
-            //         />
-            //     ),
-            // },
             {
                 header: 'Remittance Tracker',
                 id: 'remittanceTracker',
@@ -254,6 +219,42 @@ const AdminTable: React.FC<AdminTableProps> = ({
                 ),
             },
             {
+                header: 'POSH',
+                id: 'POSH',
+                cell: ({ row }) => (
+                    <AccessIndicator 
+                        hasAccess={row.original.moduleAccessNames.includes('POSH')} 
+                    />
+                ),
+            },
+            {
+                header: 'Return Tracker',
+                id: 'returnTracker',
+                cell: ({ row }) => (
+                    <AccessIndicator 
+                        hasAccess={row.original.moduleAccessNames.includes('Return Tracker')} 
+                    />
+                ),
+            },
+            {
+                header: 'Audit Tracker',
+                id: 'auditTracker',
+                cell: ({ row }) => (
+                    <AccessIndicator 
+                        hasAccess={row.original.moduleAccessNames.includes('Audit Tracker')} 
+                    />
+                ),
+            },
+            // {
+            //     header: 'Register Tracker',
+            //     id: 'registerTracker',
+            //     cell: ({ row }) => (
+            //         <AccessIndicator 
+            //             hasAccess={row.original.moduleAccessNames.includes('Register Tracker')} 
+            //         />
+            //     ),
+            // },
+            {
                 header: 'Actions',
                 id: 'actions',
                 enableSorting: false,
@@ -274,7 +275,6 @@ const AdminTable: React.FC<AdminTableProps> = ({
         []
     );
 
-
     const handleEditConfirm = async () => {
         if(itemToEdit?.id){
             try {
@@ -287,7 +287,10 @@ const AdminTable: React.FC<AdminTableProps> = ({
                     name: editedAdminData.name,
                     email: editedAdminData.email,
                     entityName: editedAdminData.entityName,
-                    moduleAccess: moduleIds
+                    moduleAccess: moduleIds,
+                    compliance_checklist: editedAdminData.compliance_checklist,
+                    both_checklist: editedAdminData.both_checklist,
+                    custom_checklist: editedAdminData.custom_checklist
                 })).unwrap();
                 
                 onDataChange();
@@ -295,9 +298,47 @@ const AdminTable: React.FC<AdminTableProps> = ({
                 handleDialogClose();
             } catch (error) {
                 console.error('Error updating admin:', error);
-               throw error;
+                throw error;
             }
         }
+    };
+
+    const handleModuleChange = (moduleName: string, isChecked: boolean) => {
+        if (moduleName === 'Audit Tracker') {
+            if (isChecked) {
+                setShowAuditTrackerDialog(true);
+            } else {
+                setEditedAdminData(prev => ({
+                    ...prev,
+                    moduleAccess: prev.moduleAccess.filter(name => name !== 'Audit Tracker'),
+                    compliance_checklist: false,
+                    both_checklist: false,
+                    custom_checklist: false
+                }));
+            }
+        } else {
+            setEditedAdminData(prev => ({
+                ...prev,
+                moduleAccess: isChecked
+                    ? [...prev.moduleAccess, moduleName]
+                    : prev.moduleAccess.filter(name => name !== moduleName)
+            }));
+        }
+    };
+
+    // Fixed handleAuditTrackerConfirm function
+    const handleAuditTrackerConfirm = (selection: 'custom' | 'compliance' | 'both') => {
+        setEditedAdminData(prev => ({
+            ...prev,
+            // Ensure 'Audit Tracker' is added to moduleAccess if not already present
+            moduleAccess: prev.moduleAccess.includes('Audit Tracker') 
+                ? prev.moduleAccess 
+                : [...prev.moduleAccess, 'Audit Tracker'],
+            compliance_checklist: selection === 'compliance' || selection === 'both',
+            both_checklist: selection === 'both',
+            custom_checklist: selection === 'custom' || selection === 'both'
+        }));
+        setShowAuditTrackerDialog(false);
     };
       
     const openEditDialog = (admin: AdminData) => {
@@ -306,45 +347,46 @@ const AdminTable: React.FC<AdminTableProps> = ({
             name: admin.name,
             email: admin.email,
             entityName: admin.entityName || '',
-            moduleAccess: admin.moduleAccessNames
+            moduleAccess: admin.moduleAccessNames,
+            compliance_checklist: admin.compliance_checklist || false,
+            both_checklist: admin.both_checklist || false,
+            custom_checklist: admin.custom_checklist || false
         });
         setEditDialogIsOpen(true);
         setErrors({});
         setTouchedFields({});
     };
 
-    const handleModuleChange = (field: string, value: any) => {
-    if (field === 'moduleAccess') {
-        setEditedAdminData(prev => ({
-            ...prev,
-            moduleAccess: value
-        }));
-    } else {
+    const handleInputChange = (field: string, value: string) => {
         setEditedAdminData(prev => ({
             ...prev,
             [field]: value
         }));
-    }
-    if (touchedFields[field]) {
-        validateField(field, value);
-    }
-    if (!touchedFields[field] && value) {
-        setTouchedFields((prev) => ({...prev, [field]: true }));
-      }
-};
+        setTouchedFields(prev => ({
+            ...prev,
+            [field]: true
+        }));
 
-const handleDialogClose = () => {
-    setEditDialogIsOpen(false);
-    setItemToEdit(null);
-    setEditedAdminData({
-        name: '',
-        email: '',
-        entityName: '',
-        moduleAccess: []
-    });
-    setErrors({});
+        if (touchedFields[field]) {
+            validateField(field, value);
+        }
+    };
+
+    const handleDialogClose = () => {
+        setEditDialogIsOpen(false);
+        setItemToEdit(null);
+        setEditedAdminData({
+            name: '',
+            email: '',
+            entityName: '',
+            moduleAccess: [],
+            compliance_checklist: false,
+            both_checklist: false,
+            custom_checklist: false
+        });
+        setErrors({});
         setTouchedFields({});
-};
+    };
 
     const showSuccessNotification = (message: string) => {
         toast.push(
@@ -354,8 +396,6 @@ const handleDialogClose = () => {
         );
     };
 
-
-    
     if (isLoading) {
         return (
             <div className="flex flex-col items-center justify-center h-96 text-gray-500 rounded-xl">
@@ -370,7 +410,6 @@ const handleDialogClose = () => {
             </div>
         );
     }
-    
 
     return (
         <div className="relative">
@@ -404,83 +443,76 @@ const handleDialogClose = () => {
             >
                 <h5 className="mb-4">Edit Company Admin</h5>
 
-                
                 <div className="flex flex-col gap-4">
-
-
                     <div className='border-b pb-2'>
-                    <h6 className="text-gray-800 font-medium mb-2">Company Group</h6>
-                    <div className="w-full">
-                      <label className="text-gray-600 mb-2 block">Entity Name</label>
-                      <OutlinedInput
-                          label="Entity Name"
-                          value={editedAdminData.entityName}
-                          onChange={(value: string) => handleModuleChange('entityName', value)}
-                      />
-                     {errors.entityName && (
+                        <h6 className="text-gray-800 font-medium mb-2">Company Group</h6>
+                        <div className="w-full">
+                            <label className="text-gray-600 mb-2 block">Entity Name</label>
+                            <OutlinedInput
+                                label="Entity Name"
+                                value={editedAdminData.entityName}
+                                onChange={(value: string) => handleInputChange('entityName', value)}
+                            />
+                            {errors.entityName && (
                                 <p className="text-red-500 text-xs mt-1">{errors.entityName}</p>
                             )}
-                    </div>
+                        </div>
                     </div>
 
                     {/* User Details Section */}
-        <div className="border-b pb-2">
-          <h6 className="text-gray-800 font-medium mb-2">User Details</h6>
-          <div className="space-y-4">
-            {/* Name and Email row */}
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <label className="text-gray-600 mb-2 block">Full Name</label>
-                <OutlinedInput
-                  label="Full Name"
-                  value={editedAdminData.name}
-                  onChange={(value: string) => handleModuleChange('name', value)}
-                />
-                {/* {errors.name && ( 
-    <p className="text-red-500 text-xs mt-1">{errors.name}</p>
-  )} */}
-              </div>
-              <div className="flex-1">
-                <label className="text-gray-600 mb-2 block">Email</label>
-                <OutlinedInput
-                  label="Email"
-                  value={editedAdminData.email}
-                  onChange={(value: string) => handleModuleChange('email', value)}
-                />
-               {errors.email && (
+                    <div className="border-b pb-2">
+                        <h6 className="text-gray-800 font-medium mb-2">User Details</h6>
+                        <div className="space-y-4">
+                            {/* Name and Email row */}
+                            <div className="flex gap-4">
+                                <div className="flex-1">
+                                    <label className="text-gray-600 mb-2 block">Full Name</label>
+                                    <OutlinedInput
+                                        label="Full Name"
+                                        value={editedAdminData.name}
+                                        onChange={(value: string) => handleInputChange('name', value)}
+                                    />
+                                </div>
+                                <div className="flex-1">
+                                    <label className="text-gray-600 mb-2 block">Email</label>
+                                    <OutlinedInput
+                                        label="Email"
+                                        value={editedAdminData.email}
+                                        onChange={(value: string) => handleInputChange('email', value)}
+                                    />
+                                    {errors.email && (
                                         <p className="text-red-500 text-xs mt-1">{errors.email}</p>
                                     )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div>
-    <label className="text-gray-600 mb-2 block">Modules List</label>
-    <div className="border rounded p-4">
-        <Checkbox.Group
-            value={editedAdminData.moduleAccess}
-            onChange={(values: string[]) => handleModuleChange('moduleAccess', values)}
-            className="flex flex-row flex-wrap gap-6"
-        >
-            {modules
-                .filter(module => ['Remittance Tracker', 'Notice', 'Agreement'].includes(module.name))
-                .map(module => (
-                    <div key={module.id} className="flex-1 min-w-[180px]">
-                        <Checkbox 
-                            value={module.name}
-                            className="inline-flex items-center"
-                        >
-                            <span className="ml-2 whitespace-nowrap">{module.name}</span>
-                        </Checkbox>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                ))}
-        </Checkbox.Group>
-        {/* {errors.moduleAccess && (
-            <p className="text-red-500 text-xs mt-1">{errors.moduleAccess}</p>
-        )} */}
-    </div>
-</div>
+
+                    <div>
+                        <label className="text-gray-600 mb-2 block">Modules List</label>
+                        <div className="border rounded p-4">
+                            <div className="flex flex-row flex-wrap gap-6">
+                                {modules
+                                    .filter(module => 
+                                        ['Remittance Tracker', 'Notice', 'Agreement', 'POSH', 'Return Tracker', 'Audit Tracker', 'Register Tracker']
+                                        .includes(module.name))
+                                    .map(module => (
+                                        <div key={module.id} className="flex-1 min-w-[180px]">
+                                            <Checkbox
+                                                checked={editedAdminData.moduleAccess.includes(module.name)}
+                                                onChange={(checked) => handleModuleChange(module.name, checked)}
+                                                className="inline-flex items-center"
+                                            >
+                                                <span className="ml-2 whitespace-nowrap">{module.name}</span>
+                                            </Checkbox>
+                                        </div>
+                                    ))}
+                            </div>
+                            {errors.moduleAccess && (
+                                <p className="text-red-500 text-xs mt-1">{errors.moduleAccess}</p>
+                            )}
+                        </div>
+                    </div>
                 </div>
                 <div className="text-right mt-6">
                     <Button
@@ -498,17 +530,30 @@ const handleDialogClose = () => {
                     </Button>
                 </div>
             </Dialog>
-{/* 
-<EditCompanyAdmin
-  isOpen={editDialogIsOpen}
-  onClose={handleDialogClose}
-  onConfirm={handleEditConfirm}
-  adminData={itemToEdit}
-  modules={modules}
-  isLoading={isLoading}
-/> */}
+            
+            <AuditTrackerDialog
+                isOpen={showAuditTrackerDialog}
+                onClose={() => {
+                    setShowAuditTrackerDialog(false);
+                    // Don't remove from moduleAccess here - let the user decide
+                }}
+                onConfirm={handleAuditTrackerConfirm}
+            />
         </div>
     );
 };
 
 export default AdminTable;
+
+
+
+
+
+
+
+
+
+
+
+
+
