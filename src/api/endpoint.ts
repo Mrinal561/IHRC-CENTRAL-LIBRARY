@@ -71,8 +71,8 @@ export const endpoints = {
     },
     companyAdmin:{
         create:()=> api('companyadmin/signup'),
-        list:()=> api(`/companyadmin/list`),
-        update:(id:any)=> api(`/companyadmin/${id}`)
+        list:()=> api('companyadmin/list'),
+        update:(id:any)=> api(`companyadmin/${id}`)
     },
     companyGroup: {
         getAll: () => api('companyadmin/company-group'),
