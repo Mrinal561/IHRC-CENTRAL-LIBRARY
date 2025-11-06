@@ -525,6 +525,7 @@ const CompanyAdmin = () => {
                                             'Remittance Tracker',
                                             'Notice',
                                             'Agreement',
+                                            'POSH'
                                         ].includes(module.name),
                                     )
                                     .map((module) => (
