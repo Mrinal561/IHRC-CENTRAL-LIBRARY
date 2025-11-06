@@ -146,17 +146,17 @@ export const protectedRoutes = [
     //     ),
     //     authority: [],
     // },
-    // {
-    //     key: 'groupMenu.collapse.item15',
-    //     path: '/auditSetup',
-    //     component: lazy(
-    //         () =>
-    //             import(
-    //                 '@/views/IHRC/components/GlobalSettings/AuditTracker/AuditTracker'
-    //             ),
-    //     ),
-    //     authority: [],
-    // },
+    {
+        key: 'groupMenu.collapse.item15',
+        path: '/auditSetup',
+        component: lazy(
+            () =>
+                import(
+                    '@/views/IHRC/components/GlobalSettings/AuditTracker/AuditTracker'
+                ),
+        ),
+        authority: [],
+    },
     
     {
         key: 'groupMenu.collapse.item5',
@@ -185,14 +185,14 @@ export const protectedRoutes = [
         ),
         authority: [],
     },
-    // {
-    //     key: 'groupMenu.collapse.item9',
-    //     path: '/return-setup',
-    //     component: lazy(() =>
-    //         import('@/views/IHRC/components/GlobalSettings/ReturnSetup/ReturnSetup')
-    //     ),
-    //     authority: [],
-    // },
+    {
+        key: 'groupMenu.collapse.item9',
+        path: '/return-setup',
+        component: lazy(() =>
+            import('@/views/IHRC/components/GlobalSettings/ReturnSetup/ReturnSetup')
+        ),
+        authority: [],
+    },
     {
         key: 'customChecklist.customChecklistForm',
         path: '/add-compliance-form',
@@ -240,39 +240,39 @@ export const protectedRoutes = [
         ),
         authority: [],
     },
-    // {
-    //     key: 'returnSetup.add',
-    //     path: '/add-return-setup',
-    //     component: lazy(() =>
-    //         import('@/views/IHRC/components/GlobalSettings/ReturnSetup/components/ReturnSetupAddForm')
-    //     ),
-    //     authority: [],
-    // },
-    // {
-    //     key: 'returnSetup.edit',
-    //     path: '/edit-return-setup',
-    //     component: lazy(
-    //         () =>
-    //             import(
-    //                 '@/views/IHRC/components/GlobalSettings/ReturnSetup/components/ReturnSetupEditForm'
-    //             ),
-    //     ),
-    //     authority: [],
-    // },
-    // {
-    //     key: 'complianceAddForm',
-    //     path: '/add-compliance',
-    //     component: lazy(() =>
-    //         import('@/views/IHRC/components/GlobalSettings/AuditTracker/components/ComplianceAddForm')
-    //     ),
-    //     authority: [],
-    // },
-    // {
-    //     key: 'complianceEditForm',
-    //     path: '/edit-compliance',
-    //     component: lazy(() =>
-    //         import('@/views/IHRC/components/GlobalSettings/AuditTracker/components/EditComplianceForm')
-    //     ),
-    //     authority: [],
-    // },
+    {
+        key: 'returnSetup.add',
+        path: '/add-return-setup',
+        component: lazy(() =>
+            import('@/views/IHRC/components/GlobalSettings/ReturnSetup/components/ReturnSetupAddForm')
+        ),
+        authority: [],
+    },
+    {
+        key: 'returnSetup.edit',
+        path: '/edit-return-setup',
+        component: lazy(
+            () =>
+                import(
+                    '@/views/IHRC/components/GlobalSettings/ReturnSetup/components/ReturnSetupEditForm'
+                ),
+        ),
+        authority: [],
+    },
+    {
+        key: 'complianceAddForm',
+        path: '/add-compliance',
+        component: lazy(() =>
+            import('@/views/IHRC/components/GlobalSettings/AuditTracker/components/ComplianceAddForm')
+        ),
+        authority: [],
+    },
+    {
+        key: 'complianceEditForm',
+        path: '/edit-compliance',
+        component: lazy(() =>
+            import('@/views/IHRC/components/GlobalSettings/AuditTracker/components/EditComplianceForm')
+        ),
+        authority: [],
+    },
 ]

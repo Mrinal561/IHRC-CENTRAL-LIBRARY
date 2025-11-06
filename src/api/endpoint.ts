@@ -79,7 +79,7 @@ export const endpoints = {
         update: (id: string) => api(`superadmin/state/config/pt/${id}`),
     },
     common: {
-        getStatesAll: () => api('/states'),
+        getStatesAll: () => api('states'),
         detail:(id:any)=> api(`superadmin/state/config/${id}`)
     },
     role:{
@@ -121,7 +121,7 @@ export const endpoints = {
     bulkUpload: () => api('return-superadmin/bulk-upload'),
     downloadData: () => api('return-superadmin/export'),
     downloadTemplate: () => api('return-superadmin/template'),
-    list: () => api('/return-superadmin/'),
+    list: () => api('return-superadmin/'),
     detail: (id: any) => api(`return-superadmin//${id}`),
     returnList: () => api('return-superadmin/act-name'),
     statusToggle: (id: any, is_active: boolean) => api(`return-superadmin/toggle-status/${id}`),

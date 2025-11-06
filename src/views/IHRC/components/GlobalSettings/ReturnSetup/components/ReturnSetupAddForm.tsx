@@ -1,0 +1,858 @@
+
+import { Formik, Form } from 'formik';
+import React, { useState, useEffect } from 'react';
+import { IoArrowBack } from 'react-icons/io5';
+import { useNavigate } from 'react-router-dom';
+import OutlinedInput from '@/components/ui/OutlinedInput';
+import OutlinedSelect from '@/components/ui/Outlined/Outlined';
+import DatePicker from '@/components/ui/DatePicker/DatePicker';
+import httpClient from '@/api/http-client';
+import { endpoints } from '@/api/endpoint';
+import * as Yup from 'yup';
+import { Button, toast, Notification } from '@/components/ui';
+import ActNameAutoSuggest from './ActNameAutoSuggest';
+
+interface Act {
+  id: number;
+  act_name: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+interface ActOption {
+  value: string;
+  label: string;
+  originalId: number;
+}
+
+interface DueDates {
+  first_due_date: Date | null;
+  second_due_date: Date | null;
+  third_due_date: Date | null;
+  last_due_date: Date | null;
+  bi_annual_due_date: Date | null;
+}
+
+interface FormValues {
+  act_name: string;
+  return_name: string;
+  state_id: string;
+  return_applicability: string;
+  return_applicable_at: string;
+  frequency: string;
+  applicable: string;
+  due_dates: DueDates;
+}
+
+const ReturnSetupAddForm = () => {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [stateOptions, setStateOptions] = useState([
+    { value: "central", label: "Central" }
+  ]);
+  const [stateLoading, setStateLoading] = useState(true);
+  const [actOptions, setActOptions] = useState<ActOption[]>([]);
+  const [enabledDateFields, setEnabledDateFields] = useState({
+    first_due_date: false,
+    second_due_date: false,
+    third_due_date: false,
+    last_due_date: false,
+    bi_annual_due_date: false
+  });
+
+  const applicableOptions = [
+    { value: "CENTRAL", label: "Central" },
+    { value: "ALL_STATES", label: "All States" },
+    { value: "STATE", label: "State" },
+  ];
+
+  const frequencyOptions = [
+    { value: "monthly", label: "Monthly" },
+    { value: "quarterly", label: "Quarterly" },
+    { value: "half_yearly", label: "Half Yearly" },
+    { value: "yearly", label: "Yearly" },
+    { value: "bi_annual", label: "Biennial" },
+  ];
+
+  const applicabilityOptions = [
+    { value: "yes", label: "Yes" },
+    { value: "no", label: "No" },
+  ];
+
+  const applicableAtOptions = [
+    { value: "branch", label: "Branch" },
+    { value: "state", label: "State" },
+    { value: "central", label: "Central" },
+  ];
+
+  const handleFrequencyChange = (frequency: string) => {
+    const newEnabledFields = {
+      first_due_date: false,
+      second_due_date: false,
+      third_due_date: false,
+      last_due_date: false,
+      bi_annual_due_date: false
+    };
+
+    switch (frequency) {
+      case 'monthly':
+      case 'yearly':
+        newEnabledFields.first_due_date = true;
+        break;
+      case 'half_yearly':
+        newEnabledFields.first_due_date = true;
+        newEnabledFields.last_due_date = true;
+        break;
+      case 'quarterly':
+        newEnabledFields.first_due_date = true;
+        newEnabledFields.second_due_date = true;
+        newEnabledFields.third_due_date = true;
+        newEnabledFields.last_due_date = true;
+        break;
+      case 'bi_annual':
+        newEnabledFields.bi_annual_due_date = true;
+        break;
+      default:
+        newEnabledFields.first_due_date = true;
+    }
+
+    setEnabledDateFields(newEnabledFields);
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setStateLoading(true);
+      try {
+        const statesResponse = await httpClient.get(endpoints.common.getStatesAll());
+        if (statesResponse.data && Array.isArray(statesResponse.data)) {
+          const stateData = statesResponse.data.map(state => ({
+            value: state.id.toString(),
+            label: state.name
+          }));
+          stateData.sort((a, b) => a.label.localeCompare(b.label));
+          setStateOptions([
+            { value: "central", label: "Central" },
+            ...stateData
+          ]);
+        }
+
+        const actsResponse = await httpClient.get<{ data: Act[] }>(endpoints.return.returnList());
+        if (actsResponse.data?.data) {
+          setActOptions(actsResponse.data.data.map(act => ({
+            value: act.act_name,
+            label: act.act_name,
+            originalId: act.id
+          })));
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        toast.push(
+          <Notification title="Error" type="error">
+            Failed to load initial data
+          </Notification>
+        );
+        setStateOptions([{ value: "central", label: "Central" }]);
+      } finally {
+        setStateLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, []);
+
+
+
+const formatDueDates = (frequency: string, dueDates: DueDates) => {
+  // Helper function to format date as DD-MM-YYYY (4-digit year)
+  const formatDate = (date: Date | null) => {
+    if (!date) return null;
+    
+    // Get local date parts (avoids timezone issues)
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear(); // Get full 4-digit year
+    
+    return `${day}-${month}-${year}`;
+  };
+  
+  const formattedDates: Record<string, string | null> = {};
+  
+  if (frequency === 'monthly' || frequency === 'yearly') {
+    formattedDates.first_due_date = formatDate(dueDates.first_due_date);
+  } else if (frequency === 'half_yearly') {
+    formattedDates.first_due_date = formatDate(dueDates.first_due_date);
+    formattedDates.last_due_date = formatDate(dueDates.last_due_date);
+  } else if (frequency === 'quarterly') {
+    formattedDates.first_due_date = formatDate(dueDates.first_due_date);
+    formattedDates.second_due_date = formatDate(dueDates.second_due_date);
+    formattedDates.third_due_date = formatDate(dueDates.third_due_date);
+    formattedDates.last_due_date = formatDate(dueDates.last_due_date);
+  } else if (frequency === 'bi_annual') {
+    formattedDates.bi_annual_due_date = formatDate(dueDates.bi_annual_due_date);
+  }
+  
+  return formattedDates;
+};
+
+const validateDueDates = (dueDates: DueDates, frequency: string) => {
+  const errors: Record<string, string> = {};
+  
+  if (frequency === 'half_yearly') {
+    if (dueDates.first_due_date && dueDates.last_due_date && 
+        dueDates.first_due_date.getTime() === dueDates.last_due_date.getTime()) {
+      errors.last_due_date = 'Last due date must be different from first due date';
+    }
+  }
+  
+  if (frequency === 'quarterly') {
+    const dates = [
+      dueDates.first_due_date,
+      dueDates.second_due_date,
+      dueDates.third_due_date,
+      dueDates.last_due_date
+    ].filter(date => date !== null);
+    
+    // Check for duplicate dates
+    const uniqueDates = new Set(dates.map(date => date?.getTime()));
+    if (uniqueDates.size !== dates.length) {
+      if (dates[0] && dates[1] && dates[0].getTime() === dates[1].getTime()) {
+        errors.second_due_date = 'Dates must be different';
+      }
+      if (dates[0] && dates[2] && dates[0].getTime() === dates[2].getTime()) {
+        errors.third_due_date = 'Dates must be different';
+      }
+      if (dates[0] && dates[3] && dates[0].getTime() === dates[3].getTime()) {
+        errors.last_due_date = 'Dates must be different';
+      }
+      if (dates[1] && dates[2] && dates[1].getTime() === dates[2].getTime()) {
+        errors.third_due_date = 'Dates must be different';
+      }
+      if (dates[1] && dates[3] && dates[1].getTime() === dates[3].getTime()) {
+        errors.last_due_date = 'Dates must be different';
+      }
+      if (dates[2] && dates[3] && dates[2].getTime() === dates[3].getTime()) {
+        errors.last_due_date = 'Dates must be different';
+      }
+    }
+  }
+  
+  return Object.keys(errors).length > 0 ? errors : undefined;
+};
+
+ 
+
+
+const validationSchema = Yup.object().shape({
+  act_name: Yup.string().required('Act Name is required'),
+  return_name: Yup.string().required('Return Name is required'),
+  state_id: Yup.string().when('applicable', {
+    is: 'STATE',
+    then: (schema) => schema.required('State is required'),
+    otherwise: (schema) => schema.notRequired()
+  }),
+  return_applicability: Yup.string()
+    .required('Return Applicability is required')
+    .oneOf(['yes', 'no'], 'Invalid selection'),
+  applicable: Yup.string()
+    .required('Applicable is required')
+    .oneOf(['CENTRAL', 'ALL_STATES', 'STATE'], 'Invalid selection'),
+  return_applicable_at: Yup.string()
+    .required('Return Applicable At is required')
+    .oneOf(['branch', 'state', 'central'], 'Invalid selection'),
+  frequency: Yup.string().when('return_applicability', {
+    is: 'yes',
+    then: (schema) => schema
+      .required('Frequency is required')
+      .oneOf(['monthly', 'quarterly', 'half_yearly', 'yearly', 'bi_annual'], 'Invalid selection'),
+    otherwise: (schema) => schema.notRequired()
+  }),
+  due_dates: Yup.object().when(['return_applicability', 'frequency'], {
+    is: (return_applicability: string, frequency: string) => 
+      return_applicability === 'yes' && frequency,
+    then: (schema) => schema.shape({
+      first_due_date: Yup.date()
+        .nullable()
+        .when('$frequency', {
+          is: (frequency: string) => 
+            ['monthly', 'quarterly', 'half_yearly', 'yearly'].includes(frequency),
+          then: (schema) => schema.required('First due date is required'),
+          otherwise: (schema) => schema.nullable()
+        }),
+      second_due_date: Yup.date()
+        .nullable()
+        .when('$frequency', {
+          is: 'quarterly',
+          then: (schema) => schema.required('Second due date is required'),
+          otherwise: (schema) => schema.nullable()
+        }),
+      third_due_date: Yup.date()
+        .nullable()
+        .when('$frequency', {
+          is: 'quarterly',
+          then: (schema) => schema.required('Third due date is required'),
+          otherwise: (schema) => schema.nullable()
+        }),
+      last_due_date: Yup.date()
+        .nullable()
+        .when('$frequency', {
+          is: (frequency: string) => 
+            ['quarterly', 'half_yearly'].includes(frequency),
+          then: (schema) => schema.required('Last due date is required'),
+          otherwise: (schema) => schema.nullable()
+        }),
+      bi_annual_due_date: Yup.date()
+        .nullable()
+        .when('$frequency', {
+          is: 'bi_annual',
+          then: (schema) => schema.required('Bi-annual due date is required'),
+          otherwise: (schema) => schema.nullable()
+        })
+    }).test(
+      'unique-dates',
+      'Dates must be unique',
+      function(value) {
+        const { frequency } = this.parent;
+        
+        if (!frequency || !value) return true;
+
+        if (frequency === 'half_yearly') {
+          if (value.first_due_date && value.last_due_date && 
+              value.first_due_date.getTime() === value.last_due_date.getTime()) {
+            return this.createError({
+              path: 'due_dates.last_due_date',
+              message: 'Last due date must be different from first due date'
+            });
+          }
+        }
+        
+        if (frequency === 'quarterly') {
+          const dates = [
+            value.first_due_date,
+            value.second_due_date,
+            value.third_due_date,
+            value.last_due_date
+          ].filter(date => date !== null) as Date[];
+          
+          // Check for duplicate dates
+          const uniqueDates = new Set(dates.map(date => date.getTime()));
+          if (uniqueDates.size !== dates.length) {
+            if (dates[0] && dates[1] && dates[0].getTime() === dates[1].getTime()) {
+              return this.createError({
+                path: 'due_dates.second_due_date',
+                message: 'Second due date must be different from first due date'
+              });
+            }
+            if (dates[0] && dates[2] && dates[0].getTime() === dates[2].getTime()) {
+              return this.createError({
+                path: 'due_dates.third_due_date',
+                message: 'Third due date must be different from first due date'
+              });
+            }
+            if (dates[0] && dates[3] && dates[0].getTime() === dates[3].getTime()) {
+              return this.createError({
+                path: 'due_dates.last_due_date',
+                message: 'Last due date must be different from first due date'
+              });
+            }
+            if (dates[1] && dates[2] && dates[1].getTime() === dates[2].getTime()) {
+              return this.createError({
+                path: 'due_dates.third_due_date',
+                message: 'Third due date must be different from second due date'
+              });
+            }
+            if (dates[1] && dates[3] && dates[1].getTime() === dates[3].getTime()) {
+              return this.createError({
+                path: 'due_dates.last_due_date',
+                message: 'Last due date must be different from second due date'
+              });
+            }
+            if (dates[2] && dates[3] && dates[2].getTime() === dates[3].getTime()) {
+              return this.createError({
+                path: 'due_dates.last_due_date',
+                message: 'Last due date must be different from third due date'
+              });
+            }
+          }
+        }
+        
+        return true;
+      }
+    ),
+    otherwise: (schema) => schema.notRequired()
+  })
+});
+
+
+
+
+  // Fixed initial values - removed default values that were showing up on form load
+  const initialValues: FormValues = {
+    act_name: '',
+    return_name: '',
+    state_id: '',
+    return_applicability: '', // Changed from 'yes' to empty
+    return_applicable_at: '', // Changed from 'state' to empty
+    frequency: '', // Changed from 'monthly' to empty
+    applicable: '', // Changed from 'STATE' to empty
+    due_dates: {
+      first_due_date: null,
+      second_due_date: null,
+      third_due_date: null,
+      last_due_date: null,
+      bi_annual_due_date: null
+    }
+  };
+
+
+const handleSubmit = async (values: FormValues, { setSubmitting, resetForm }: { setSubmitting: (isSubmitting: boolean) => void; resetForm: () => void }) => {
+  setLoading(true);
+  
+  try {
+    // First validate the form
+    await validationSchema.validate(values, { abortEarly: false });
+    
+    // Only proceed if validation passes
+    const payload = {
+      act_name: values.act_name,
+      return_name: values.return_name,
+      state_id: values.applicable === 'STATE' ? parseInt(values.state_id) : null,
+      applicable: values.applicable,
+      return_applicable: values.return_applicability === "yes",
+      return_applicable_at: values.return_applicable_at,
+      frequency: values.return_applicability === "yes" ? values.frequency : null,
+      due_dates: values.return_applicability === "yes" ? formatDueDates(values.frequency, values.due_dates) : null
+    };
+
+    const response = await httpClient.post(endpoints.return.create(), payload);
+    
+    if (response.data) {
+      toast.push(
+        <Notification title="Success" type="success">
+          Return setup created successfully!
+        </Notification>,
+        { placement: 'top-center' }
+      );
+      resetForm();
+      navigate('/return-setup');
+    }
+  } catch (error: any) {
+    if (error.name === 'ValidationError') {
+      // Handle validation errors
+      error.inner.forEach((err: Yup.ValidationError) => {
+        toast.push(
+          <Notification title="Validation Error" type="error">
+            {err.message}
+          </Notification>,
+          { placement: 'top-center' }
+        );
+      });
+    } else {
+      // Handle other errors
+      console.error('Error creating return setup:', error);
+      let errorMessage = 'Failed to create return setup. Please try again.';
+      
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      toast.push(
+        <Notification title="Error" type="error">
+          {errorMessage}
+        </Notification>,
+        { placement: 'top-center' }
+      );
+    }
+  } finally {
+    setLoading(false);
+    setSubmitting(false);
+  }
+};
+
+
+  return (
+    <div className='bg-white p-2 rounded-lg'>
+      <div className="flex gap-2 items-center mb-6">
+        <Button
+          size="sm"
+          variant="plain"
+          icon={<IoArrowBack className="text-gray-500 hover:text-gray-700" />}
+          onClick={() => navigate(-1)}
+        />
+        <h3 className="text-2xl font-semibold">Add Return Setup</h3>
+      </div>
+
+    
+
+      <Formik
+  initialValues={initialValues}
+  validationSchema={validationSchema}
+  onSubmit={handleSubmit}
+  validateOnChange={true}
+  validateOnBlur={true}
+  context={{ frequency: '' }}
+>
+  {({
+    values,
+    errors,
+    touched,
+    setFieldValue,
+    setFieldTouched,
+    handleSubmit,
+    setFieldError,
+    handleBlur,
+    validateForm,
+    isSubmitting
+  }) => {
+    // Update enabled date fields when frequency changes
+    useEffect(() => {
+      handleFrequencyChange(values.frequency);
+    }, [values.frequency]);
+
+     const validateDueDatesOnSubmit = () => {
+      if (values.return_applicability === 'yes' && values.frequency) {
+        const dueDateErrors: any = {};
+        
+        // Monthly and Yearly: first_due_date required
+        if (['monthly', 'yearly'].includes(values.frequency)) {
+          if (!values.due_dates.first_due_date) {
+            dueDateErrors.first_due_date = 'First due date is required';
+          }
+        }
+
+        // Half Yearly: first_due_date and last_due_date required
+        if (values.frequency === 'half_yearly') {
+          if (!values.due_dates.first_due_date) {
+            dueDateErrors.first_due_date = 'First due date is required';
+          }
+          if (!values.due_dates.last_due_date) {
+            dueDateErrors.last_due_date = 'Last due date is required';
+          }
+        }
+
+        // Quarterly: all four dates required
+        if (values.frequency === 'quarterly') {
+          if (!values.due_dates.first_due_date) {
+            dueDateErrors.first_due_date = 'First due date is required';
+          }
+          if (!values.due_dates.second_due_date) {
+            dueDateErrors.second_due_date = 'Second due date is required';
+          }
+          if (!values.due_dates.third_due_date) {
+            dueDateErrors.third_due_date = 'Third due date is required';
+          }
+          if (!values.due_dates.last_due_date) {
+            dueDateErrors.last_due_date = 'Last due date is required';
+          }
+        }
+
+        // Bi-annual: bi_annual_due_date required
+        if (values.frequency === 'bi_annual') {
+          if (!values.due_dates.bi_annual_due_date) {
+            dueDateErrors.bi_annual_due_date = 'Bi-annual due date is required';
+          }
+        }
+
+        // Set errors if any
+        Object.entries(dueDateErrors).forEach(([field, message]) => {
+          setFieldError(`due_dates.${field}`, message as string);
+        });
+
+        return Object.keys(dueDateErrors).length === 0;
+      }
+      return true;
+    };
+
+    const handleFormSubmit = (e: any) => {
+      e.preventDefault();
+      const isValid = validateDueDatesOnSubmit();
+      if (isValid) {
+        handleSubmit(e);
+      }
+    };
+
+    return (
+      <Form onSubmit={handleFormSubmit}>
+        <div className="space-y-6">
+          {/* First row - Act Name and Return Name */}
+          <div className="grid grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <ActNameAutoSuggest
+                value={values.act_name}
+                onChange={(value) => setFieldValue('act_name', value)}
+                onActSelect={(id) => {}}
+                options={actOptions}
+              />
+              {touched.act_name && errors.act_name && (
+                <div className="text-red-500 text-sm">{errors.act_name}</div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="return_name">Return Name <span className="text-red-500">*</span></label>
+              <OutlinedInput
+                value={values.return_name}
+                onChange={(value) => setFieldValue('return_name', value)}
+                isDisabled={!values.act_name}
+                label="Enter Return Name"
+                onBlur={handleBlur}
+              />
+              {touched.return_name && errors.return_name && (
+                <div className="text-red-500 text-sm">{errors.return_name}</div>
+              )}
+            </div>
+          </div>
+
+          {/* Second row - Applicable and State (conditional) */}
+          <div className="grid grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label htmlFor="applicable">Applicable<span className="text-red-500">*</span></label>
+              <OutlinedSelect 
+                options={applicableOptions}
+                value={applicableOptions.find(opt => opt.value === values.applicable) || null}
+                onChange={(selected) => {
+                  const value = selected?.value || '';
+                  setFieldValue('applicable', value);
+                  if (value !== 'STATE') {
+                    setFieldValue('state_id', '');
+                  }
+                }}
+                disabled={!values.return_name}
+                label="Select Applicable"
+                onBlur={handleBlur}
+              />
+              {touched.applicable && errors.applicable && (
+                <div className="text-red-500 text-sm">{errors.applicable}</div>
+              )}
+            </div>
+
+            {values.applicable === 'STATE' && (
+              <div className="space-y-2">
+                <label htmlFor="state_id">State <span className="text-red-500">*</span></label>
+                <OutlinedSelect 
+                  options={stateOptions}
+                  value={stateOptions.find(opt => opt.value === values.state_id) || null}
+                  onChange={(selected) => setFieldValue('state_id', selected?.value || '')}
+                  disabled={!values.return_name}
+                  label="Select State"
+                  onBlur={handleBlur}
+                />
+                {touched.state_id && errors.state_id && (
+                  <div className="text-red-500 text-sm">{errors.state_id}</div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Third row - Return Applicability and Applicable At (conditional) */}
+          <div className="grid grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label htmlFor="return_applicability">Return Applicability<span className="text-red-500">*</span></label>
+              <OutlinedSelect 
+                options={applicabilityOptions}
+                value={applicabilityOptions.find(opt => opt.value === values.return_applicability) || null}
+                onChange={(selected) => {
+                  const value = selected?.value || '';
+                  setFieldValue('return_applicability', value);
+                  if (value === 'no') {
+                    setFieldValue('frequency', '');
+                    setFieldValue('return_applicable_at', '');
+                    setFieldValue('due_dates', {
+                      first_due_date: null,
+                      second_due_date: null,
+                      third_due_date: null,
+                      last_due_date: null,
+                      bi_annual_due_date: null
+                    });
+                  }
+                }}
+                disabled={!values.applicable}
+                label="Select Return Applicability"
+                onBlur={handleBlur}
+              />
+              {touched.return_applicability && errors.return_applicability && (
+                <div className="text-red-500 text-sm">{errors.return_applicability}</div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="return_applicable_at">Return Applicability level<span className="text-red-500">*</span></label>
+              <OutlinedSelect 
+                options={applicableAtOptions}
+                value={applicableAtOptions.find(opt => opt.value === values.return_applicable_at) || null}
+                onChange={(selected) => setFieldValue('return_applicable_at', selected?.value || '')}
+                disabled={!values.return_applicability}
+                label="Select Return Applicability level"
+                onBlur={handleBlur}
+              />
+              {touched.return_applicable_at && errors.return_applicable_at && (
+                <div className="text-red-500 text-sm">{errors.return_applicable_at}</div>
+              )}
+            </div>
+          </div>
+
+          {/* Fourth row - Frequency (conditional) */}
+          {values.return_applicability === 'yes' && (
+            <div className="grid grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label htmlFor="frequency">Frequency<span className="text-red-500">*</span></label>
+                <OutlinedSelect 
+                  options={frequencyOptions}
+                  value={frequencyOptions.find(opt => opt.value === values.frequency) || null}
+                  onChange={(selected) => {
+                    const value = selected?.value || '';
+                    setFieldValue('frequency', value);
+                    setFieldValue('due_dates', {
+                      first_due_date: null,
+                      second_due_date: null,
+                      third_due_date: null,
+                      last_due_date: null,
+                      bi_annual_due_date: null
+                    });
+                  }}
+                  disabled={!values.return_applicable_at}
+                  label="Select Frequency"
+                  onBlur={handleBlur}
+                />
+                {touched.frequency && errors.frequency && (
+                  <div className="text-red-500 text-sm">{errors.frequency}</div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Date Fields (conditional) */}
+          {values.return_applicability === 'yes' && values.frequency && (
+            <div className="grid grid-cols-2 gap-6">
+              {/* First Due Date */}
+              {enabledDateFields.first_due_date && (
+                <div className="space-y-2">
+                  <label>First Due Date <span className="text-red-500">*</span></label>
+                  <DatePicker 
+                    value={values.due_dates.first_due_date}
+                    onChange={(date) => {
+                      setFieldValue('due_dates.first_due_date', date);
+                      setFieldTouched('due_dates.first_due_date', true);
+                    }}
+                    disabled={!values.frequency}
+                    placeholder="Select First Due Date"
+                    inputFormat="DD-MM-YYYY"
+                  />
+                  {touched.due_dates?.first_due_date && errors.due_dates?.first_due_date && (
+                    <div className="text-red-500 text-sm">{errors.due_dates.first_due_date}</div>
+                  )}
+                </div>
+              )}
+
+              {/* Second Due Date */}
+              {enabledDateFields.second_due_date && (
+                <div className="space-y-2">
+                  <label>Second Due Date <span className="text-red-500">*</span></label>
+                  <DatePicker 
+                    value={values.due_dates.second_due_date}
+                    onChange={(date) => {
+                      setFieldValue('due_dates.second_due_date', date);
+                      setFieldTouched('due_dates.second_due_date', true);
+                    }}
+                    disabled={!values.frequency}
+                    placeholder="Select Second Due Date"
+                    inputFormat="DD-MM-YYYY"
+                  />
+                  {touched.due_dates?.second_due_date && errors.due_dates?.second_due_date && (
+                    <div className="text-red-500 text-sm">{errors.due_dates.second_due_date}</div>
+                  )}
+                </div>
+              )}
+
+              {/* Third Due Date */}
+              {enabledDateFields.third_due_date && (
+                <div className="space-y-2">
+                  <label>Third Due Date <span className="text-red-500">*</span></label>
+                  <DatePicker 
+                    value={values.due_dates.third_due_date}
+                    onChange={(date) => {
+                      setFieldValue('due_dates.third_due_date', date);
+                      setFieldTouched('due_dates.third_due_date', true);
+                    }}
+                    disabled={!values.frequency}
+                    placeholder="Select Third Due Date"
+                    inputFormat="DD-MM-YYYY"
+                  />
+                  {touched.due_dates?.third_due_date && errors.due_dates?.third_due_date && (
+                    <div className="text-red-500 text-sm">{errors.due_dates.third_due_date}</div>
+                  )}
+                </div>
+              )}
+
+              {/* Last Due Date */}
+              {enabledDateFields.last_due_date && (
+                <div className="space-y-2">
+                  <label>Last Due Date <span className="text-red-500">*</span></label>
+                  <DatePicker 
+                    value={values.due_dates.last_due_date}
+                    onChange={(date) => {
+                      setFieldValue('due_dates.last_due_date', date);
+                      setFieldTouched('due_dates.last_due_date', true);
+                    }}
+                    disabled={!values.frequency}
+                    placeholder="Select Last Due Date"
+                    inputFormat="DD-MM-YYYY"
+                  />
+                  {touched.due_dates?.last_due_date && errors.due_dates?.last_due_date && (
+                    <div className="text-red-500 text-sm">{errors.due_dates.last_due_date}</div>
+                  )}
+                </div>
+              )}
+
+              {/* Bi-Annual Due Date */}
+              {enabledDateFields.bi_annual_due_date && (
+                <div className="space-y-2">
+                  <label>Biennial Due Date <span className="text-red-500">*</span></label>
+                  <DatePicker 
+                    value={values.due_dates.bi_annual_due_date}
+                    onChange={(date) => {
+                      setFieldValue('due_dates.bi_annual_due_date', date);
+                      setFieldTouched('due_dates.bi_annual_due_date', true);
+                    }}
+                    disabled={!values.frequency}
+                    placeholder="Select Bi-Annual Due Date"
+                    inputFormat="DD-MM-YYYY"
+                  />
+                  {touched.due_dates?.bi_annual_due_date && errors.due_dates?.bi_annual_due_date && (
+                    <div className="text-red-500 text-sm">{errors.due_dates.bi_annual_due_date}</div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Submit buttons */}
+          <div className="flex justify-end gap-2 pt-8">
+            <Button
+              type="button"
+              variant="plain"
+              onClick={() => navigate(-1)}
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="submit" 
+              variant="solid"
+              loading={loading || isSubmitting}
+              disabled={loading || isSubmitting}
+            >
+              Confirm
+            </Button>
+          </div>
+        </div>
+      </Form>
+    );
+  }}
+</Formik>
+    </div>
+  );
+};
+
+export default ReturnSetupAddForm;

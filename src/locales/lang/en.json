@@ -17,12 +17,27 @@
                     }
                 },
                 "item2": "District",
-                "item3": "Compliance",
                 "item4": "PF Configuration",
                 "item5": "Register Template",
                 "item6": "Role Configuration",
                 "item7": "Company Admin",
-                "item8": "External User"
+                "item8": "External User",
+                "item11": "State",
+                "item12": "POSH",
+                "item13": "Return Setup",
+                "registerSetup": "Register Setup",
+                "collapse": {
+                    "collapse": "Register Setup",
+                    "registerTracker": {
+                        "collapse": {
+                            "collapse": "Register Setup",
+                            "registerSetup": {
+                                "item1": "Register Input",
+                                "item2": "Register Output"
+                            }                        }
+                    }
+                },
+                "item15": "Audit Setup"
             }
         }
     }
