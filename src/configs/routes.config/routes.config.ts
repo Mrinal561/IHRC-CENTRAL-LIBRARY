@@ -83,6 +83,28 @@ export const protectedRoutes = [
         ),
         authority: [],
     },
+    {
+        key: 'groupMenu.collapse.item11',
+        path: '/state-manager',
+        component: lazy(
+            () =>
+                import(
+                    '@/views/IHRC/components/GlobalSettings/State/State'
+                ),
+        ),
+        authority: [],
+    },
+    // {
+    //     key: 'addState',
+    //     path: '/add-state',
+    //     component: lazy(
+    //         () =>
+    //             import(
+    //                 '@/views/IHRC/components/GlobalSettings/State/components/AddStateForm'
+    //             ),
+    //     ),
+    //     authority: [],
+    // },
     // {
     //     key: 'groupMenu.collapse.item4',
     //     path: '/pf-configuration',
@@ -91,6 +113,51 @@ export const protectedRoutes = [
     //     ),
     //     authority: [],
     // },
+    {
+        key: 'groupMenu.collapse.item12',
+        path: '/posh',
+        component: lazy(
+            () =>
+                import(
+                    '@/views/IHRC/components/GlobalSettings/Posh/Posh'
+                ),
+        ),
+        authority: [],
+    },
+    {
+        key: 'registerSetup.item1',
+        path: '/register-input-setup',
+        component: lazy(
+            () =>
+                import(
+                    '@/views/IHRC/components/GlobalSettings/RegisterTemplate/RegisterTemplate'
+                ),
+        ),
+        authority: [],
+    },
+    // {
+    //     key: 'registerSetup.item2',
+    //     path: '/register-output-setup',
+    //     component: lazy(
+    //         () =>
+    //             import(
+    //                 '@/views/IHRC/components/GlobalSettings/RegisterTemplate/RegisterOutputTemplate'
+    //             ),
+    //     ),
+    //     authority: [],
+    // },
+    // {
+    //     key: 'groupMenu.collapse.item15',
+    //     path: '/auditSetup',
+    //     component: lazy(
+    //         () =>
+    //             import(
+    //                 '@/views/IHRC/components/GlobalSettings/AuditTracker/AuditTracker'
+    //             ),
+    //     ),
+    //     authority: [],
+    // },
+    
     {
         key: 'groupMenu.collapse.item5',
         path: '/register-template',
@@ -118,6 +185,14 @@ export const protectedRoutes = [
         ),
         authority: [],
     },
+    // {
+    //     key: 'groupMenu.collapse.item9',
+    //     path: '/return-setup',
+    //     component: lazy(() =>
+    //         import('@/views/IHRC/components/GlobalSettings/ReturnSetup/ReturnSetup')
+    //     ),
+    //     authority: [],
+    // },
     {
         key: 'customChecklist.customChecklistForm',
         path: '/add-compliance-form',
@@ -165,4 +240,39 @@ export const protectedRoutes = [
         ),
         authority: [],
     },
+    // {
+    //     key: 'returnSetup.add',
+    //     path: '/add-return-setup',
+    //     component: lazy(() =>
+    //         import('@/views/IHRC/components/GlobalSettings/ReturnSetup/components/ReturnSetupAddForm')
+    //     ),
+    //     authority: [],
+    // },
+    // {
+    //     key: 'returnSetup.edit',
+    //     path: '/edit-return-setup',
+    //     component: lazy(
+    //         () =>
+    //             import(
+    //                 '@/views/IHRC/components/GlobalSettings/ReturnSetup/components/ReturnSetupEditForm'
+    //             ),
+    //     ),
+    //     authority: [],
+    // },
+    // {
+    //     key: 'complianceAddForm',
+    //     path: '/add-compliance',
+    //     component: lazy(() =>
+    //         import('@/views/IHRC/components/GlobalSettings/AuditTracker/components/ComplianceAddForm')
+    //     ),
+    //     authority: [],
+    // },
+    // {
+    //     key: 'complianceEditForm',
+    //     path: '/edit-compliance',
+    //     component: lazy(() =>
+    //         import('@/views/IHRC/components/GlobalSettings/AuditTracker/components/EditComplianceForm')
+    //     ),
+    //     authority: [],
+    // },
 ]

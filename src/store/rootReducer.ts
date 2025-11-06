@@ -14,6 +14,7 @@ import lwfconfig, { LWFConfigState } from './slices/lwfConfig/lwfConfigSlice';
 import ptconfig,  { PTSetupState } from './slices/ptConfig/ptConfigSlice'
 import companyadmin,{ CompanyAdminState } from './slices/companyAdmin/companyAdminSlice'
 import companygroup, { CompanyGroupState } from './slices/companyAdmin/companyGroupSlice'
+import stateDistrict, { StateDistrictState } from '@/store/slices/state/stateDistrictSlice'
 
 export type RootState = CombinedState<{
     auth: CombinedState<AuthState>
@@ -24,6 +25,7 @@ export type RootState = CombinedState<{
     pfconfig: PFConfigState,
     esiconfig: ESIConfigState,
     lwfconfig: LWFConfigState,
+    stateDistrict: StateDistrictState,
     ptconfig: PTSetupState,
     district: DistrictState,
     companyadmin: CompanyAdminState,
@@ -45,6 +47,7 @@ const staticReducers = {
     theme,
     login,
     state,
+    stateDistrict,
     district,
     compliance,
     pfconfig,

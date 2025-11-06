@@ -15,21 +15,40 @@ export const endpoints = {
         getById: (id: string) => api(`superadmin/state/${id}`),
         create: () => api('superadmin/state'),
         update: (id: string) => api(`superadmin/state/${id}`),
+        createStateDistrict: () => api('superadmin/state/config/state-district'),
+        getStateDistrict: () => api('superadmin/state/config/list/state-districts'),
+        downloadTemplate: () => api('superadmin/state/config/template/state-district'),
+        bulkCreate: () => api('superadmin/state/config/statedistrict-bulk-upload'),
+        downloadData: () => api('superadmin/state/config/export-state-district-data'),
+        updateStateDistrict: () => api('superadmin/state/config/state-district/update')
     },
     district: {
         getAll: () => api('superadmin/district'),
+        getAllDistrict: () => api('district'),        
         getById: (id: string) => api(`superadmin/district/${id}`),
         create: () => api('superadmin/district'),
         update: (id: string) => api(`superadmin/district/${id}`),
     },
-    compliances: {
-        getAll: () => api('superadmin/compliance'),
-        getById: (id: string) => api(`superadmin/compliance/${id}`),
-        create: () => api('superadmin/compliance'),
-        update: (id: string) => api(`superadmin/compliance/${id}`),
-        downloadFormat: () => api(`upload/sample_files/master-compliance.xlsx`),
-        bulkCreate: () => api(`/superadmin/compliance/bulk-upload`),
-        delete: (id: string) => api(`superadmin/compliance/${id}`),
+     compliances: {
+        complianceCategorizationsList: () => api('superadmin/compliance/compliance-categorizations'),
+        complianceApplicabilityList: () => api('superadmin/compliance/compliance-applicabilities'),
+        legislationActsList: () => api('superadmin/compliance/legislation-acts'),
+        complianceTypeList: () => api('superadmin/compliance/compliance-types'),
+        penaltyTypesList: () => api('superadmin/compliance/penalty-types'),
+        functionList: () => api('superadmin/compliance/functions'),
+        downloadTemplate: () => api('superadmin/compliance/template'),
+        exportData: () => api('superadmin/compliance/export'),
+        listCompliance: () => api('superadmin/compliance/'),
+        createcomplianceCategorizations: () => api('superadmin/compliance/compliance-categorizations'),
+        createcomplianceApplicability: () => api('superadmin/compliance/compliance-applicabilities'),
+        createlegislationActs: () => api('superadmin/compliance/legislation-acts'),
+        createcomplianceType: () => api('superadmin/compliance/compliance-types'),
+        createpenaltyTypes: () => api('superadmin/compliance/penalty-types'),
+        createfunctions: () => api('superadmin/compliance/functions'),
+        createcompliance: () => api('superadmin/compliance/'),
+        bulkUpload: () => api('superadmin/compliance/bulk-upload'),
+        updatecompliance: (id: string) => api(`superadmin/compliance/${id}`),
+        togglestatus: (id: string) => api(`superadmin/compliance/toggle-status/${id}`),
     },
     pf: {
         getAll: () => api('superadmin/pfconfig'),
@@ -87,7 +106,40 @@ export const endpoints = {
     delete: (id:any) => api(`superadmin/externaluser/external-user/${id}`),
     update:(id:any)=> api(`superadmin/externaluser/external-user/${id}`),
     create: (id:any) => api(`superadmin/externaluser/external-user`)
-
+   },
+   posh: {
+    create: () => api('posh'),
+    update: (id:any) => api(`posh/${id}`),
+    bulkUpload: () => api('posh/bulk-upload'),
+    downloadData: () => api('posh/export'),
+    downloadTemplate: () => api('posh/template'),
+    list: () => api('posh'),
+    detail: (id: any) => api(`posh/${id}`)
+   },
+   return: {
+    create: () => api('return-superadmin/create'),
+    bulkUpload: () => api('return-superadmin/bulk-upload'),
+    downloadData: () => api('return-superadmin/export'),
+    downloadTemplate: () => api('return-superadmin/template'),
+    list: () => api('/return-superadmin/'),
+    detail: (id: any) => api(`return-superadmin//${id}`),
+    returnList: () => api('return-superadmin/act-name'),
+    statusToggle: (id: any, is_active: boolean) => api(`return-superadmin/toggle-status/${id}`),
+    update: (id:any) => api(`return-superadmin/${id}`),
+    createActName: () => api('return-superadmin/act-name'),
+    listactname: () => api('return-superadmin/act-name')
+   },
+   register: {
+    createRegister: () => api('register-superadmin'),
+    listRegister: () => api('register-superadmin'),
+    detailRegister: (id:any) => api(`register-superadmin/${id}`),
+    updateRegister: (id:any) => api(`register-superadmin/${id}`),
+    deleteRegister: (id:any) => api(`register-superadmin/${id}`),
+    exportRegister: () => api('register-superadmin/export'),
+    downloadDocumentRegister: (id:any) => api(`register-superadmin/download-document/${id}`),
+    downloadDocumentOutputRegister: (id:any) => api(`register-superadmin/download-document-register-output/${id}`),
+    createRegisterOutput: () => api('register-superadmin/register-output'),
+    listRegisterOutput: () => api('register-superadmin/register-output')
    }
     
 

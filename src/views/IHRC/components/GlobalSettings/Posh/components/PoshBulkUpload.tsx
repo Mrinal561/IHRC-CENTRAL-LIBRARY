@@ -5,7 +5,12 @@ import httpClient from '@/api/http-client';
 import { endpoints } from '@/api/endpoint';
 
 
-const BulkUpload = () => {
+interface PoshBulkUploadProps {
+  onSuccess?: () => void;
+}
+
+
+const PoshBulkUpload = ({ onSuccess }: PoshBulkUploadProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [remark, setRemark] = useState('');
   const [file, setFile] = useState<File | null>(null);
@@ -33,11 +38,11 @@ const BulkUpload = () => {
         formData.append('remark', remark);
       }
 
-      await httpClient.post(endpoints.state.bulkCreate(formData, {
+      await httpClient.post(endpoints.posh.bulkUpload(), formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
-      }));
+      });
 
       toast.push(
         <Notification title="Success" type="success">
@@ -47,6 +52,9 @@ const BulkUpload = () => {
       setIsDialogOpen(false);
       setRemark('');
       setFile(null);
+      if (onSuccess) {
+        onSuccess();
+    }
     } catch (error: any) {
       toast.push(
         <Notification title="Error" type="error">
@@ -67,19 +75,18 @@ const BulkUpload = () => {
   const handleDownloadTemplate = async (e: React.MouseEvent) => {
     e.preventDefault();
     try {
-      const response = await httpClient.get(endpoints.state.downloadTemplate(),{
+      const response = await httpClient.get(endpoints.posh.downloadTemplate(), {
         responseType: 'blob'
       });
-      // Assuming the API returns a blob for download
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', 'State_District_Template.xlsx');
+      link.setAttribute('download', 'POSH_Template.xlsx');
       document.body.appendChild(link);
       link.click();
       link.parentNode?.removeChild(link);
-      window.URL.revokeObjectURL(url);    
-    } catch (error) {
+      window.URL.revokeObjectURL(url);
+   } catch (error) {
       toast.push(
         <Notification title="Error" type="error">
           Failed to download template
@@ -110,7 +117,7 @@ const BulkUpload = () => {
         onClose={handleCancel}
         width={450}
       >
-        <h5 className="mb-4">Bulk Upload States/Districts</h5>
+        <h5 className="mb-4">Bulk Upload POSH Authorities</h5>
         <div className="my-4 flex gap-2 items-center">
           <p>Download Bulk Upload Format</p>
           <Button 
@@ -122,7 +129,7 @@ const BulkUpload = () => {
           </Button>
         </div>
         <div className="flex flex-col gap-2">
-          <p>Upload State/District File:</p>
+          <p>Upload POSH File:</p>
           <Input
             type="file"
             accept=".xlsx,.xls,.csv"
@@ -160,4 +167,4 @@ const BulkUpload = () => {
   );
 };
 
-export default BulkUpload;
+export default PoshBulkUpload;

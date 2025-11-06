@@ -38,7 +38,7 @@ const initialState: StateState = {
 export const fetchStates = createAsyncThunk(
   'state/fetchStates',
   async (param: any) => {
-      const { data } = await httpClient.get(endpoints.state.getAll(), { 
+      const { data } = await httpClient.get(endpoints.state.getStateDistrict(), { 
         params: param,
       });
       return data;
