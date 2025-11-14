@@ -33,11 +33,15 @@ const BulkUpload = () => {
         formData.append('remark', remark);
       }
 
-      await httpClient.post(endpoints.state.bulkCreate(formData, {
+      await httpClient.post(
+      endpoints.state.bulkCreate(), // Just call the function to get the URL
+      formData, // Pass formData as the data
+      {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
-      }));
+      }
+    );
 
       toast.push(
         <Notification title="Success" type="success">
