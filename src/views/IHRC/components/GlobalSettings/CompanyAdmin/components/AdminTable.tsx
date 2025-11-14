@@ -276,32 +276,37 @@ const AdminTable: React.FC<AdminTableProps> = ({
     );
 
     const handleEditConfirm = async () => {
-        if(itemToEdit?.id){
-            try {
-                const moduleIds = modules
-                    .filter(module => editedAdminData.moduleAccess.includes(module.name))
-                    .map(module => module.id);
+    if(itemToEdit?.id){
+        try {
+            const moduleIds = modules
+                .filter(module => editedAdminData.moduleAccess.includes(module.name))
+                .map(module => module.id);
             
-                await dispatch(updateCompanyAdmin({ 
-                    id: itemToEdit.id,
-                    name: editedAdminData.name,
-                    email: editedAdminData.email,
-                    entityName: editedAdminData.entityName,
-                    moduleAccess: moduleIds,
-                    compliance_checklist: editedAdminData.compliance_checklist,
-                    both_checklist: editedAdminData.both_checklist,
-                    custom_checklist: editedAdminData.custom_checklist
-                })).unwrap();
+            // Create the payload with proper checklist fields
+            const updatePayload = {
+                id: itemToEdit.id,
+                name: editedAdminData.name,
+                email: editedAdminData.email,
+                entityName: editedAdminData.entityName,
+                moduleAccess: moduleIds,
+                compliance_checklist: editedAdminData.compliance_checklist,
+                both_checklist: editedAdminData.both_checklist,
+                custom_checklist: editedAdminData.custom_checklist
+            };
+
+            console.log("Update Payload:", updatePayload); // Debug log
+            
+            await dispatch(updateCompanyAdmin(updatePayload)).unwrap();
                 
-                onDataChange();
-                showSuccessNotification('Admin updated successfully');
-                handleDialogClose();
-            } catch (error) {
-                console.error('Error updating admin:', error);
-                throw error;
-            }
+            onDataChange();
+            showSuccessNotification('Admin updated successfully');
+            handleDialogClose();
+        } catch (error) {
+            console.error('Error updating admin:', error);
+            throw error;
         }
-    };
+    }
+};
 
     const handleModuleChange = (moduleName: string, isChecked: boolean) => {
         if (moduleName === 'Audit Tracker') {
