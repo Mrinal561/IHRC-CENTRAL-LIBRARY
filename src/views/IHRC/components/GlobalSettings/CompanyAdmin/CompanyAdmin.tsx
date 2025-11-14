@@ -353,9 +353,9 @@ useEffect(() => {
  const handleAuditTrackerConfirm = (selection: 'custom' | 'compliance' | 'both') => {
     setFormData(prev => ({
       ...prev,
-      complianceChecklist: selection === 'compliance',
-      bothChecklist: selection === 'both',
-      customChecklist: selection === 'custom' || selection === 'both'
+      compliance_checklist: selection === 'compliance',
+        both_checklist: selection === 'both', 
+        custom_checklist: selection === 'custom' || selection === 'both'
     }));
     
     setSelectedModules(tempSelectedModules);
@@ -431,11 +431,20 @@ useEffect(() => {
                 )
                 return
             }
-            console.log(formData)
-            const apiPayload = {
-    ...formData,
-   
-  };
+           const apiPayload = {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        moduleAccess: formData.moduleAccess,
+        entityName: formData.entityName,
+        compliance_checklist: formData.compliance_checklist,
+        both_checklist: formData.both_checklist,
+        custom_checklist: formData.custom_checklist
+    };
+
+       
+
+        console.log("Final API Payload:", apiPayload);
 
             try {
                 const response = await dispatch(createCompanyAdmin(apiPayload))
