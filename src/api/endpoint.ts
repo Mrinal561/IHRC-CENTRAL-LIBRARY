@@ -129,18 +129,17 @@ export const endpoints = {
     createActName: () => api('return-superadmin/act-name'),
     listactname: () => api('return-superadmin/act-name')
    },
-   register: {
-    createRegister: () => api('register-superadmin'),
-    listRegister: () => api('register-superadmin'),
-    detailRegister: (id:any) => api(`register-superadmin/${id}`),
-    updateRegister: (id:any) => api(`register-superadmin/${id}`),
-    deleteRegister: (id:any) => api(`register-superadmin/${id}`),
-    exportRegister: () => api('register-superadmin/export'),
-    downloadDocumentRegister: (id:any) => api(`register-superadmin/download-document/${id}`),
-    downloadDocumentOutputRegister: (id:any) => api(`register-superadmin/download-document-register-output/${id}`),
-    createRegisterOutput: () => api('register-superadmin/register-output'),
-    listRegisterOutput: () => api('register-superadmin/register-output')
-   }
-    
+  register: {
+  list: () => api('superadmin/registers'),
+  detail: (id: any) => api(`superadmin/registers/${id}`),
+  downloadOriginal: (id: any) => api(`superadmin/registers/download-original/${id}`),
+  downloadProcessed: (id: any) => api(`superadmin/registers/download-processed/${id}`),
+  uploadProcessed: (id: any) => api(`superadmin/registers/upload-processed/${id}`),
+  updateStatus: (id: any) => api(`superadmin/registers/status/${id}`),
+  delete: (id: any) => api(`superadmin/registers/${id}`),
+  export: () => api('superadmin/registers/export'),
+  years: () => api('superadmin/registers/years'),
+  statistics: () => api('superadmin/registers/statistics'),
+},
 
 }

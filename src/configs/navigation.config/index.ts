@@ -139,6 +139,16 @@ const navigationConfig: NavigationTree[] = [
                 subMenu: [],
             },
              {
+                key: 'groupMenu.collapse.item14',
+                path: '/register',
+                title: 'Register',
+                translateKey: 'nav.groupMenu.collapse.item14',
+                icon: '',
+                type: NAV_ITEM_TYPE_ITEM,
+                authority: [],
+                subMenu: [],
+            },
+             {
                 key: 'groupMenu.collapse.item15',
                 path: '/auditSetup',
                 title: 'Audit Setup',
