@@ -210,10 +210,10 @@ const RegisterTable = ({
               />
             </Tooltip> */}
             
-            <Tooltip title="Edit Details" placement="top">
+            <Tooltip title="Upload Processed Document" placement="top">
               <Button
                 size="sm"
-                icon={<MdEdit />}
+                icon={<FiUpload />}
                 onClick={() => onEdit(row.original.id)}
               />
             </Tooltip>

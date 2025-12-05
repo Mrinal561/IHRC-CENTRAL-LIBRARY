@@ -175,7 +175,7 @@ const EditRegisterModal: React.FC<EditRegisterModalProps> = ({
       onRequestClose={handleClose}
       width={700}
     >
-      <h5 className="mb-2">Edit Register Details</h5>
+      <h5 className="mb-2">Upload Processed ZIP File</h5>
       
       {registerData && (
         <div className="space-y-2">
