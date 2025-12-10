@@ -90,8 +90,8 @@ export const endpoints = {
     },
     companyAdmin:{
         create:()=> api('companyadmin/signup'),
-        list:()=> api(`/companyadmin/list`),
-        update:(id:any)=> api(`/companyadmin/${id}`)
+        list:()=> api(`companyadmin/list`),
+        update:(id:any)=> api(`companyadmin/${id}`)
     },
     companyGroup: {
         getAll: () => api('companyadmin/company-group'),
@@ -140,7 +140,18 @@ export const endpoints = {
     downloadDocumentOutputRegister: (id:any) => api(`register-superadmin/download-document-register-output/${id}`),
     createRegisterOutput: () => api('register-superadmin/register-output'),
     listRegisterOutput: () => api('register-superadmin/register-output')
-   }
-    
+   },
+registers: {
+  list: () => api('superadmin/registers'),
+  detail: (id: any) => api(`superadmin/registers/${id}`),
+  downloadOriginal: (id: any) => api(`superadmin/registers/download-original/${id}`),
+  downloadProcessed: (id: any) => api(`superadmin/registers/download-processed/${id}`),
+  uploadProcessed: (id: any) => api(`superadmin/registers/upload-processed/${id}`),
+  updateStatus: (id: any) => api(`superadmin/registers/status/${id}`),
+  delete: (id: any) => api(`superadmin/registers/${id}`),
+  export: () => api('superadmin/registers/export'),
+  years: () => api('superadmin/registers/years'),
+  statistics: () => api('superadmin/registers/statistics'),
+},
 
 }

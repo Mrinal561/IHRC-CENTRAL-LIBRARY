@@ -146,6 +146,17 @@ export const protectedRoutes = [
         ),
         authority: [],
     },
+     {
+        key: 'groupMenu.collapse.item14',
+        path: '/register',
+        component: lazy(
+            () =>
+                import(
+                    '@/views/IHRC/components/GlobalSettings/Register/Register'
+                ),
+        ),
+        authority: [],
+    },
     {
         key: 'groupMenu.collapse.item15',
         path: '/auditSetup',
