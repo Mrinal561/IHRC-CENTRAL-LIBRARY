@@ -115,7 +115,7 @@ const UploadProcessedModal: React.FC<UploadProcessedModalProps> = ({
       onRequestClose={handleClose}
       width={600}
     >
-      <h5 className="mb-6">Upload Processed ZIP File</h5>
+      <h5 className="mb-6">Upload Output Register ZIP File</h5>
       
       <div className="space-y-6">
         <div>

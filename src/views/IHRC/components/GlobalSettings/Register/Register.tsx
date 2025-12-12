@@ -13,6 +13,7 @@ import { HiDownload } from 'react-icons/hi'
 interface RegisterFormData {
   search?: string;
   year?: number;
+  month?: string;
   page: number;
   page_size: number;
   sort_by: string;
@@ -30,7 +31,9 @@ const Register = () => {
   const [currentRegisterId, setCurrentRegisterId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedYear, setSelectedYear] = useState<string>('');
+  const [selectedMonth, setSelectedMonth] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
+  
   
   const [tableData, setTableData] = useState({
     data: [] as any[],
@@ -54,6 +57,21 @@ const Register = () => {
     
     return yearOptions;
   };
+
+  const monthOptions: SelectOption[] = [
+    { value: 'January', label: 'January' },
+    { value: 'February', label: 'February' },
+    { value: 'March', label: 'March' },
+    { value: 'April', label: 'April' },
+    { value: 'May', label: 'May' },
+    { value: 'June', label: 'June' },
+    { value: 'July', label: 'July' },
+    { value: 'August', label: 'August' },
+    { value: 'September', label: 'September' },
+    { value: 'October', label: 'October' },
+    { value: 'November', label: 'November' },
+    { value: 'December', label: 'December' },
+  ];
 
   const yearOptions = generateYearOptions();
 
@@ -93,6 +111,21 @@ const Register = () => {
         }
       }
 
+       if (selectedMonth) {
+        let monthValue: string;
+        
+        // Check if selectedMonth is an object
+        if (typeof selectedMonth === 'object' && selectedMonth !== null) {
+          monthValue = selectedMonth.value;
+        } else {
+          monthValue = selectedMonth;
+        }
+        
+        if (monthValue && monthValue.trim() !== '') {
+          params.month = monthValue;
+        }
+      }
+
       console.log('API params being sent:', params);
 
       const response = await httpClient.get(endpoints.registers.list(), { params });
@@ -116,7 +149,7 @@ const Register = () => {
 
   useEffect(() => {
     fetchRegisterData();
-  }, [tableData.pageIndex, tableData.pageSize, searchTerm, selectedYear]);
+  }, [tableData.pageIndex, tableData.pageSize, searchTerm, selectedYear, selectedMonth]);
 
   const handleDownloadOriginal = async (id: number) => {
     try {
@@ -127,7 +160,7 @@ const Register = () => {
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `register_original_${id}.zip`);
+      link.setAttribute('download', `register_input_${id}.zip`);
       document.body.appendChild(link);
       link.click();
       link.parentNode?.removeChild(link);
@@ -135,14 +168,14 @@ const Register = () => {
       
       toast.push(
         <Notification title="Success" type="success">
-          Original file downloaded successfully
+          Input file downloaded successfully
         </Notification>
       );
     } catch (error) {
       console.error('Download error:', error);
       toast.push(
         <Notification title="Error" type="error">
-          Failed to download original file
+          Failed to download Input file
         </Notification>
       );
     }
@@ -157,7 +190,7 @@ const Register = () => {
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `register_processed_${id}.zip`);
+      link.setAttribute('download', `register_output_${id}.zip`);
       document.body.appendChild(link);
       link.click();
       link.parentNode?.removeChild(link);
@@ -165,14 +198,14 @@ const Register = () => {
       
       toast.push(
         <Notification title="Success" type="success">
-          Processed file downloaded successfully
+          Output file downloaded successfully
         </Notification>
       );
     } catch (error) {
       console.error('Download error:', error);
       toast.push(
         <Notification title="Error" type="error">
-          Failed to download processed file
+          Failed to download output file
         </Notification>
       );
     }
@@ -258,6 +291,18 @@ const Register = () => {
     
     setTableData(prev => ({ ...prev, pageIndex: 1 }));
   };
+  
+  const handleMonthChange = (option: SelectOption | null) => {
+    console.log('Month selected:', option);
+    
+    if (option) {
+      setSelectedMonth(option.value);
+    } else {
+      setSelectedMonth('');
+    }
+    
+    setTableData(prev => ({ ...prev, pageIndex: 1 }));
+  };
 
   return (
     <AdaptableCard className="h-full" bodyClass="h-full">
@@ -277,6 +322,14 @@ const Register = () => {
               value={yearOptions.find(opt => opt.value === selectedYear) || null}
               options={yearOptions}
               onChange={handleYearChange}
+            />
+          </div>
+          <div className='w-36'>
+            <OutlinedSelect
+              label={'Month'}
+              value={monthOptions.find(opt => opt.value === selectedMonth) || null}
+              options={monthOptions}
+              onChange={handleMonthChange}
             />
           </div>
           <Button

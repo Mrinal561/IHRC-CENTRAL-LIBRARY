@@ -10,6 +10,7 @@ interface RegisterData {
   company_admin_name: string;
   company_admin_email: string;
   year: number;
+  // month: string;
   status: 'pending' | 'processed' | 'completed';
   has_original_zip: boolean;
   has_processed_zip: boolean;
@@ -111,6 +112,16 @@ const RegisterTable = ({
         ),
       },
       {
+        header: 'Month',
+        enableSorting: false,
+        accessorKey: 'month',
+        cell: ({ row }: any) => (
+          <div className="w-20">
+            {row.original.month}
+          </div>
+        ),
+      },
+      {
         header: 'Status',
         enableSorting: false,
         accessorKey: 'status',
@@ -129,12 +140,12 @@ const RegisterTable = ({
                 },
       },
       {
-        header: 'Original File',
+        header: 'Input File',
         enableSorting: false,
         cell: ({ row }: any) => (
           <div className="flex justify-center w-24">
             {row.original.has_original_zip ? (
-              <Tooltip title="Download Original ZIP" placement="top">
+              <Tooltip title="Download Input File" placement="top">
                 {/* <Button
                   size="sm"
                 //   variant="plain"
@@ -193,7 +204,7 @@ const RegisterTable = ({
         cell: ({ row }: any) => (
           <div className="flex gap-1">
             {row.original.has_processed_zip && (
-              <Tooltip title="Download Processed Document" placement="top">
+              <Tooltip title="Download Output Register" placement="top">
                 <Button
                   size="sm"
                   icon={<FiDownload />}
@@ -210,7 +221,7 @@ const RegisterTable = ({
               />
             </Tooltip> */}
             
-            <Tooltip title="Upload Processed Document" placement="top">
+            <Tooltip title="Upload Output Register" placement="top">
               <Button
                 size="sm"
                 icon={<FiUpload />}
