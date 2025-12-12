@@ -115,7 +115,7 @@ const UploadProcessedModal: React.FC<UploadProcessedModalProps> = ({
       onRequestClose={handleClose}
       width={600}
     >
-      <h5 className="mb-6">Upload Processed ZIP File</h5>
+      <h5 className="mb-6">Upload Output Register ZIP File</h5>
       
       <div className="space-y-6">
         <div>
@@ -146,7 +146,7 @@ const UploadProcessedModal: React.FC<UploadProcessedModalProps> = ({
           </p>
         </div>
 
-        <div>
+        {/* <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Description (Optional)
           </label>
@@ -156,7 +156,7 @@ const UploadProcessedModal: React.FC<UploadProcessedModalProps> = ({
             onChange={setDescription}
             rows={3}
           />
-        </div>
+        </div> */}
       </div>
 
       <div className="flex justify-end gap-2 mt-8">

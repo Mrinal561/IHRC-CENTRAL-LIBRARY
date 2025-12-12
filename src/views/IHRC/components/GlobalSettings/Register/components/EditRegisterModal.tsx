@@ -10,6 +10,7 @@ interface EditRegisterModalProps {
   onClose: () => void;
   registerId: number;
   onSuccess: () => void;
+  
 }
 
 interface RegisterDetails {
@@ -175,81 +176,24 @@ const EditRegisterModal: React.FC<EditRegisterModalProps> = ({
       onRequestClose={handleClose}
       width={700}
     >
-      <h5 className="mb-2">Upload Processed ZIP File</h5>
+      {registerData?.file_info.processed_zip_path ? (
+        <h5 className="mb-2">Update Output Register ZIP File</h5>
+      ) : (
+        <h5 className="mb-2">Upload Output Register ZIP File</h5>
+      )}
       
       {registerData && (
         <div className="space-y-2">
-          {/* <div className="grid grid-cols-2 gap-6"> */}
-            {/* <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Company Name
-              </label>
-              <OutlinedInput
-                              value={registerData.company.name}
-                              isDisabled={true}
-                              label={'Company Name'} onChange={function (value: string): void {
-                                  throw new Error('Function not implemented.');
-                              } }              />
-            </div> */}
-            {/* <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Company Admin
-              </label>
-              <OutlinedInput
-                              value={registerData.company_admin.name}
-                              isDisabled={true}
-                              label={'Company Admin'} onChange={function (value: string): void {
-                                  throw new Error('Function not implemented.');
-                              } }              />
-            </div> */}
-          {/* </div> */}
-
-          {/* <div className="grid grid-cols-2 gap-6"> */}
-            {/* <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Year
-              </label>
-              <OutlinedInput
-                              value={registerData.year.toString()}
-                              isDisabled={true}
-                              label={'Year'} onChange={function (value: string): void {
-                                  throw new Error('Function not implemented.');
-                              } }              />
-            </div> */}
-            {/* <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Status
-              </label>
-              <OutlinedSelect
-                value={registerData.status.toString()}
-                label={'Select Status'}
-                options={[
-                  { value: 'pending', label: 'Pending' },
-                  { value: 'processed', label: 'Processed' },
-                  { value: 'completed', label: 'Completed' }
-                ]}
-                onChange={(value) => setStatus(value as any)}
-              />
-            </div> */}
-          {/* </div> */}
+        
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description
-            </label>
-            <OutlinedInput
-              textarea
-              label='Enter Description'
-              value={description}
-              onChange={setDescription}
-            //   placeholder="Enter description..."
-            //   rows={3}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Update Processed ZIP File (Optional)
+              {registerData?.file_info.processed_zip_path ? (
+        "Update Output ZIP File (Optional)"
+      ) : (
+        ""
+      )}
+            
             </label>
             <div className="mt-1 flex items-center">
               <input
@@ -271,7 +215,11 @@ const EditRegisterModal: React.FC<EditRegisterModalProps> = ({
               </span>
             </div>
             <p className="mt-1 text-xs text-gray-500">
-              Leave empty to keep existing processed file
+              {registerData?.file_info.processed_zip_path ? (
+        "Leave empty to keep existing processed file"
+      ) : (
+        ""
+      )}
             </p>
           </div>
 
@@ -297,7 +245,7 @@ const EditRegisterModal: React.FC<EditRegisterModalProps> = ({
           onClick={handleUpdate}
           loading={isUpdating}
         >
-          Update
+          Upload
         </Button>
       </div>
     </Dialog>
